@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinVault - Your Financial Command Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="h-screen overflow-hidden">
+
+    <div id="auth-screen" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4">
+        <div class="w-full max-w-md">
+            <div id="login-container">
+                <div class="bg-slate-800 p-8 rounded-lg shadow-lg"><h2 class="text-3xl font-bold text-center mb-2">Welcome Back</h2><p class="text-center text-slate-400 mb-8">Sign in to your FinVault</p><form id="login-form" class="space-y-4"><input type="email" id="login-email" name="login-email" placeholder="Email" class="w-full bg-slate-700 p-3 rounded-md" required><input type="password" id="login-password" name="login-password" placeholder="Password" class="w-full bg-slate-700 p-3 rounded-md" required><button type="submit" class="w-full btn-primary p-3 rounded-md font-semibold">Login</button></form><p class="text-center text-slate-400 mt-4">Don't have an account? <a href="#" id="show-signup" class="text-green-400 hover:underline">Sign up</a></p></div>
+            </div>
+            <div id="signup-container" class="hidden">
+                <div class="bg-slate-800 p-8 rounded-lg shadow-lg"><h2 class="text-3xl font-bold text-center mb-2">Create an Account</h2><p class="text-center text-slate-400 mb-8">Start managing your finances</p><form id="signup-form" class="space-y-4"><input type="email" id="signup-email" name="signup-email" placeholder="Email" class="w-full bg-slate-700 p-3 rounded-md" required><input type="password" id="signup-password" name="signup-password" placeholder="Password (min. 6 characters)" class="w-full bg-slate-700 p-3 rounded-md" required><button type="submit" class="w-full btn-primary p-3 rounded-md font-semibold">Sign Up</button></form><p class="text-center text-slate-400 mt-4">Already have an account? <a href="#" id="show-login" class="text-green-400 hover:underline">Login</a></p></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-wrapper" class="hidden w-full h-full sm:flex">
+        <aside class="sidebar w-16 md:w-64 flex-shrink-0 transition-all duration-300 ease-in-out hidden sm:flex flex-col">
+            <div class="flex items-center justify-center md:justify-start px-4 h-20 border-b" style="border-color: var(--color-border);"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-8 w-8" style="color: var(--color-primary);"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg><h1 class="text-2xl font-bold ml-2 hidden md:block">FinVault</h1></div>
+            <nav class="flex-1 px-2 py-4 space-y-2"><a href="#" class="nav-link flex items-center p-2 text-base font-normal rounded-lg bg-slate-700" data-target="dashboard"><i data-lucide="layout-dashboard" class="w-6 h-6"></i><span class="ml-3 hidden md:block">Dashboard</span></a><a href="#" class="nav-link flex items-center p-2 text-base font-normal rounded-lg hover:bg-slate-700" data-target="card-control"><i data-lucide="credit-card" class="w-6 h-6"></i><span class="ml-3 hidden md:block">Card Control</span></a><a href="#" class="nav-link flex items-center p-2 text-base font-normal rounded-lg hover:bg-slate-700" data-target="budgets"><i data-lucide="pie-chart" class="w-6 h-6"></i><span class="ml-3 hidden md:block">Budgets</span></a><a href="#" class="nav-link flex items-center p-2 text-base font-normal rounded-lg hover:bg-slate-700" data-target="vaults"><i data-lucide="shield-check" class="w-6 h-6"></i><span class="ml-3 hidden md:block">Vaults</span></a><a href="#" class="nav-link flex items-center p-2 text-base font-normal rounded-lg hover:bg-slate-700" data-target="transactions"><i data-lucide="list" class="w-6 h-6"></i><span class="ml-3 hidden md:block">Transactions</span></a><a href="#" class="nav-link flex items-center p-2 text-base font-normal rounded-lg hover:bg-slate-700" data-target="settings"><i data-lucide="settings" class="w-6 h-6"></i><span class="ml-3 hidden md:block">Settings</span></a></nav>
+            <div class="px-2 py-4 mt-auto border-t" style="border-color: var(--color-border);"><a href="#" id="logout-btn" class="flex items-center p-2 text-base font-normal rounded-lg hover:bg-slate-700"><i data-lucide="log-out" class="w-6 h-6"></i><span id="user-email-display" class="ml-3 hidden md:block">user@email.com</span></a></div>
+        </aside>
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <header class="flex items-center justify-between h-20 px-6 border-b bg-slate-800" style="border-color: var(--color-border);"><div class="sm:hidden"><button id="mobile-menu-button" class="p-2 rounded-md"><i data-lucide="menu" class="w-6 h-6"></i></button></div><h1 class="text-xl font-semibold" id="page-title">Dashboard</h1><div class="flex items-center space-x-4 relative"><button id="notifications-btn" class="p-2 rounded-full hover:bg-slate-700 relative"><i data-lucide="bell" class="w-6 h-6"></i><span id="notification-dot" class="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500"></span></button><div id="notifications-dropdown" class="absolute top-full right-0 mt-2 w-80 bg-slate-700 rounded-lg shadow-lg hidden z-10"><div class="p-3 border-b border-slate-600"><h4 class="font-semibold">Notifications</h4></div><div id="notification-list" class="max-h-96 overflow-y-auto"></div></div></div></header>
+            <div class="flex-1 overflow-y-auto p-6 md:p-8 space-y-8" id="main-content-area">
+                <section id="dashboard" class="page-section space-y-8"></section>
+                <section id="card-control" class="page-section hidden"></section>
+                <section id="budgets" class="page-section hidden space-y-8"></section>
+                <section id="vaults" class="page-section hidden"></section>
+                <section id="transactions" class="page-section hidden space-y-8"></section>
+                <section id="settings" class="page-section hidden space-y-8"></section>
+            </div>
+        </main>
+    </div>
+    <div id="mobile-sidebar" class="fixed inset-0 bg-slate-900 z-40 transform -translate-x-full transition-transform duration-300 ease-in-out sm:hidden"></div>
+    <div id="onboarding-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center hidden z-50 p-4"></div>
+    <div id="qr-scanner-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center hidden z-50 p-4"></div>
+    <div id="map-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center hidden z-50"></div>
+    <div id="add-money-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center hidden z-50"></div>
+    <div id="send-money-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center hidden z-50"></div>
+    <div id="new-vault-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center hidden z-50"></div>
+    <div id="new-budget-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center hidden z-50"></div>
+    <div id="update-budget-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center hidden z-50"></div>
+    <div id="vault-action-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center hidden z-50"></div>
+    <div id="confirm-delete-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center hidden z-50"></div>
+    <div id="toast-notification" class="fixed bottom-8 right-8 bg-green-600 text-white py-3 px-6 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 ease-in-out z-50"><p id="toast-message"></p></div>
+    
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>
