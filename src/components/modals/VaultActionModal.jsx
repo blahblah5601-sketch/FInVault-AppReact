@@ -25,7 +25,7 @@ function VaultActionModal({ isOpen, onClose, onSubmit, vault, actionType }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-slate-800 rounded-lg p-6 w-11/12 max-w-md" onClick={e => e.stopPropagation()}>
+      <div className="bg-panel rounded-lg p-6 w-11/12 max-w-md" onClick={e => e.stopPropagation()}>
         <h3 className="text-xl font-semibold mb-1">{title}</h3>
         <p className="text-sm text-slate-400 mb-4">To/From: {vault.name}</p>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -45,7 +45,7 @@ function VaultActionModal({ isOpen, onClose, onSubmit, vault, actionType }) {
               value={amount}
               onChange={e => setAmount(e.target.value)}
               max={isGoalVaultDeposit ? remainingGoal : null}
-              className="w-full bg-slate-700 border-slate-600 rounded-md p-2" 
+              className="w-full bg-sidebar border-slate-600 rounded-md p-2" 
               placeholder="0.00" 
               required 
               autoFocus

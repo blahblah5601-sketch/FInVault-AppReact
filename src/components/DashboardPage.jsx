@@ -33,7 +33,7 @@ function DashboardPage({ accounts, budgets, vaults }) {
         </div>
 
         {/* AI Financial Advisor */}
-        <div className="bg-slate-900/50 p-6 rounded-2xl flex flex-col">
+        <div className="bg-background/50 p-6 rounded-2xl flex flex-col">
            {/* ... AI Advisor content will go here ... */}
         </div>
       </div>

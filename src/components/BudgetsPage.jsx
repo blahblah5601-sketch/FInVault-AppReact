@@ -1,20 +1,27 @@
 // src/components/BudgetsPage.jsx
-import { createBudget , updateBudget } from '../api';
+import { createBudget, updateBudget, deleteBudget, toggleBudgetCardAssignment } from '../api';
 import { useState } from 'react';
 import BudgetItem from './BudgetItem';
+import { Plus } from 'lucide-react';
 import CreateBudgetModal from './modals/CreateBudgetModal';
 import UpdateBudgetModal from './modals/UpdateBudgetModal';
+import ConfirmDeleteModal from './modals/ConfirmDeleteModal';
 
 
-function BudgetsPage({ budgets }) {
+function BudgetsPage({ budgets, showToast }) {
   // Calculate summary totals from the budgets prop
+  const MAX_CARD_ASSIGNMENTS = 3;
+  const MAX_BUDGETS = 5;
   const totalBudgeted = budgets.reduce((sum, b) => sum + b.limit, 0);
   const totalSpent = budgets.reduce((sum, b) => sum + b.spent, 0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [budgetToEdit, setBudgetToEdit] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
   const totalRemaining = totalBudgeted - totalSpent;
-  const MAX_BUDGETS = 5;
+  const assignedCount = budgets.filter(b => b.isCardAssigned).length;
+  const canAssignMore = assignedCount < MAX_CARD_ASSIGNMENTS;
 
   const handleCreateBudget = async (name, limit) => {
     const success = await createBudget(name, limit);
@@ -23,6 +30,7 @@ function BudgetsPage({ budgets }) {
   };
 
   const handleOpenUpdateModal = (budget) => {
+    console.log('2. handleOpenUpdateModal called in BudgetsPage with:', budget);
     setBudgetToEdit(budget);
     setIsUpdateModalOpen(true);
   };
@@ -34,6 +42,30 @@ function BudgetsPage({ budgets }) {
       setBudgetToEdit(null);
     } else {
       alert("Failed to update budget.");
+    }
+  };
+
+  const handleOpenDeleteModal = (budget) => {
+    setItemToDelete(budget);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (itemToDelete) {
+      const success = await deleteBudget(itemToDelete);
+      if (success) {
+        setIsDeleteModalOpen(false);
+        setItemToDelete(null);
+      } else {
+        alert("Failed to delete budget.");
+      }
+    }
+  };
+
+  const handleAssignBudget = async (budget, action) => {
+    const result = await toggleBudgetCardAssignment(budget, budgets, action);
+    if (!result.success) {
+      showToast(result.message); // Use the toast to show errors
     }
   };
 
@@ -51,13 +83,13 @@ function BudgetsPage({ budgets }) {
                   id="new-budget-btn"
                   className="btn-primary py-2 px-4 rounded-lg flex items-center"
               >
-                  <i data-lucide="plus" className="w-5 h-5 mr-2"></i>
+                  <Plus className="w-5 h-5 mr-2" />
                   New Budget
               </button>
           </div>
 
           {/* Budget Summary - now with live data */}
-          <div className="bg-slate-900/50 p-6 rounded-2xl">
+          <div className="bg-background/50 p-6 rounded-2xl">
               <h3 className="font-semibold text-lg mb-4">Monthly Summary</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                   <div>
@@ -76,9 +108,9 @@ function BudgetsPage({ budgets }) {
           </div>
 
           {/* Budget List - now dynamically rendered */}
-          <div id="budgets-list" className="bg-slate-900/50 p-6 rounded-2xl">
+          <div id="budgets-list" className="bg-background/50 p-6 rounded-2xl">
               {budgets.map(budget => (
-                  <BudgetItem key={budget.id} budget={budget} onUpdate={() => handleOpenUpdateModal(budget)}/>
+                  <BudgetItem key={budget.id} budget={budget} onUpdate={() => handleOpenUpdateModal(budget)} onDelete={() => handleOpenDeleteModal(budget)} onAssign={handleAssignBudget} canAssignMore={canAssignMore}/>
               ))}
           </div>
       </section>
@@ -94,6 +126,14 @@ function BudgetsPage({ budgets }) {
         onClose={() => setIsUpdateModalOpen(false)}
         onSubmit={handleUpdateBudget}
         budgetToEdit={budgetToEdit}
+        />
+
+        <ConfirmDeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        itemType="budget"
+        itemName={itemToDelete?.name}
         />
     </>
   );

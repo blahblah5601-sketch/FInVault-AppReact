@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 
 function UpdateBudgetModal({ isOpen, onClose, onSubmit, budgetToEdit }) {
+  console.log('3. UpdateBudgetModal rendered. isOpen:', isOpen);
   const [name, setName] = useState('');
   const [limit, setLimit] = useState('');
 
@@ -22,7 +23,7 @@ function UpdateBudgetModal({ isOpen, onClose, onSubmit, budgetToEdit }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-slate-800 rounded-lg p-6 w-11/12 max-w-md" onClick={e => e.stopPropagation()}>
+      <div className="bg-panel rounded-lg p-6 w-11/12 max-w-md" onClick={e => e.stopPropagation()}>
         <h3 className="text-xl font-semibold mb-4">Update Budget</h3>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -32,7 +33,7 @@ function UpdateBudgetModal({ isOpen, onClose, onSubmit, budgetToEdit }) {
               id="update-budget-name" 
               value={name}
               onChange={e => setName(e.target.value)}
-              className="w-full bg-slate-700 border-slate-600 rounded-md p-2" 
+              className="w-full bg-sidebar border-slate-600 rounded-md p-2" 
               required 
             />
           </div>
@@ -43,7 +44,7 @@ function UpdateBudgetModal({ isOpen, onClose, onSubmit, budgetToEdit }) {
               id="update-budget-limit" 
               value={limit}
               onChange={e => setLimit(e.target.value)}
-              className="w-full bg-slate-700 border-slate-600 rounded-md p-2" 
+              className="w-full bg-sidebar border-slate-600 rounded-md p-2" 
               required 
             />
           </div>

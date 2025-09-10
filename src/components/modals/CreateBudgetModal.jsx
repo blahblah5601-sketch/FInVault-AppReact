@@ -23,7 +23,7 @@ function CreateBudgetModal({ isOpen, onClose, onSubmit }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-slate-800 rounded-lg p-6 w-11/12 max-w-md" onClick={e => e.stopPropagation()}>
+      <div className="bg-panel rounded-lg p-6 w-11/12 max-w-md" onClick={e => e.stopPropagation()}>
         <h3 className="text-xl font-semibold mb-4">Create New Budget</h3>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -33,7 +33,7 @@ function CreateBudgetModal({ isOpen, onClose, onSubmit }) {
               id="budget-name" 
               value={name}
               onChange={e => setName(e.target.value)}
-              className="w-full bg-slate-700 border-slate-600 rounded-md p-2" 
+              className="w-full bg-sidebar border-slate-600 rounded-md p-2" 
               placeholder="e.g., Groceries" 
               required 
             />
@@ -45,7 +45,7 @@ function CreateBudgetModal({ isOpen, onClose, onSubmit }) {
               id="budget-limit" 
               value={limit}
               onChange={e => setLimit(e.target.value)}
-              className="w-full bg-slate-700 border-slate-600 rounded-md p-2" 
+              className="w-full bg-sidebar border-slate-600 rounded-md p-2" 
               placeholder="e.g., 25000" 
               required 
             />

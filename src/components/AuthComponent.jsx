@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { auth, db } from '../firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp, writeBatch, collection } from 'firebase/firestore';
+import Logo from './Logo';
 
 // This is a simplified version of your setupNewUser function
 // We'll move this to a better place later
@@ -56,11 +57,11 @@ function AuthComponent() {
     };
 
     return (
-        <div id="auth-container" className="fixed inset-0 bg-slate-900 flex items-center justify-center z-50 p-4">
+        <div id="auth-container" className="fixed inset-0 bg-background flex items-center justify-center z-50 p-4">
             <div className="auth-card w-full max-w-sm space-y-6">
                 <div className="text-center">
                     <div className="flex items-center justify-center mb-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8" style={{ color: 'var(--color-primary)' }}><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                        <Logo className="h-8 w-8" /> {/* <-- Use Logo component */}
                         <h1 className="text-3xl font-bold ml-2">FinVault</h1>
                     </div>
                     <p id="auth-mode-label" className="text-slate-400">{isLoginMode ? 'Sign in to continue' : 'Create a new account'}</p>

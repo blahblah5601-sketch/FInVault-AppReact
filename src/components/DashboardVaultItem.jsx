@@ -1,14 +1,15 @@
 // src/components/DashboardVaultItem.jsx
+import Icon from './Icon';
 
 function DashboardVaultItem({ vault }) {
   const isSavings = vault.isSavingsAccount;
   const percentage = !isSavings && vault.target > 0 ? Math.round((vault.current / vault.target) * 100) : 0;
 
   return (
-    <div className={`bg-slate-900/50 p-4 rounded-xl flex flex-col h-full ${isSavings ? 'border border-green-500/30' : ''}`}>
+    <div className={`bg-background/50 p-4 rounded-xl flex flex-col h-full ${isSavings ? 'border border-green-500/30' : ''}`}>
       <div className="flex items-center space-x-3">
         <div className={`p-2 bg-${vault.color}-500/20 rounded-lg`}>
-          <i data-lucide={vault.icon} className={`w-5 h-5 text-${vault.color}-400`}></i>
+          <Icon name={vault.icon} className={`w-5 h-5 text-${vault.color}-400`} />
         </div>
         <span className="font-medium">{vault.name}</span>
       </div>
@@ -19,7 +20,7 @@ function DashboardVaultItem({ vault }) {
         </p>
       </div>
       {!isSavings && vault.target ? (
-        <div className="w-full bg-slate-700 rounded-full h-2.5 mt-auto">
+        <div className="w-full bg-sidebar rounded-full h-2.5 mt-auto">
           <div className="bg-green-500 h-2.5 rounded-full" style={{ width: `${percentage}%` }}></div>
         </div>
       ) : <div className="h-2.5 mt-auto"></div>}

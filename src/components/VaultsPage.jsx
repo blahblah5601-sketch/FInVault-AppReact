@@ -4,8 +4,10 @@ import VaultItem from './VaultItem';
 import CreateVaultModal from './modals/CreateVaultModal'; // <-- Import the new modal
 import VaultActionModal from './modals/VaultActionModal'; // <-- Import action modal
 import { createVault, handleVaultTransaction } from '../api'; // <-- Import the new API function
+import { Plus } from 'lucide-react'; // <-- 1. Import STATIC icons directly
+import Icon from './Icon';
 
-function VaultsPage({ vaults , accounts }) {
+function VaultsPage({ vaults , accounts, showToast }) {
   // Separate the main savings account from the other goal vaults
   const savingsAccount = vaults.find(v => v.isSavingsAccount);
   const goalVaults = vaults.filter(v => !v.isSavingsAccount);
@@ -31,8 +33,13 @@ function VaultsPage({ vaults , accounts }) {
     const result = await handleVaultTransaction(vault, accounts, actionType, amount);
     if (result.success) {
       handleCloseActionModal();
+      showToast('Transaction successful!');
+    if (result.goalReached) {
+        // Show the celebration message!
+        showToast(`Congratulations! You've reached your goal for '${result.vaultName}'! 🎉`);
+      }
     } else {
-      alert(result.message); // Show error message from API
+      showToast(result.message); // Show error message from API
     }
   };
 
@@ -51,10 +58,10 @@ function VaultsPage({ vaults , accounts }) {
           {/* Render the special Savings Account container if it exists */}
           {savingsAccount && (
               <div id="savings-account-container" className="mb-8">
-                  <div className="bg-slate-900/50 p-6 rounded-2xl flex flex-col md:flex-row md:items-center justify-between border-2 border-green-500/50">
+                  <div className="bg-background/50 p-6 rounded-2xl flex flex-col md:flex-row md:items-center justify-between border-2 border-green-500/50">
                       <div className="flex items-center space-x-4 mb-4 md:mb-0">
                           <div className={`p-3 bg-${savingsAccount.color}-500/20 rounded-lg`}>
-                              <i data-lucide={savingsAccount.icon} className="w-8 h-8 text-green-400"></i>
+                              <Icon name={savingsAccount.icon} className="w-8 h-8 text-green-400" />
                           </div>
                           <div>
                               <h4 className="font-semibold text-lg">{savingsAccount.name}</h4>
@@ -63,7 +70,7 @@ function VaultsPage({ vaults , accounts }) {
                       </div>
                       <div className="text-center md:text-right mb-4 md:mb-0 md:mx-auto">
                           <p className="text-2xl font-bold font-mono">Rs {Math.floor(savingsAccount.current).toLocaleString('en-US')}</p>
-                          <p className="font-text-sm mt-1 text-green-400">Interest Bearing ({(savingsAccount.returnRate * 100).toFixed(0)}% APR)</p>
+                          <p className="text-sm mt-1 text-green-400">Interest Bearing ({(savingsAccount.returnRate * 100).toFixed(0)}% APR)</p>
                       </div>
                       <div className="flex gap-4 md:flex-col md:w-36">
                           <button onClick={() => handleOpenActionModal(savingsAccount, 'withdraw')} className="flex-1 btn-secondary py-2 rounded-lg">Withdraw</button>
@@ -80,7 +87,7 @@ function VaultsPage({ vaults , accounts }) {
                   id="new-vault-btn"
                   className="btn-primary py-2 px-4 rounded-lg flex items-center"
               >
-                  <i data-lucide="plus" className="w-5 h-5 mr-2"></i>
+                  <Plus className="w-5 h-5 mr-2" />
                   New Vault
               </button>
           </div>

@@ -1,18 +1,13 @@
 // src/components/AppLayout.jsx
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import MainContent from './MainContent';
 
 // The component receives props, including the onLogout function
-function AppLayout({ user, onLogout, accounts, budgets, vaults, transactions, history }) {
+function AppLayout({ user, onLogout, showToast, accounts, budgets, vaults, transactions, history }) {
     const [activePage, setActivePage] = useState('dashboard');
-    useEffect(() => {
-    // This runs after the component renders, ensuring the <i> tags are in the DOM
-        if (window.lucide) {
-        window.lucide.createIcons();
-        }
-    }); // Note: No dependency array, so it runs on every re-render
+    // useEffect for lucide.createIcons() was deleted as pnpm install lucide-react was done to fix lucide icons issue
 
     return (
         <div id="app-container" className="flex h-screen w-full">
@@ -32,6 +27,7 @@ function AppLayout({ user, onLogout, accounts, budgets, vaults, transactions, hi
           vaults={vaults}
           transactions={transactions}
           history={history}
+          showToast={showToast}
         />
         </main>
         </div>

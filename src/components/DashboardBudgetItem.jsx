@@ -1,13 +1,14 @@
 // src/components/DashboardBudgetItem.jsx
+import Icon from "./Icon";
 
 function DashboardBudgetItem({ budget }) {
   const percentage = budget.limit > 0 ? Math.round((budget.spent / budget.limit) * 100) : 0;
   
   return (
-    <div className="bg-slate-900/50 p-4 rounded-xl flex flex-col h-full">
+    <div className="bg-background/50 p-4 rounded-xl flex flex-col h-full">
       <div className="flex items-center space-x-3">
         <div className={`p-2 bg-${budget.color}-500/20 rounded-lg`}>
-          <i data-lucide={budget.icon} className={`w-5 h-5 text-${budget.color}-400`}></i>
+          <Icon name={budget.icon} className={`w-5 h-5 text-${budget.color}-400`} />
         </div>
         <span className="font-medium">{budget.name}</span>
       </div>
@@ -17,7 +18,7 @@ function DashboardBudgetItem({ budget }) {
           {percentage}% Used
         </p>
       </div>
-      <div className="w-full bg-slate-700 rounded-full h-2.5 mt-auto">
+      <div className="w-full bg-sidebar rounded-full h-2.5 mt-auto">
         <div className="bg-green-500 h-2.5 rounded-full" style={{ width: `${percentage}%` }}></div>
       </div>
     </div>

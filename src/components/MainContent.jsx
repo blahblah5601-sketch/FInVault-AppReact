@@ -1,11 +1,12 @@
 // src/components/MainContent.jsx
 import DashboardPage from './DashboardPage';
+import CardControlPage from './CardControlPage';
 import BudgetsPage from './BudgetsPage';
 import VaultsPage from './VaultsPage';
 import TransactionsPage from './TransactionsPage';
 import SettingsPage from './SettingsPage'; 
 // This component will eventually show the correct page component
-function MainContent({ activePage, accounts, budgets, vaults, transactions, history }) {
+function MainContent({ activePage, accounts, budgets, vaults, transactions, showToast }) {
   return (
     <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8">
       {/* This is conditional rendering. It checks activePage and shows the right content. */}
@@ -14,11 +15,11 @@ function MainContent({ activePage, accounts, budgets, vaults, transactions, hist
       )}
 
       {activePage === 'budgets' && (
-        <BudgetsPage budgets={budgets} />
+        <BudgetsPage budgets={budgets} showToast={showToast}/>
       )}
       
       {activePage === 'vaults' && (
-        <VaultsPage vaults={vaults} accounts={accounts}/>
+        <VaultsPage vaults={vaults} accounts={accounts} showToast={showToast}/>
       )}
 
       {activePage === 'transactions' && (
@@ -28,9 +29,9 @@ function MainContent({ activePage, accounts, budgets, vaults, transactions, hist
       {activePage === 'settings' && <SettingsPage />}
       
       {/* You can add placeholders for any remaining pages like Card Control */}
-      {activePage === 'card-control' && <div><h2>Card Control Page - Coming Soon</h2></div>}
+      {activePage === 'card-control' && <div></div>}
 
-      {/* ... and so on for the other pages ... */}
+      {activePage === 'card-control' && <CardControlPage accounts={accounts} budgets={budgets} showToast={showToast}/>}
     </div>
   );
 }

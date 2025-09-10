@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import ToastNotification from './components/ToastNotification';
 import './App.css';
 import { auth, db } from './firebase'; // Import from your new firebase.js file
 import { onAuthStateChanged } from 'firebase/auth';
@@ -10,27 +11,26 @@ import { signOut } from 'firebase/auth';
 // --- Helper Components (we will move these to their own files later) ---
 
 const LoadingSpinner = () => (
-  <div id="loading-spinner" className="fixed inset-0 bg-slate-900 flex flex-col items-center justify-center z-50">
+  <div id="loading-spinner" className="fixed inset-0 bg-background flex flex-col items-center justify-center z-50">
     <div className="w-8 h-8 border-4 border-slate-600 border-t-green-500 rounded-full animate-spin"></div>
     <p className="text-slate-400 mt-4">Connecting...</p>
   </div>
 );
 
-
-// const AppLayout = ({ user, budgets, vaults, transactions, history }) => {
-//   // This will be the main layout of your app once logged in
-//   return (
-//     <div>
-//       <h1>Welcome, {user.email}</h1>
-//       <p>You have {budgets.length} budgets.</p>
-//       {/* We will build out the full UI here later */}
-//     </div>
-//   );
-// };
-
 function App() {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Toast Notification State
+  const [toast, setToast] = useState({ message: '', isVisible: false });
+
+  const showToast = (message) => {
+    setToast({ message, isVisible: true });
+    // Hide the toast after 3 seconds
+    setTimeout(() => {
+      setToast({ message: '', isVisible: false });
+    }, 3000);
+  };
   
   // States to hold your application data
   const [accounts, setAccounts] = useState([]);
@@ -95,7 +95,7 @@ function App() {
   }
 
   return (
-    <AppLayout 
+    <><AppLayout
       user={user}
       onLogout={handleLogout}
       accounts={accounts}
@@ -103,7 +103,13 @@ function App() {
       vaults={vaultsData}
       transactions={transactionsData}
       history={historyData}
-    />
+      showToast={showToast} 
+      />
+      <ToastNotification
+        message={toast.message}
+        isVisible={toast.isVisible} 
+      />
+      </>
   );
 }
 
