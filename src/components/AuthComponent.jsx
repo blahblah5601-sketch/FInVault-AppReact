@@ -64,7 +64,7 @@ function AuthComponent() {
                         <Logo className="h-8 w-8" /> {/* <-- Use Logo component */}
                         <h1 className="text-3xl font-bold ml-2">FinVault</h1>
                     </div>
-                    <p id="auth-mode-label" className="text-slate-400">{isLoginMode ? 'Sign in to continue' : 'Create a new account'}</p>
+                    <p id="auth-mode-label" className="text-text-secondary">{isLoginMode ? 'Sign in to continue' : 'Create a new account'}</p>
                 </div>
 
                 {/* Login Form */}
@@ -83,7 +83,7 @@ function AuthComponent() {
 
                 {error && <p id="auth-error" className="error-message">{error}</p>}
 
-                <p className="text-sm text-center text-slate-400">
+                <p className="text-sm text-center text-text-secondary">
                     <span>{isLoginMode ? "Don't have an account?" : "Already have an account?"}</span>
                     <button type="button" onClick={toggleMode} className="font-medium hover:underline" style={{ color: 'var(--color-primary)', marginLeft: '4px' }}>
                         {isLoginMode ? 'Sign up' : 'Log in'}

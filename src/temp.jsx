@@ -9,7 +9,7 @@
 //                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" strokeColor="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8" style="color: var(--color-primary)"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
 //                     <h1 className="text-3xl font-bold ml-2">FinVault</h1>
 //                 </div>
-//                 <p id="auth-mode-label" className="text-slate-400">Sign in to continue</p>
+//                 <p id="auth-mode-label" className="text-text-secondary">Sign in to continue</p>
 //             </div>
 
 //             {/* Login Form */}
@@ -28,7 +28,7 @@
 
 //             <p id="auth-error" className="error-message"></p>
 
-//             <p className="text-sm text-center text-slate-400">
+//             <p className="text-sm text-center text-text-secondary">
 //                 <span id="toggle-text">Don't have an account?</span>
 //                 <a href="#" id="toggle-auth-mode" className="font-medium hover:underline" style="color: var(--color-primary);">Sign up</a>
 //             </p>
@@ -38,7 +38,7 @@
 //     {/* Loading Spinner (Shown on initial load) */}
 //     <div id="loading-spinner" className="fixed inset-0 bg-slate-900 flex flex-col items-center justify-center z-50">
 //         <div className="w-8 h-8 border-4 border-slate-600 border-t-green-500 rounded-full animate-spin"></div>
-//         <p className="text-slate-400 mt-4">Connecting...</p>
+//         <p className="text-text-secondary mt-4">Connecting...</p>
 //     </div>
 
 //     {/* Main App Container (Shown when logged in) */}
@@ -77,8 +77,8 @@
 //             </nav>
 //             <div className="px-2 py-4 mt-auto border-t" style="borderColor: var(--color-border);">
 //                  <div className="flex items-center p-2 text-base font-normal rounded-lg">
-//                     <i data-lucide="user-circle" className="w-8 h-8 rounded-full text-slate-400"></i>
-//                     <span id="user-email-display" className="ml-3 hidden md:block text-sm text-slate-400 truncate" title="user@example.com">user@example.com</span>
+//                     <i data-lucide="user-circle" className="w-8 h-8 rounded-full text-text-secondary"></i>
+//                     <span id="user-email-display" className="ml-3 hidden md:block text-sm text-text-secondary truncate" title="user@example.com">user@example.com</span>
 //                 </div>
 //                 <a href="#" id="logout-button" className="flex items-center p-2 text-base font-normal rounded-lg hover:bg-slate-700 text-red-400 hover:text-red-300">
 //                     <i data-lucide="log-out" className="w-6 h-6"></i>
@@ -125,7 +125,7 @@
 //                             <div id="smart-card-display" className="card-gradient p-6 rounded-2xl shadow-lg relative h-56 transition-all duration-300">
 //                                 <div className="flex justify-between items-start">
 //                                     <div>
-//                                         <p className="text-sm text-slate-400">Active Account</p>
+//                                         <p className="text-sm text-text-secondary">Active Account</p>
 //                                         <h3 id="active-account-name" className="text-xl font-semibold">Current Account</h3>
 //                                     </div>
 //                                     <div className="flex items-center">
@@ -133,9 +133,9 @@
 //                                     </div>
 //                                 </div>
 //                                 <div className="absolute bottom-6 left-6">
-//                                      <p className="text-sm text-slate-400">Total Balance</p>
+//                                      <p className="text-sm text-text-secondary">Total Balance</p>
 //                                     <p id="card-balance" className="text-3xl font-bold">Rs 124,530.50</p>
-//                                     <p id="card-number" className="text-lg font-mono tracking-widest mt-2 text-slate-300">**** **** **** 8021</p>
+//                                     <p id="card-number" className="text-lg font-mono tracking-widest mt-2 text-text-primary">**** **** **** 8021</p>
 //                                 </div>
 //                                 <div id="card-frozen-overlay" className="absolute inset-0 bg-black bg-opacity-60 rounded-2xl flex items-center justify-center hidden backdrop-blur-sm">
 //                                     <i data-lucide="snowflake" className="w-16 h-16 text-blue-300"></i>
@@ -168,7 +168,7 @@
 //                         <div className="bg-slate-900/50 p-6 rounded-2xl flex flex-col">
 //                             <div className="flex justify-between items-center mb-4">
 //                                  <h3 className="text-lg font-semibold">AI Financial Advisor</h3>
-//                                  <button id="new-advice-btn" className="p-1 rounded-full hover:bg-slate-700"><i data-lucide="refresh-cw" className="w-4 h-4 text-slate-400"></i></button>
+//                                  <button id="new-advice-btn" className="p-1 rounded-full hover:bg-slate-700"><i data-lucide="refresh-cw" className="w-4 h-4 text-text-secondary"></i></button>
 //                             </div>
 //                             <div className="flex items-start space-x-4">
 //                                 <div className="p-2 rounded-full" style="background-color: var(--color-primary); opacity: 0.2;">
@@ -213,13 +213,13 @@
 //                             <div id="smart-card-display-control" className="card-gradient p-6 rounded-2xl shadow-lg relative h-56">
 //                                  <div className="flex justify-between items-start">
 //                                     <div>
-//                                         <p className="text-sm text-slate-400">Active Account</p>
+//                                         <p className="text-sm text-text-secondary">Active Account</p>
 //                                         <h3 id="active-account-name-control" className="text-xl font-semibold">Current Account</h3>
 //                                     </div>
 //                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-10 h-10 text-white"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
 //                                 </div>
 //                                 <div className="absolute bottom-6 left-6">
-//                                     <p id="card-number-control" className="text-lg font-mono tracking-widest text-slate-300">**** **** **** 8021</p>
+//                                     <p id="card-number-control" className="text-lg font-mono tracking-widest text-text-primary">**** **** **** 8021</p>
 //                                 </div>
 //                                 <div id="card-frozen-overlay-control" className="absolute inset-0 bg-black bg-opacity-60 rounded-2xl flex items-center justify-center hidden backdrop-blur-sm">
 //                                     <i data-lucide="snowflake" className="w-16 h-16 text-blue-300"></i>
@@ -240,7 +240,7 @@
 
 //                         <div className="bg-slate-900/50 p-6 rounded-2xl">
 //                             <h3 className="text-lg font-semibold mb-4">Rotate Active Account</h3>
-//                             <p className="text-sm text-slate-400 mb-6">Select which account or budget jar your physical card should use for the next transaction.</p>
+//                             <p className="text-sm text-text-secondary mb-6">Select which account or budget jar your physical card should use for the next transaction.</p>
 //                             <div className="space-y-3" id="account-selector">
 //                                 {/* Accounts will be populated by JS */}
 //                             </div>
@@ -253,7 +253,7 @@
 //                      <div className="flex justify-between items-center mb-6">
 //                         <div>
 //                             <h2 className="text-2xl font-semibold">My Budgets</h2>
-//                             <p id="budget-count-text" className="text-sm text-slate-400 mt-1"></p>
+//                             <p id="budget-count-text" className="text-sm text-text-secondary mt-1"></p>
 //                         </div>
 //                         <button id="new-budget-btn" className="btn-primary py-2 px-4 rounded-lg flex items-center">
 //                             <i data-lucide="plus" className="w-5 h-5 mr-2"></i>
@@ -266,15 +266,15 @@
 //                         <h3 className="font-semibold text-lg mb-4">Monthly Summary</h3>
 //                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
 //                             <div>
-//                                 <p className="text-sm text-slate-400">Total Budgeted</p>
+//                                 <p className="text-sm text-text-secondary">Total Budgeted</p>
 //                                 <p id="total-budgeted" className="text-2xl font-bold font-mono"></p>
 //                             </div>
 //                             <div>
-//                                 <p className="text-sm text-slate-400">Total Spent</p>
+//                                 <p className="text-sm text-text-secondary">Total Spent</p>
 //                                 <p id="total-spent" className="text-2xl font-bold font-mono"></p>
 //                             </div>
 //                             <div>
-//                                 <p className="text-sm text-slate-400">Remaining</p>
+//                                 <p className="text-sm text-text-secondary">Remaining</p>
 //                                 <p id="total-remaining" className="text-2xl font-bold font-mono"></p>
 //                             </div>
 //                         </div>
@@ -290,7 +290,7 @@
 //                      <div className="flex justify-between items-center mb-6">
 //                         <div>
 //                             <h2 className="text-2xl font-semibold">Savings Vaults</h2>
-//                             <p className="text-sm text-slate-400 mt-1">Total Saved: <span id="total-saved-vaults-page" className="font-bold text-base"></span></p>
+//                             <p className="text-sm text-text-secondary mt-1">Total Saved: <span id="total-saved-vaults-page" className="font-bold text-base"></span></p>
 //                         </div>
 //                      </div>
 //                      <div id="savings-account-container" className="mb-8">
@@ -435,7 +435,7 @@
 //                         <h2 className="text-2xl font-semibold mb-6">Settings</h2>
 //                         <div className="bg-slate-900/50 p-6 rounded-2xl">
 //                             <h3 className="text-lg font-semibold mb-4">Theme Customization</h3>
-//                             <p className="text-sm text-slate-400 mb-6">Choose a color scheme for your dashboard.</p>
+//                             <p className="text-sm text-text-secondary mb-6">Choose a color scheme for your dashboard.</p>
 //                             <div id="theme-selector" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
 //                                 {/* Theme options will be generated by JS */}
 //                             </div>
@@ -444,7 +444,7 @@
 //                      <div>
 //                         <div className="bg-slate-900/50 p-6 rounded-2xl">
 //                             <h3 className="text-lg font-semibold mb-4">Card Security</h3>
-//                             <p className="text-sm text-slate-400 mb-6">Find your card's last known location.</p>
+//                             <p className="text-sm text-text-secondary mb-6">Find your card's last known location.</p>
 //                             <button id="locate-card-btn-settings" className="btn-secondary py-2 px-4 rounded-lg flex items-center">
 //                                 <i data-lucide="map-pin" className="w-5 h-5 mr-2"></i>
 //                                 Locate My Card
@@ -454,7 +454,7 @@
 //                     <div>
 //                         <div className="bg-slate-900/50 p-6 rounded-2xl">
 //                             <h3 className="text-lg font-semibold mb-4">Simulation Controls</h3>
-//                             <p className="text-sm text-slate-400 mb-6">Advance time to see features like monthly returns.</p>
+//                             <p className="text-sm text-text-secondary mb-6">Advance time to see features like monthly returns.</p>
 //                             <button id="simulate-payout-btn" className="btn-primary py-2 px-4 rounded-lg">Simulate Monthly Payout</button>
 //                         </div>
 //                     </div>
@@ -504,13 +504,13 @@
 //              <div id="onboarding-step-1">
 //                 <i data-lucide="gem" className="w-12 h-12 text-green-400 mx-auto mb-4"></i>
 //                 <h3 className="text-xl font-semibold mb-2">Welcome to FinVault!</h3>
-//                 <p className="text-slate-400 mb-6">Your all-in-one financial command center. Let's take a quick tour.</p>
+//                 <p className="text-text-secondary mb-6">Your all-in-one financial command center. Let's take a quick tour.</p>
 //                 <button className="onboarding-next btn-primary py-2 px-6 rounded-lg w-full">Next</button>
 //              </div>
 //              <div id="onboarding-step-2" className="hidden">
 //                  <i data-lucide="pie-chart" className="w-12 h-12 text-sky-400 mx-auto mb-4"></i>
 //                 <h3 className="text-xl font-semibold mb-2">Create Budget Jars</h3>
-//                 <p className="text-slate-400 mb-6">Separate your money into categories like 'Food' or 'Shopping' to track your spending easily.</p>
+//                 <p className="text-text-secondary mb-6">Separate your money into categories like 'Food' or 'Shopping' to track your spending easily.</p>
 //                 <div className="flex gap-4">
 //                     <button className="onboarding-prev btn-secondary py-2 px-6 rounded-lg w-1/2">Previous</button>
 //                     <button className="onboarding-next btn-primary py-2 px-6 rounded-lg w-1/2">Next</button>
@@ -519,7 +519,7 @@
 //              <div id="onboarding-step-3" className="hidden">
 //                 <i data-lucide="credit-card" className="w-12 h-12 text-amber-400 mx-auto mb-4"></i>
 //                 <h3 className="text-xl font-semibold mb-2">The Universal Card</h3>
-//                 <p className="text-slate-400 mb-6">Assign any Budget Jar to your physical card to spend directly from it. You're always in control.</p>
+//                 <p className="text-text-secondary mb-6">Assign any Budget Jar to your physical card to spend directly from it. You're always in control.</p>
 //                  <div className="flex gap-4">
 //                     <button className="onboarding-prev btn-secondary py-2 px-6 rounded-lg w-1/2">Previous</button>
 //                     <button className="onboarding-finish btn-primary py-2 px-6 rounded-lg w-1/2">Let's Get Started!</button>
@@ -535,7 +535,7 @@
 //                 <div className="absolute inset-0 bg-grid-slate-700/20"></div>
 //                 <div className="qr-scanner-line"></div>
 //             </div>
-//             <p className="mt-4 text-slate-400 text-sm">Hold your camera up to a QR code</p>
+//             <p className="mt-4 text-text-secondary text-sm">Hold your camera up to a QR code</p>
 //             <button className="mt-6 btn-secondary py-2 px-6 rounded-lg" data-action="close">Cancel</button>
 //         </div>
 //     </div>
@@ -545,9 +545,9 @@
 //             <h3 className="text-xl font-semibold mb-4">Locating Your Card...</h3>
 //             <div className="aspect-video bg-slate-700 rounded-md flex items-center justify-center">
 //                 <p></p>
-//                 <i data-lucide="map" className="w-24 h-24 text-slate-500"></i>
+//                 <i data-lucide="map" className="w-24 h-24 text-text-muted"></i>
 //             </div>
-//             <p className="mt-4 text-slate-400">Last seen: 2 minutes ago at Tariq Road, Karachi</p>
+//             <p className="mt-4 text-text-secondary">Last seen: 2 minutes ago at Tariq Road, Karachi</p>
 //             <button id="close-map-modal" className="mt-6 btn-primary py-2 px-6 rounded-lg">Close</button>
 //         </div>
 //     </div>
@@ -557,11 +557,11 @@
 //             <h3 className="text-xl font-semibold mb-4">Add Money to Current Account</h3>
 //             <form id="add-money-form" className="space-y-4">
 //                 <div>
-//                     <label htmlFor="add-money-amount" className="block text-sm font-medium text-slate-300 mb-1">Amount</label>
+//                     <label htmlFor="add-money-amount" className="block text-sm font-medium text-text-primary mb-1">Amount</label>
 //                     <input type="number" id="add-money-amount" name="add-money-amount" className="w-full bg-slate-700 border-slate-600 rounded-md p-2" placeholder="e.g., 10000" required/>
 //                 </div>
 //                 <div>
-//                     <label htmlFor="add-money-source" className="block text-sm font-medium text-slate-300 mb-1">Source</label>
+//                     <label htmlFor="add-money-source" className="block text-sm font-medium text-text-primary mb-1">Source</label>
 //                     <select id="add-money-source" name="add-money-source" className="w-full bg-slate-700 border-slate-600 rounded-md p-2">
 //                         <option>Linked Bank Account (**** 1234)</option>
 //                         <option>Debit Card (**** 5678)</option>
@@ -580,15 +580,15 @@
 //             <h3 className="text-xl font-semibold mb-4">Send Money</h3>
 //             <form id="send-money-form" className="space-y-4">
 //                  <div>
-//                     <label htmlFor="send-money-recipient" className="block text-sm font-medium text-slate-300 mb-1">Recipient Account/IBAN</label>
+//                     <label htmlFor="send-money-recipient" className="block text-sm font-medium text-text-primary mb-1">Recipient Account/IBAN</label>
 //                     <input type="text" id="send-money-recipient" name="send-money-recipient" className="w-full bg-slate-700 border-slate-600 rounded-md p-2" placeholder="e.g., PK36SCBL0000001123456789" required/>
 //                 </div>
 //                 <div>
-//                     <label htmlFor="send-money-amount" className="block text-sm font-medium text-slate-300 mb-1">Amount</label>
+//                     <label htmlFor="send-money-amount" className="block text-sm font-medium text-text-primary mb-1">Amount</label>
 //                     <input type="number" id="send-money-amount" name="send-money-amount" className="w-full bg-slate-700 border-slate-600 rounded-md p-2" placeholder="e.g., 2500" required/>
 //                 </div>
 //                 <div>
-//                     <label htmlFor="send-money-service" className="block text-sm font-medium text-slate-300 mb-1">Service</label>
+//                     <label htmlFor="send-money-service" className="block text-sm font-medium text-text-primary mb-1">Service</label>
 //                     <select id="send-money-service" name="send-money-service" className="w-full bg-slate-700 border-slate-600 rounded-md p-2">
 //                         <option>Bank Transfer</option>
 //                         <option>JazzCash</option>
@@ -608,11 +608,11 @@
 //             <h3 className="text-xl font-semibold mb-4">Create New Vault</h3>
 //             <form id="new-vault-form" className="space-y-4">
 //                 <div>
-//                     <label htmlFor="vault-name" className="block text-sm font-medium text-slate-300 mb-1">Vault Name</label>
+//                     <label htmlFor="vault-name" className="block text-sm font-medium text-text-primary mb-1">Vault Name</label>
 //                     <input type="text" id="vault-name" name="vault-name" className="w-full bg-slate-700 border-slate-600 rounded-md p-2 focus:ring-2 focus:ring-green-500" placeholder="e.g., Vacation Trip" required/>
 //                 </div>
 //                 <div>
-//                     <label htmlFor="vault-target" className="block text-sm font-medium text-slate-300 mb-1">Target Amount</label>
+//                     <label htmlFor="vault-target" className="block text-sm font-medium text-text-primary mb-1">Target Amount</label>
 //                     <input type="number" id="vault-target" name="vault-target" className="w-full bg-slate-700 border-slate-600 rounded-md p-2 focus:ring-2 focus:ring-green-500" placeholder="e.g., 200000" required/>
 //                 </div>
 //                 <div className="flex justify-end gap-4 pt-4">
@@ -628,11 +628,11 @@
 //             <h3 className="text-xl font-semibold mb-4">Create New Budget</h3>
 //             <form id="new-budget-form" className="space-y-4">
 //                 <div>
-//                     <label htmlFor="budget-name" className="block text-sm font-medium text-slate-300 mb-1">Budget Name</label>
+//                     <label htmlFor="budget-name" className="block text-sm font-medium text-text-primary mb-1">Budget Name</label>
 //                     <input type="text" id="budget-name" name="budget-name" className="w-full bg-slate-700 border-slate-600 rounded-md p-2 focus:ring-2 focus:ring-green-500" placeholder="e.g., Groceries" required/>
 //                 </div>
 //                 <div>
-//                     <label htmlFor="budget-limit" className="block text-sm font-medium text-slate-300 mb-1">Monthly Limit</label>
+//                     <label htmlFor="budget-limit" className="block text-sm font-medium text-text-primary mb-1">Monthly Limit</label>
 //                     <input type="number" id="budget-limit" name="budget-limit" className="w-full bg-slate-700 border-slate-600 rounded-md p-2 focus:ring-2 focus:ring-green-500" placeholder="e.g., 25000" required/>
 //                 </div>
 //                 <div className="flex justify-end gap-4 pt-4">
@@ -649,11 +649,11 @@
 //             <form id="update-budget-form" className="space-y-4">
 //                 <input type="hidden" id="update-budget-id" name="update-budget-id"/>
 //                 <div>
-//                     <label htmlFor="update-budget-name" className="block text-sm font-medium text-slate-300 mb-1">Budget Name</label>
+//                     <label htmlFor="update-budget-name" className="block text-sm font-medium text-text-primary mb-1">Budget Name</label>
 //                     <input type="text" id="update-budget-name" name="update-budget-name" className="w-full bg-slate-700 border-slate-600 rounded-md p-2 focus:ring-2 focus:ring-green-500" required/>
 //                 </div>
 //                 <div>
-//                     <label htmlFor="update-budget-limit" className="block text-sm font-medium text-slate-300 mb-1">Monthly Limit</label>
+//                     <label htmlFor="update-budget-limit" className="block text-sm font-medium text-text-primary mb-1">Monthly Limit</label>
 //                     <input type="number" id="update-budget-limit" name="update-budget-limit" className="w-full bg-slate-700 border-slate-600 rounded-md p-2 focus:ring-2 focus:ring-green-500" required/>
 //                 </div>
 //                 <div className="flex justify-end gap-4 pt-4">
@@ -671,7 +671,7 @@
 //                 <input type="hidden" id="vault-action-id" name="vault-action-id"/>
 //                 <input type="hidden" id="vault-action-type" name="vault-action-type"/>
 //                 <div>
-//                     <label htmlFor="vault-action-amount" className="block text-sm font-medium text-slate-300 mb-1">Amount</label>
+//                     <label htmlFor="vault-action-amount" className="block text-sm font-medium text-text-primary mb-1">Amount</label>
 //                     <input type="number" id="vault-action-amount" name="vault-action-amount" className="w-full bg-slate-700 border-slate-600 rounded-md p-2 focus:ring-2 focus:ring-green-500" placeholder="e.g., 5000" required/>
 //                 </div>
 //                 <div className="flex justify-end gap-4 pt-4">
@@ -686,7 +686,7 @@
 //         <div className="bg-slate-800 rounded-lg p-6 w-11/12 max-w-md text-center">
 //             <i data-lucide="alert-triangle" className="w-12 h-12 text-red-500 mx-auto mb-4"></i>
 //             <h3 id="confirm-delete-title" className="text-xl font-semibold mb-2">Are you sure?</h3>
-//             <p id="confirm-delete-message" className="text-slate-400 mb-6">This action cannot be undone.</p>
+//             <p id="confirm-delete-message" className="text-text-secondary mb-6">This action cannot be undone.</p>
 //             <div className="flex justify-center gap-4">
 //                 <button type="button" className="btn-secondary py-2 px-6 rounded-lg" data-action="close">Cancel</button>
 //                 <button type="button" id="confirm-delete-btn" className="btn-danger py-2 px-6 rounded-lg">Delete</button>

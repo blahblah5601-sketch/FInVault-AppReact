@@ -20,7 +20,7 @@ function CreateVaultModal({ isOpen, onClose, onSubmit }) {
         <h3 className="text-xl font-semibold mb-4">Create New Goal Vault</h3>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="vault-name" className="block text-sm font-medium text-slate-300 mb-1">Vault Name</label>
+            <label htmlFor="vault-name" className="block text-sm font-medium text-text-primary mb-1">Vault Name</label>
             <input 
               type="text" 
               id="vault-name" 
@@ -32,7 +32,7 @@ function CreateVaultModal({ isOpen, onClose, onSubmit }) {
             />
           </div>
           <div>
-            <label htmlFor="vault-target" className="block text-sm font-medium text-slate-300 mb-1">Target Amount</label>
+            <label htmlFor="vault-target" className="block text-sm font-medium text-text-primary mb-1">Target Amount</label>
             <input 
               type="number" 
               id="vault-target" 

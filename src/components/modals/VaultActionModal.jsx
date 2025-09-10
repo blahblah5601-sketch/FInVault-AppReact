@@ -27,14 +27,14 @@ function VaultActionModal({ isOpen, onClose, onSubmit, vault, actionType }) {
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50" onClick={onClose}>
       <div className="bg-panel rounded-lg p-6 w-11/12 max-w-md" onClick={e => e.stopPropagation()}>
         <h3 className="text-xl font-semibold mb-1">{title}</h3>
-        <p className="text-sm text-slate-400 mb-4">To/From: {vault.name}</p>
+        <p className="text-sm text-text-secondary mb-4">To/From: {vault.name}</p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <div className="flex justify-between items-center mb-1">
-              <label htmlFor="vault-action-amount" className="block text-sm font-medium text-slate-300">Amount</label>
+              <label htmlFor="vault-action-amount" className="block text-sm font-medium text-text-primary">Amount</label>
               {/* Show the max deposit amount if applicable */}
               {isGoalVaultDeposit && (
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-text-secondary">
                   Max Deposit: Rs {remainingGoal.toLocaleString()}
                 </p>
               )}

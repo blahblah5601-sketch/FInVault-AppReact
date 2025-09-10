@@ -26,7 +26,7 @@ function BudgetItem({ budget, onUpdate, onDelete, onAssign, canAssignMore }) {
               {budget.name}
               {budget.isCardAssigned && <CreditCard className="w-4 h-4 text-green-400 ml-2" />}
             </h4>
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-text-secondary">
               Spent <span className="font-mono">Rs {budget.spent.toLocaleString('en-US')}</span> of <span className="font-mono">Rs {budget.limit.toLocaleString('en-US')}</span>
             </p>
           </div>

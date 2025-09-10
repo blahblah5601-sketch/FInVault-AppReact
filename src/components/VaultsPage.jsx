@@ -49,7 +49,7 @@ function VaultsPage({ vaults , accounts, showToast }) {
           <div className="flex justify-between items-center mb-6">
               <div>
                   <h2 className="text-2xl font-semibold">Savings Vaults</h2>
-                  <p className="text-sm text-slate-400 mt-1">
+                  <p className="text-sm text-text-secondary mt-1">
                       Total Saved: <span className="font-bold text-base">Rs {totalSaved.toLocaleString('en-US')}</span>
                   </p>
               </div>
@@ -65,7 +65,7 @@ function VaultsPage({ vaults , accounts, showToast }) {
                           </div>
                           <div>
                               <h4 className="font-semibold text-lg">{savingsAccount.name}</h4>
-                              {/* <p className="text-sm text-slate-400">Saved: Rs {Math.floor(savingsAccount.current).toLocaleString('en-US')}</p> */}
+                              {/* <p className="text-sm text-text-secondary">Saved: Rs {Math.floor(savingsAccount.current).toLocaleString('en-US')}</p> */}
                           </div>
                       </div>
                       <div className="text-center md:text-right mb-4 md:mb-0 md:mx-auto">

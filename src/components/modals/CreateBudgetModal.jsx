@@ -27,7 +27,7 @@ function CreateBudgetModal({ isOpen, onClose, onSubmit }) {
         <h3 className="text-xl font-semibold mb-4">Create New Budget</h3>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="budget-name" className="block text-sm font-medium text-slate-300 mb-1">Budget Name</label>
+            <label htmlFor="budget-name" className="block text-sm font-medium text-text-primary mb-1">Budget Name</label>
             <input 
               type="text" 
               id="budget-name" 
@@ -39,7 +39,7 @@ function CreateBudgetModal({ isOpen, onClose, onSubmit }) {
             />
           </div>
           <div>
-            <label htmlFor="budget-limit" className="block text-sm font-medium text-slate-300 mb-1">Monthly Limit</label>
+            <label htmlFor="budget-limit" className="block text-sm font-medium text-text-primary mb-1">Monthly Limit</label>
             <input 
               type="number" 
               id="budget-limit" 

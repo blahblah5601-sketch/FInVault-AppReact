@@ -13,10 +13,10 @@ function VaultItem({ vault , onDeposit, onWithdraw }) {
           </div>
           <div>
             <h4 className="font-semibold text-lg">{vault.name}</h4>
-            <p className="text-sm text-slate-400">Target: Rs {vault.target.toLocaleString('en-US')}</p>
+            <p className="text-sm text-text-secondary">Target: Rs {vault.target.toLocaleString('en-US')}</p>
           </div>
         </div>
-        <button className="text-slate-500 hover:text-red-500">
+        <button className="text-text-muted hover:text-red-500">
           <Icon data-lucide="trash-2" className="w-5 h-5" />
         </button>
       </div>

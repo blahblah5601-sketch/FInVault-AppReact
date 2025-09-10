@@ -74,7 +74,7 @@ function BudgetsPage({ budgets, showToast }) {
           <div className="flex justify-between items-center">
               <div>
                   <h2 className="text-2xl font-semibold">My Budgets</h2>
-                  <p className="text-sm text-slate-400 mt-1">
+                  <p className="text-sm text-text-secondary mt-1">
                       {budgets.length} of {MAX_BUDGETS} budgets created.
                   </p>
               </div>
@@ -93,15 +93,15 @@ function BudgetsPage({ budgets, showToast }) {
               <h3 className="font-semibold text-lg mb-4">Monthly Summary</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                   <div>
-                      <p className="text-sm text-slate-400">Total Budgeted</p>
+                      <p className="text-sm text-text-secondary">Total Budgeted</p>
                       <p className="text-2xl font-bold font-mono">Rs {totalBudgeted.toLocaleString('en-US')}</p>
                   </div>
                   <div>
-                      <p className="text-sm text-slate-400">Total Spent</p>
+                      <p className="text-sm text-text-secondary">Total Spent</p>
                       <p className="text-2xl font-bold font-mono">Rs {totalSpent.toLocaleString('en-US')}</p>
                   </div>
                   <div>
-                      <p className="text-sm text-slate-400">Remaining</p>
+                      <p className="text-sm text-text-secondary">Remaining</p>
                       <p className="text-2xl font-bold font-mono">Rs {totalRemaining.toLocaleString('en-US')}</p>
                   </div>
               </div>

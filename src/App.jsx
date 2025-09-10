@@ -2,24 +2,26 @@ import { useState, useEffect } from 'react';
 import ToastNotification from './components/ToastNotification';
 import './App.css';
 import { auth, db } from './firebase'; // Import from your new firebase.js file
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { collection, query, onSnapshot, orderBy } from 'firebase/firestore';
 import AuthComponent from './components/AuthComponent';
 import AppLayout from './components/AppLayout';
-import { signOut } from 'firebase/auth';
+import { getUserPreferences } from './api'; // <-- Import getUserSettings
+import { applyTheme } from './components/theme'; // <-- Import applyTheme
 
 // --- Helper Components (we will move these to their own files later) ---
 
 const LoadingSpinner = () => (
   <div id="loading-spinner" className="fixed inset-0 bg-background flex flex-col items-center justify-center z-50">
     <div className="w-8 h-8 border-4 border-slate-600 border-t-green-500 rounded-full animate-spin"></div>
-    <p className="text-slate-400 mt-4">Connecting...</p>
+    <p className="text-text-secondary mt-4">Connecting...</p>
   </div>
 );
 
-function App() {
+function App( ) {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [theme, setTheme] = useState('Slate');
 
   // Toast Notification State
   const [toast, setToast] = useState({ message: '', isVisible: false });
@@ -41,9 +43,17 @@ function App() {
 
   useEffect(() => {
     // onAuthStateChanged is the Firebase listener for login/logout events
-    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
+
+        const settings = await getUserPreferences();
+        if (settings && settings.theme) {
+          setTheme(settings.theme);
+          applyTheme(settings.theme);
+        } else {
+          applyTheme('Slate'); // Apply default
+        }
         
         // This is the direct replacement for your loadAndInitializeAppData function
         const collectionsToSync = {
@@ -104,6 +114,9 @@ function App() {
       transactions={transactionsData}
       history={historyData}
       showToast={showToast} 
+      theme={theme}
+      setTheme={setTheme}
+
       />
       <ToastNotification
         message={toast.message}

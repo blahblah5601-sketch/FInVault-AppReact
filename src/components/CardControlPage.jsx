@@ -61,13 +61,13 @@ function CardControlPage({ accounts, budgets, showToast }) {
           <div id="smart-card-display-control" className={`card-gradient p-6 rounded-2xl shadow-lg relative h-56 ${isCardFrozen ? 'grayscale' : ''}`}>
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-sm text-slate-400">Active Account</p>
+                <p className="text-sm text-text-secondary">Active Account</p>
                 <h3 className="text-xl font-semibold">{activeAccount?.name}</h3>
               </div>
               <CardGraphic className="w-10 h-10 text-white" />
             </div>
             <div className="absolute bottom-6 left-6">
-              <p className="text-lg font-mono tracking-widest text-slate-300">**** **** **** 8021</p>
+              <p className="text-lg font-mono tracking-widest text-text-primary">**** **** **** 8021</p>
             </div>
             {isCardFrozen && (
               <div id="card-frozen-overlay-control" className="absolute inset-0 bg-black bg-opacity-60 rounded-2xl flex items-center justify-center backdrop-blur-sm">
@@ -94,7 +94,7 @@ function CardControlPage({ accounts, budgets, showToast }) {
         </div>
         <div className="bg-background/50 p-6 rounded-2xl">
           <h3 className="text-lg font-semibold mb-4">Rotate Active Account</h3>
-          <p className="text-sm text-slate-400 mb-6">Select which account or budget jar your card should use.</p>
+          <p className="text-sm text-text-secondary mb-6">Select which account or budget jar your card should use.</p>
           {/* The `onChange` now triggers the confirmation flow */}
           <div className="space-y-3" id="account-selector" onChange={handleAccountChange}>
             {/* Account list is now dynamically rendered */}
@@ -103,7 +103,7 @@ function CardControlPage({ accounts, budgets, showToast }) {
                 <input type="radio" id={`acc-${account.id}`} name="activeAccount" value={account.id} className="hidden" defaultChecked={account.id === activeAccountId} />
                 <div className="flex-1">
                   <p className="font-medium">{account.name}</p>
-                  <p className="text-sm text-slate-400">Available: Rs {account.balance.toLocaleString('en-US')}</p>
+                  <p className="text-sm text-text-secondary">Available: Rs {account.balance.toLocaleString('en-US')}</p>
                 </div>
                 {activeAccountId === account.id && <CheckCircle2 className="w-6 h-6 text-green-500" />}
               </label>

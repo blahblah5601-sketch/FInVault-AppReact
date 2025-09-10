@@ -27,7 +27,7 @@ function UpdateBudgetModal({ isOpen, onClose, onSubmit, budgetToEdit }) {
         <h3 className="text-xl font-semibold mb-4">Update Budget</h3>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="update-budget-name" className="block text-sm font-medium text-slate-300 mb-1">Budget Name</label>
+            <label htmlFor="update-budget-name" className="block text-sm font-medium text-text-primary mb-1">Budget Name</label>
             <input 
               type="text" 
               id="update-budget-name" 
@@ -38,7 +38,7 @@ function UpdateBudgetModal({ isOpen, onClose, onSubmit, budgetToEdit }) {
             />
           </div>
           <div>
-            <label htmlFor="update-budget-limit" className="block text-sm font-medium text-slate-300 mb-1">Monthly Limit</label>
+            <label htmlFor="update-budget-limit" className="block text-sm font-medium text-text-primary mb-1">Monthly Limit</label>
             <input 
               type="number" 
               id="update-budget-limit" 

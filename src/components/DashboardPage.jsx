@@ -14,7 +14,7 @@ function DashboardPage({ accounts, budgets, vaults }) {
           <div id="smart-card-display" className="card-gradient p-6 rounded-2xl shadow-lg relative h-56 transition-all duration-300">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-sm text-slate-400">Active Account</p>
+                <p className="text-sm text-text-secondary">Active Account</p>
                 <h3 id="active-account-name" className="text-xl font-semibold">
                   {mainAccount ? mainAccount.name : '...'}
                 </h3>
@@ -22,11 +22,11 @@ function DashboardPage({ accounts, budgets, vaults }) {
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-10 h-10 text-white"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
             </div>
             <div className="absolute bottom-6 left-6">
-              <p className="text-sm text-slate-400">Total Balance</p>
+              <p className="text-sm text-text-secondary">Total Balance</p>
               <p id="card-balance" className="text-3xl font-bold">
                 Rs {mainAccount ? mainAccount.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
               </p>
-              <p id="card-number" className="text-lg font-mono tracking-widest mt-2 text-slate-300">**** **** **** 8021</p>
+              <p id="card-number" className="text-lg font-mono tracking-widest mt-2 text-text-primary">**** **** **** 8021</p>
             </div>
           </div>
           {/* ... Quick Actions buttons will go here ... */}

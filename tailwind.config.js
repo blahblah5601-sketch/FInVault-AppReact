@@ -18,7 +18,12 @@ export default {
           hover: 'var(--color-primary-hover)' // We can add hover variants later
         },
         border: 'var(--color-border)',
-      }
+        text: {
+            primary: 'var(--color-text-primary)',
+            secondary: 'var(--color-text-secondary)',
+            muted: 'var(--color-text-muted)',
+          }
+        }
     },
   },
   plugins: [],

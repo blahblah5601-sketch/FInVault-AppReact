@@ -1,14 +1,23 @@
 /* src/index.css */
 
 :root {
-  --color-bg: #0f172a;
-  --color-sidebar: #1e293b;
+  --color-bg:#020617;
+  --color-sidebar: #0f172a;
   --color-panel: #1e293b;
   --color-interactive: #475569;
   --color-primary: #22c55e;
   --color-border: rgba(255, 255, 255, 0.1);
+  --color-text-primary: #f1f5f9;   /* slate-100 */
+  --color-text-secondary: #cbd5e1; /* slate-300 */
+  --color-text-muted: #94a3b8;     /* slate-400 */
 }
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* --- ADD THIS BLOCK --- */
+html, body, #root {
+  @apply h-full w-full bg-background;
+}
+/* --- END OF BLOCK --- */
