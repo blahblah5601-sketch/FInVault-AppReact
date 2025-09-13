@@ -1,12 +1,10 @@
 // src/components/SettingsPage.jsx
-import { useState, useEffect } from 'react';
-import { db, auth } from '../firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { themes, applyTheme } from './theme'; // Import the applyTheme function
-import { updateUserPreferences } from '../api';
+import { themes, applyTheme } from '../theme.js'; // Import the applyTheme function
+import { updateUserPreferences } from '../api.js'; // <-- Import updateUserSettings
 
 // --- 1. Use the COMPLETE themes object from your original project ---
-function SettingsPage( ) {
+function SettingsPage( { currentTheme, setCurrentTheme } ) {
   //const [currentTheme, setCurrentTheme] = useState('Slate');
 
   const handleThemeSelect = async (themeName) => {
@@ -15,32 +13,6 @@ function SettingsPage( ) {
     await updateUserSettings({ theme: themeName }); // Save to Firestore
   };
   
-  // Fetch user's theme setting on component load
-  useEffect(() => {
-    const fetchUserSettings = async () => {
-        if (auth.currentUser) {
-            const userDocRef = doc(db, 'users', auth.currentUser.uid);
-            const docSnap = await getDoc(userDocRef);
-            if (docSnap.exists() && docSnap.data().settings?.theme) {
-                const userTheme = docSnap.data().settings.theme;
-                setCurrentTheme(userTheme);
-                applyTheme(userTheme); // Apply the theme on initial load
-            } else {
-                applyTheme('Slate'); // Apply default theme if none is saved
-            }
-        }
-    };
-    fetchUserSettings();
-  }, []); // The empty array [] means this runs only once
-
-  // const handleThemeSelect = async (themeName) => {
-  //   setCurrentTheme(themeName);
-  //   applyTheme(themeName);
-  //   // Save to Firestore
-  //   const userDocRef = doc(db, "users", auth.currentUser.uid);
-  //   await updateDoc(userDocRef, { "settings.theme": themeName });
-  // };
-
   return (
     <section id="settings" className="page-section">
       <h2 className="text-2xl font-semibold mb-6">Settings</h2>

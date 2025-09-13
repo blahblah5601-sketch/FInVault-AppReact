@@ -7,7 +7,7 @@ import { collection, query, onSnapshot, orderBy } from 'firebase/firestore';
 import AuthComponent from './components/AuthComponent';
 import AppLayout from './components/AppLayout';
 import { getUserPreferences } from './api'; // <-- Import getUserSettings
-import { applyTheme } from './components/theme'; // <-- Import applyTheme
+import { applyTheme } from './theme.js'; // <-- Import applyTheme
 
 // --- Helper Components (we will move these to their own files later) ---
 
@@ -77,6 +77,7 @@ function App( ) {
       } else {
         setUser(null);
         // Clear all data on logout
+        applyTheme('Slate'); // Reset to default theme on logout
         setAccounts([]);
         setBudgetsData([]);
         setVaultsData([]);

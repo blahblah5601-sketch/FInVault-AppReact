@@ -5,10 +5,14 @@ import BudgetsPage from './BudgetsPage';
 import VaultsPage from './VaultsPage';
 import TransactionsPage from './TransactionsPage';
 import SettingsPage from './SettingsPage'; 
+
 // This component will eventually show the correct page component
 function MainContent({ activePage, accounts, budgets, vaults, transactions, showToast, theme, setTheme, history }) {
+  
   return (
-    <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8">
+    <div 
+      
+      className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8">
       {/* This is conditional rendering. It checks activePage and shows the right content. */}
       {activePage === 'dashboard' && (
         <DashboardPage accounts={accounts} budgets={budgets} vaults={vaults} />
@@ -23,15 +27,18 @@ function MainContent({ activePage, accounts, budgets, vaults, transactions, show
       )}
 
       {activePage === 'transactions' && (
-        <TransactionsPage transactions={transactions} currentTheme={theme} setCurrentTheme={setTheme} />
+        <TransactionsPage transactions={transactions} />
       )}
     
-      {activePage === 'settings' && <SettingsPage />}
-      
-      {/* You can add placeholders for any remaining pages like Card Control */}
-      {activePage === 'card-control' && <div></div>}
-
-      {activePage === 'card-control' && <CardControlPage accounts={accounts} budgets={budgets} showToast={showToast}/>}
+      {activePage === 'settings' && (
+        // Pass the theme state and the function to update it
+        <SettingsPage 
+          currentTheme={theme} 
+          setCurrentTheme={setTheme} 
+        />
+      )}
+      {activePage === 'card-control' && <CardControlPage accounts={accounts} budgets={budgets} showToast={showToast} />}
+    
     </div>
   );
 }
