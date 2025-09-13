@@ -1,7 +1,7 @@
 // src/components/VaultItem.jsx
 import Icon from './Icon';
 
-function VaultItem({ vault , onDeposit, onWithdraw }) {
+function VaultItem({ vault , onDeposit, onWithdraw, onDelete}) {
   const percentage = vault.target > 0 ? Math.round((vault.current / vault.target) * 100) : 0;
 
   return (
@@ -16,8 +16,8 @@ function VaultItem({ vault , onDeposit, onWithdraw }) {
             <p className="text-sm text-text-secondary">Target: Rs {vault.target.toLocaleString('en-US')}</p>
           </div>
         </div>
-        <button className="text-text-muted hover:text-red-500">
-          <Icon data-lucide="trash-2" className="w-5 h-5" />
+        <button onClick={onDelete} className="text-text-muted hover:text-red-500">
+          <Icon name="trash-2" className="w-5 h-5" />
         </button>
       </div>
       <div className="text-center my-4 flex-1">

@@ -78,6 +78,8 @@ export const handleVaultTransaction = async (vault, accounts, actionType, amount
   const vaultDocRef = doc(db, "users", auth.currentUser.uid, "vaults", vault.id);
   const accountDocRef = doc(db, "users", auth.currentUser.uid, "accounts", "current");
   const batch = writeBatch(db);
+  let goalReached = false; 
+
   if (actionType === 'deposit') {
     const newBalance = vault.current + amount;
     if (currentAccount.balance < amount) return { success: false, message: 'Insufficient funds in Current Account.' };
@@ -87,7 +89,7 @@ export const handleVaultTransaction = async (vault, accounts, actionType, amount
         return { success: false, message: `Deposit exceeds goal. You can deposit up to Rs ${remainingGoal.toLocaleString()}.` };
       }
     }
-    const goalReached = !vault.isSavingsAccount && vault.target && newBalance >= vault.target && vault.current < vault.target;
+    goalReached = !vault.isSavingsAccount && vault.target && newBalance >= vault.target && vault.current < vault.target;
     batch.update(vaultDocRef, { current: vault.current + amount });
     batch.update(accountDocRef, { balance: currentAccount.balance - amount });
   } else if (actionType === 'withdraw') {
@@ -112,8 +114,7 @@ export const handleVaultTransaction = async (vault, accounts, actionType, amount
 
   try {
     await batch.commit();
-    return { success: true, message: 'Transaction successful!' };
-    return { success: true, goalReached: goalReached, vaultName: vault.name };
+    return { success: true, message: 'Transaction successful!',goalReached: goalReached, vaultName: vault.name  };
   } catch (error) {
     console.error("Vault transaction error:", error);
     return { success: false, message: 'Transaction failed.' };
@@ -216,4 +217,25 @@ export const getUserPreferences = async () => {
   const userDocRef = doc(db, "users", auth.currentUser.uid);
   const docSnap = await getDoc(userDocRef);
   return docSnap.exists() ? docSnap.data().settings : null;
+};
+
+export const deleteVault = async (vault) => {
+  if (!vault || !auth.currentUser) return false;
+  try {
+    const userId = auth.currentUser.uid;
+    // Delete the document from the 'vaults' collection
+    await deleteDoc(doc(db, "users", userId, "vaults", vault.id));
+
+    // Log the deletion to the 'history' collection
+    await addDoc(collection(db, "users", userId, "history"), {
+        type: 'Vault Event',
+        details: `Deleted vault: '${vault.name}'`,
+        date: new Date().toISOString(),
+        createdAt: serverTimestamp()
+    });
+    return true;
+  } catch (error) {
+    console.error("Error deleting vault:", error);
+    return false;
+  }
 };

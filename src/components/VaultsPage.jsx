@@ -3,7 +3,8 @@ import { useState } from 'react'; // <-- Import useState
 import VaultItem from './VaultItem';
 import CreateVaultModal from './modals/CreateVaultModal'; // <-- Import the new modal
 import VaultActionModal from './modals/VaultActionModal'; // <-- Import action modal
-import { createVault, handleVaultTransaction } from '../api'; // <-- Import the new API function
+import ConfirmDeleteModal from './modals/ConfirmDeleteModal';
+import { createVault, handleVaultTransaction, deleteVault } from '../api'; // <-- Import the new API function
 import { Plus } from 'lucide-react'; // <-- 1. Import STATIC icons directly
 import Icon from './Icon';
 
@@ -14,6 +15,9 @@ function VaultsPage({ vaults , accounts, showToast }) {
   const [isCreateVaultModalOpen, setIsCreateVaultModalOpen] = useState(false); // State for the modal
   const totalSaved = vaults.reduce((sum, v) => sum + v.current, 0);
   const [actionModalState, setActionModalState] = useState({ isOpen: false, vault: null, type: '' });
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false); // 1. Add isDeleting state
 
   const handleCreateVault = async (name, target) => {
     const success = await createVault(name, target);
@@ -40,6 +44,27 @@ function VaultsPage({ vaults , accounts, showToast }) {
       }
     } else {
       showToast(result.message); // Show error message from API
+    }
+  };
+
+  const handleOpenDeleteModal = (vault) => {
+    setItemToDelete(vault);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (itemToDelete) {
+      setIsDeleting(true); // Show the "deleting" state in the modal
+      const success = await deleteVault(itemToDelete);
+      setIsDeleting(false); // Reset the deleting state
+      setIsDeleteModalOpen(false); // Now close the modal
+      if (success) {
+        showToast(`Vault '${itemToDelete.name}' deleted.`);
+        setIsDeleteModalOpen(false);
+        setItemToDelete(null);
+      } else {
+        showToast("Error: Could not delete vault.");
+      }
     }
   };
 
@@ -100,6 +125,7 @@ function VaultsPage({ vaults , accounts, showToast }) {
               vault={vault}
               onDeposit={() => handleOpenActionModal(vault, 'deposit')}
               onWithdraw={() => handleOpenActionModal(vault, 'withdraw')}
+              onDelete={() => handleOpenDeleteModal(vault)}
             />
           ))}
           </div>
@@ -115,6 +141,14 @@ function VaultsPage({ vaults , accounts, showToast }) {
         onSubmit={handleActionSubmit}
         vault={actionModalState.vault}
         actionType={actionModalState.type}
+      />
+      <ConfirmDeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        itemType="vault"
+        itemName={itemToDelete?.name}
+        isDeleting={isDeleting}
       />
     </>
   );

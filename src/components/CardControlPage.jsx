@@ -26,7 +26,7 @@ function CardControlPage({ accounts, budgets, showToast }) {
     }, []);// The empty array [] ensures this runs only once
   
   const handleFreezeToggle = async () => {
-    setIsCardFrozen(!isCardFrozen);
+    const newFrozenState = !isCardFrozen;
     setIsCardFrozen(newFrozenState);
     await updateUserPreferences({ isCardFrozen: newFrozenState });
   };

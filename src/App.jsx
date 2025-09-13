@@ -43,7 +43,13 @@ function App( ) {
 
   useEffect(() => {
     // onAuthStateChanged is the Firebase listener for login/logout events
-    const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
+    let firestoreUnsubscribers = [];
+    
+    const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {  
+      // When auth state changes, first unsubscribe from any old Firestore listeners
+      firestoreUnsubscribers.forEach(unsub => unsub());
+      firestoreUnsubscribers = []; // Then clear the array
+      
       if (currentUser) {
         setUser(currentUser);
 

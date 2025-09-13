@@ -19,6 +19,7 @@ function BudgetsPage({ budgets, showToast }) {
   const [budgetToEdit, setBudgetToEdit] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false); // 1. Add isDeleting state
   const totalRemaining = totalBudgeted - totalSpent;
   const assignedCount = budgets.filter(b => b.isCardAssigned).length;
   const canAssignMore = assignedCount < MAX_CARD_ASSIGNMENTS;
@@ -52,10 +53,14 @@ function BudgetsPage({ budgets, showToast }) {
 
   const handleConfirmDelete = async () => {
     if (itemToDelete) {
+      setIsDeleting(true); //  Set isDeleting to true when deletion starts
       const success = await deleteBudget(itemToDelete);
+      setIsDeleting(false); // Reset the deleting state
+      setIsDeleteModalOpen(false); // Now close the modal
       if (success) {
         setIsDeleteModalOpen(false);
         setItemToDelete(null);
+        showToast(`Budget '${itemToDelete.name}' was deleted.`);
       } else {
         alert("Failed to delete budget.");
       }
@@ -134,6 +139,7 @@ function BudgetsPage({ budgets, showToast }) {
         onConfirm={handleConfirmDelete}
         itemType="budget"
         itemName={itemToDelete?.name}
+        isDeleting={isDeleting}
         />
     </>
   );

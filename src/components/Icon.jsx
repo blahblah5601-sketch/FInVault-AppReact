@@ -6,7 +6,8 @@ import {
   PackagePlus, 
   PiggyBank, 
   Shield,
-  CreditCard // Add any other icon you use from your data
+  CreditCard,
+  Trash2 // Add any other icon you use from your data
 } from 'lucide-react';
 
 // This object maps the string name from your database to the actual icon component
@@ -18,6 +19,7 @@ const iconMap = {
   'piggy-bank': PiggyBank,
   'shield': Shield,
   'credit-card': CreditCard,
+  'trash-2': Trash2, // 2. Add it to the map
 };
 
 // This component looks up the icon in the map and renders it

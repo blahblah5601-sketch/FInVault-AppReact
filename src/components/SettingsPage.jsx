@@ -1,5 +1,4 @@
 // src/components/SettingsPage.jsx
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { themes, applyTheme } from '../theme.js'; // Import the applyTheme function
 import { updateUserPreferences } from '../api.js'; // <-- Import updateUserSettings
 
@@ -10,7 +9,7 @@ function SettingsPage( { currentTheme, setCurrentTheme } ) {
   const handleThemeSelect = async (themeName) => {
     setCurrentTheme(themeName); // Update the state in App.jsx
     applyTheme(themeName); // Apply the theme visually
-    await updateUserSettings({ theme: themeName }); // Save to Firestore
+    await updateUserPreferences({ theme: themeName }); // Save to Firestore
   };
   
   return (
