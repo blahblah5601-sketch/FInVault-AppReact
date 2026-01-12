@@ -12,7 +12,7 @@ function MainContent({ activePage, accounts, budgets, vaults, transactions, show
   return (
     <div 
       
-      className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8">
+      className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8">
       {/* This is conditional rendering. It checks activePage and shows the right content. */}
       {activePage === 'dashboard' && (
         <DashboardPage accounts={accounts} budgets={budgets} vaults={vaults} />
