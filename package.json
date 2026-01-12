@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://blahblah5601-sketch.github.io/FinVault-AppReact/",
+  "homepage": "https://blahblah5601-sketch.github.io/FInVault-AppReact/",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
