@@ -1,6 +1,6 @@
  // src/api.js
  import { db, auth } from './firebase';
- import { collection, addDoc, serverTimestamp, doc, getDoc, updateDoc, writeBatch, deleteDoc } from 'firebase/firestore';
+ import { collection, addDoc, serverTimestamp, doc, getDoc, updateDoc, writeBatch, deleteDoc, setDoc } from 'firebase/firestore';
 
  // Note: This is the same logic from your old main.js file
 export const createBudget = async (name, limit) => {
@@ -204,7 +204,8 @@ export const updateUserPreferences = async (prefs) => {
   if (!auth.currentUser) return false;
   try {
     const userDocRef = doc(db, "users", auth.currentUser.uid);
-    await updateDoc(userDocRef, { settings: prefs }, { merge: true });
+    //await updateDoc(userDocRef, { settings: prefs }, { merge: true });
+    await setDoc(userDocRef, { settings: prefs }, { merge: true });
     return true;
   } catch (error) {
     console.error("Error updating user preferences:", error);
