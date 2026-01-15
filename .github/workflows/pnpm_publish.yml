@@ -59,9 +59,9 @@ jobs:
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
-        with:
+        #with:
           # Vite always outputs to 'dist' at the root level
-          path: './dist'
+         # path: './dist'
 
       - name: Deploy to GitHub Pages
         id: deployment
