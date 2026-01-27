@@ -15,7 +15,7 @@ function AppLayout({ user, onLogout, showToast, theme, setTheme, accounts, budge
         {/* 2. Mobile Backdrop: Only shows when menu is open on small screens */}
         {isMobileMenuOpen && (
             <div 
-                className="fixed inset-0 bg-black/60 z-40 lg:hidden" 
+                className="fixed inset-0 z-40 bg-black/10 backdrop-blur-sm transition-opacity lg:hidden"
                 onClick={() => setIsMobileMenuOpen(false)}
             />
         )}

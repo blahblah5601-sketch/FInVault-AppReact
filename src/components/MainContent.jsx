@@ -7,7 +7,7 @@ import TransactionsPage from './TransactionsPage';
 import SettingsPage from './SettingsPage'; 
 
 // This component will eventually show the correct page component
-function MainContent({ activePage, accounts, budgets, vaults, transactions, showToast, theme, setTheme, history }) {
+function MainContent({ activePage, accounts, budgets, vaults, transactions, showToast, theme, setTheme, history, setActivePage }) {
   
   return (
     <div 
@@ -15,7 +15,7 @@ function MainContent({ activePage, accounts, budgets, vaults, transactions, show
       className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8">
       {/* This is conditional rendering. It checks activePage and shows the right content. */}
       {activePage === 'dashboard' && (
-        <DashboardPage accounts={accounts} budgets={budgets} vaults={vaults} />
+        <DashboardPage accounts={accounts} budgets={budgets} vaults={vaults} setActivePage={setActivePage} />
       )}
 
       {activePage === 'budgets' && (

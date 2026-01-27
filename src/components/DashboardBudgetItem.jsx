@@ -3,6 +3,11 @@ import Icon from "./Icon";
 
 function DashboardBudgetItem({ budget }) {
   const percentage = budget.limit > 0 ? Math.round((budget.spent / budget.limit) * 100) : 0;
+  const getBarColor = (pct) => {
+  if (pct > 90) return 'bg-red-500';
+  if (pct > 70) return 'bg-yellow-500';
+  return 'bg-green-500';
+  };
   
   return (
     <div className="bg-background/50 p-4 rounded-xl flex flex-col h-full">
@@ -19,7 +24,10 @@ function DashboardBudgetItem({ budget }) {
         </p>
       </div>
       <div className="w-full bg-sidebar rounded-full h-2.5 mt-auto">
-        <div className="bg-green-500 h-2.5 rounded-full" style={{ width: `${percentage}%` }}></div>
+        <div 
+          className={`${getBarColor(percentage)} h-2.5 rounded-full transition-all duration-500`} 
+          style={{ width: `${Math.min(percentage, 100)}%` }} 
+        ></div>
       </div>
     </div>
   );
