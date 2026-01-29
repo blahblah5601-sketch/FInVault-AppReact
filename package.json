@@ -13,7 +13,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "dataconnect-generated": "link:../../../AppData/Local/pnpm/global/5/node_modules/src/dataconnect-generated",
     "firebase": "^12.2.1",
+    "firebase-tools": "^15.4.0",
+    "framer-motion": "^12.29.2",
     "lucide-react": "^0.543.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
@@ -44,6 +47,9 @@
         "GHSA-ch7m-m9rf-8gvv",
         "GHSA-m99c-cfww-cxqx"
       ]
+    },
+    "overrides": {
+      "dataconnect-generated": "link:../../../AppData/Local/pnpm/global/5/node_modules/src/dataconnect-generated"
     }
   }
 }
