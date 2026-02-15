@@ -1,9 +1,246 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow users to create, read, and write only their own data
-    match /users/{userId}/{documents=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+    
+    // ==================== HELPER FUNCTIONS ====================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isVerifiedEmail() {
+      return isAuthenticated() && request.auth.token.email_verified == true;
+    }
+
+    function onlyUpdating(fields) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
+    }
+    
+    // ==================== BUDGET VALIDATION ====================
+    
+    function isValidBudget() {
+      let data = request.resource.data;
+      return (
+        // Required fields exist
+        data.keys().hasAll([
+          'name', 'limit', 'spent', 'icon', 
+          'color', 'isCardAssigned', 'createdAt'
+        ]) &&
+        
+        // Name validation
+        data.name is string &&
+        data.name.size() > 0 &&
+        data.name.size() <= 50 &&
+        
+        // Limit validation
+        data.limit is number &&
+        data.limit > 0 &&
+        data.limit <= 1000000 && // 1 million max
+        
+        // Spent validation
+        data.spent is number &&
+        data.spent >= 0 &&
+        data.spent <= data.limit &&
+        
+        // Boolean validation
+        data.isCardAssigned is bool &&
+        
+        // String validation
+        data.icon is string &&
+        data.color is string &&
+        
+        // Timestamp validation
+        data.createdAt == request.time
+      );
+    }
+    
+    // ==================== VAULT VALIDATION ====================
+    
+    function isValidVault() {
+      let data = request.resource.data;
+      
+      return (
+        // Required fields exist
+        data.keys().hasAll([
+          'name', 'target', 'current', 'icon', 
+          'color', 'isSavingsAccount', 'createdAt'
+        ]) &&
+        
+        // Name validation
+        data.name is string &&
+        data.name.size() > 0 &&
+        data.name.size() <= 50 &&
+        
+        // Target validation
+        data.target is number &&
+        data.target >= 0 &&
+        
+        // Current validation
+        data.current is number &&
+        data.current >= 0 &&
+        data.current <= data.target &&
+        
+        // Boolean validation
+        data.isSavingsAccount is bool &&
+        
+        // String validation
+        data.icon is string &&
+        data.color is string
+      );
+    }
+    
+    // ==================== TRANSACTION VALIDATION ====================
+    
+    function isValidTransaction() {
+      let data = request.resource.data;
+      
+      return (
+        data.keys().hasAll(['desc', 'cat', 'amount', 'date', 'createdAt']) &&
+        data.desc is string &&
+        data.desc.size() > 0 &&
+        data.desc.size() <= 200 &&
+        data.cat is string &&
+        data.amount is number && data.amount != 0 &&
+        data.date is string &&
+        data.createdAt == request.time
+      );
+    }
+    
+    // ==================== ACCOUNT VALIDATION ====================
+    
+    function isValidAccount() {
+      let data = request.resource.data;
+      
+      return (
+        data.balance is number &&
+        data.balance >= 0 &&
+        data.balance <= 100000000 // 100 million max
+      );
+    }
+    
+    // ==================== USER SETTINGS VALIDATION ====================
+    
+    function isValidSettings() {
+      let data = request.resource.data;
+      
+      // Ensure settings exists and has correct types if present
+      return !('settings' in data) || 
+      (
+        data.settings is map &&
+        (!('theme' in data.settings) || data.settings.theme is string) &&
+        (!('currency' in data.settings) || data.settings.currency is string) &&
+        (!('notifications' in data.settings) || data.settings.notifications is bool)
+      );
+    }
+    
+    // ==================== USER DOCUMENTS ====================
+    
+    match /users/{userId} {
+      // Users can read their own document
+      allow read: if isOwner(userId);
+      
+      // Users can create their own document during signup
+      allow create: if isAuthenticated() && 
+                       request.auth.uid == userId &&
+                       isValidSettings();
+      
+      // Users can update their settings
+      allow update: if isOwner(userId) &&
+                       onlyUpdating(['settings', 'lastLogin']) &&
+                       isValidSettings() &&
+                       // Prevent modification of protected fields
+                       !request.resource.data.diff(resource.data)
+                         .affectedKeys()
+                         .hasAny(['createdAt', 'email']);
+      
+      // ==================== BUDGETS SUBCOLLECTION ====================
+      
+      match /budgets/{budgetId} {
+        // Users can read their own budgets
+        allow read: if isOwner(userId);
+        
+        // Users can create budgets (with validation)
+        allow create: if isOwner(userId) && isVerifiedEmail() &&
+                         isValidBudget();
+        
+        // Users can update budgets (but not spent amount directly)
+        allow update: if isOwner(userId) && 
+                         isValidBudget() &&
+            //set points of update possible // onlyUpdating(['name', 'icon', 'color']) &&
+                         // Prevent direct modification of spent
+                         // Spent should only be modified through transactions
+                         request.resource.data.spent == resource.data.spent;
+        
+        // Users can delete budgets (but only if not assigned to card)
+        allow delete: if isOwner(userId) &&
+                         resource.data.isCardAssigned == false;
+      }
+      
+      // ==================== VAULTS SUBCOLLECTION ====================
+      
+      match /vaults/{vaultId} {
+        allow read: if isOwner(userId);
+        
+        allow create: if isOwner(userId) && 
+                         isValidVault();
+        
+        // Allow updates with validation
+        allow update: if isOwner(userId) &&
+        //set points of update possible // onlyUpdating(['name', 'target', 'icon', 'color']) && 
+                         request.resource.data.current == resource.data.current &&
+                         isValidVault();
+        
+        // Cannot delete savings account
+        allow delete: if isOwner(userId) &&
+                         resource.data.isSavingsAccount == false;
+      }
+      
+      // ==================== ACCOUNTS SUBCOLLECTION ====================
+      
+      match /accounts/{accountId} {
+        allow read: if isOwner(userId);
+        
+        // Accounts are created during signup, not by users
+        allow create: if false;
+        
+        //currently balance is linked with accountId  
+        // Users can update account balance
+        allow update: if isOwner(userId) && 
+                         isValidAccount();
+        
+        // Users cannot delete accounts
+        allow delete: if false;
+      }
+      
+      // ==================== TRANSACTIONS SUBCOLLECTION ====================
+      
+      match /transactions/{transactionId} {
+        allow read: if isOwner(userId);
+        
+        allow create: if isOwner(userId) &&
+                         isVerifiedEmail() && 
+                         isValidTransaction();
+        
+        // Transactions are immutable
+        allow update: if false;
+        
+        allow delete: if false; // users are not allowed to delete transections
+      }
+      
+      // ==================== HISTORY SUBCOLLECTION ====================
+      
+      match /history/{historyId} {
+        allow read: if isOwner(userId);
+        
+        allow create: if false; // created by system not users
+        
+        // History is append-only (no updates or deletes)
+        allow update, delete: if false;
+      }
     }
   }
 }

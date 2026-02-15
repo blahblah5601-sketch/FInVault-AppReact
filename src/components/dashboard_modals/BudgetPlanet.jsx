@@ -1,7 +1,6 @@
 // components/BudgetPlanet.jsx
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
-
 /**
  * BudgetPlanet Component - Shows budget progress as a radial ring
  * @param {Object} props
@@ -9,16 +8,16 @@ import { useEffect, useState } from 'react';
  * @param {number} props.progress - Progress percentage (0-100)
  * @param {Object} props.orbitPosition - Position in orbit {angle, radius}
  */
-export default function BudgetPlanet({ name, progress, orbitPosition }) {
-  const [animatedProgress, setAnimatedProgress] = useState(0);
-
+export default function BudgetPlanet({ name, progress, orbitPosition, setActivePage}) {
+  const [animatedProgress, setAnimatedProgress] = useState(0);  
   useEffect(() => {
     setAnimatedProgress(progress);
   }, [progress]);
 
+  if (!orbitPosition) return null;
   // Convert polar to cartesian coordinates
-  const x = orbitPosition.radius * Math.cos((orbitPosition.angle * Math.PI) / 180);
-  const y = orbitPosition.radius * Math.sin((orbitPosition.angle * Math.PI) / 180);
+  const x = orbitPosition.radius* Math.cos((orbitPosition.angle* Math.PI) / 180);
+  const y = orbitPosition.radius* Math.sin((orbitPosition.angle* Math.PI) / 180);
 
   // SVG Circle Math: Circumference = 2πr
   const radius = 70;
@@ -28,25 +27,18 @@ export default function BudgetPlanet({ name, progress, orbitPosition }) {
   return (
     <motion.div
       className="absolute top-1/2 left-1/2"
-      style={{ x, y }}
+      // style={{ x, y }}
+      style={{ x, y, left: '50%', top: '50%', x: '-50%', y: '-50%', translateX: x, translateY: y }}
       initial={{ scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
+      whileHover={{ scale: 1.05 }}
       transition={{ delay: 0.3, duration: 0.6 }}
     >
-      {/* Orbit Trail Effect */}
-      <motion.div
-        className="absolute inset-0 -z-10"
-        animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.1, 0.3] }}
-        transition={{ duration: 3, repeat: Infinity }}
-      >
-        <div className="w-44 h-44 rounded-full border border-purple-500/30"></div>
-      </motion.div>
 
       {/* Planet Body */}
-      <div className="relative w-44 h-44 flex items-center justify-center">
+      <div className="relative w-40 h-40 flex items-center justify-center rounded-full cursor-pointer" onClick={() => setActivePage('budgets')}>
         {/* Background Circle */}
         <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-900/40 to-purple-700/40 backdrop-blur-sm border border-purple-500/30"></div>
-
         {/* SVG Progress Ring */}
         <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 160 160">
           {/* Background Ring */}
@@ -84,7 +76,9 @@ export default function BudgetPlanet({ name, progress, orbitPosition }) {
         </svg>
 
         {/* Content */}
-        <div className="relative z-10 flex flex-col items-center gap-2">
+        <div className="relative flex flex-col items-center justify-center gap-1 p-6">
+        {/* <div className="relative z-10 flex flex-col items-center gap-2"> */}
+          <p className="text-s text-purple-300 text-center uppercase tracking-wider">{name}</p>
           <motion.p
             key={progress}
             initial={{ scale: 0.5, opacity: 0 }}
@@ -93,7 +87,9 @@ export default function BudgetPlanet({ name, progress, orbitPosition }) {
           >
             {Math.round(animatedProgress)}%
           </motion.p>
-          <p className="text-xs text-purple-300 text-center px-4">{name}</p>
+          {/* <p className="text-sm text-purple-200">
+            <span className="font-mono">Rs {budget.spent.toLocaleString('en-US')}</span> {" "}/{" "} <span className="font-mono"> {budget.toLocaleString('en-US')}</span>
+          </p> */}
         </div>
       </div>
 

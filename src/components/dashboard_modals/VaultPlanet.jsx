@@ -8,21 +8,22 @@ import { motion } from 'framer-motion';
  * @param {number} props.balance - Vault balance
  * @param {Object} props.orbitPosition - Position in orbit {angle, radius}
  */
-export default function VaultPlanet({ name, balance, orbitPosition }) {
+export default function VaultPlanet({ name, balance, orbitPosition, setActivePage }) {
   const x = orbitPosition.radius * Math.cos((orbitPosition.angle * Math.PI) / 180);
   const y = orbitPosition.radius * Math.sin((orbitPosition.angle * Math.PI) / 180);
 
   return (
     <motion.div
       className="absolute top-1/2 left-1/2"
-      style={{ x, y }}
+      //style={{ x, y }}
+      style={{ x, y, right: '50%', top: '50%', x: '-50%', y: '-50%', translateX: x, translateY: y }}
       initial={{ scale: 0, opacity: 0, rotate: -180 }}
       animate={{ scale: 1, opacity: 1, rotate: 0 }}
       transition={{ delay: 0.5, duration: 0.7 }}
     >
       {/* Planet Body - Glassmorphic Rounded Square */}
       <motion.div
-        className="relative w-44 h-44 rounded-3xl overflow-hidden"
+        className="relative w-36 h-36 rounded-3xl overflow-hidden cursor-pointer" onClick={() => setActivePage('vaults')}
         whileHover={{ scale: 1.05 }}
         transition={{ duration: 0.3 }}
       >
@@ -33,16 +34,16 @@ export default function VaultPlanet({ name, balance, orbitPosition }) {
         <div className="absolute inset-0 bg-white/5"></div>
         <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/10 to-transparent"></div>
 
-        {/* Lock Icon */}
+        {/* Lock Icon
         <div className="absolute top-4 right-4">
           <svg className="w-6 h-6 text-cyan-300" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
           </svg>
-        </div>
+        </div> */}
 
         {/* Content */}
         <div className="relative h-full flex flex-col items-center justify-center gap-3 p-6">
-          <p className="text-xs font-semibold text-cyan-300 uppercase tracking-wider">
+          <p className="text-s font-semibold text-cyan-300 uppercase tracking-wider">
             {name}
           </p>
 

@@ -47,6 +47,7 @@ function AppLayout({ user, onLogout, showToast, theme, setTheme, accounts, budge
             />
             <MainContent 
                 activePage={activePage}
+                setActivePage={setActivePage}
                 accounts={accounts} 
                 budgets={budgets}
                 vaults={vaults}
