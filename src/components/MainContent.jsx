@@ -5,6 +5,7 @@ import BudgetsPage from './BudgetsPage';
 import VaultsPage from './VaultsPage';
 import TransactionsPage from './TransactionsPage';
 import SettingsPage from './SettingsPage'; 
+import Dashboard_simple from './Dashboard_simple';
 
 // This component will eventually show the correct page component
 function MainContent({ activePage, accounts, budgets, vaults, transactions, showToast, theme, setTheme, history, setActivePage }) {
@@ -16,6 +17,10 @@ function MainContent({ activePage, accounts, budgets, vaults, transactions, show
       {/* This is conditional rendering. It checks activePage and shows the right content. */}
       {activePage === 'dashboard' && (
         <DashboardPage accounts={accounts} budgets={budgets} vaults={vaults} setActivePage={setActivePage} activePage={activePage}/>
+      )}
+
+      {activePage === 'dashboard_simple' && (
+        <Dashboard_simple accounts={accounts} budgets={budgets} vaults={vaults} setActivePage={setActivePage} activePage={activePage}/>
       )}
 
       {activePage === 'budgets' && (
