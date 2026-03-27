@@ -1,17 +1,17 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
+
     // ==================== HELPER FUNCTIONS ====================
-    
+
     function isAuthenticated() {
       return request.auth != null;
     }
-    
+
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
-    
+
     function isVerifiedEmail() {
       return isAuthenticated() && request.auth.token.email_verified == true;
     }
@@ -19,85 +19,82 @@ service cloud.firestore {
     function onlyUpdating(fields) {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
     }
-    
-    // ==================== BUDGET VALIDATION ====================
-    
+
+    // ==================== VALIDATION FUNCTIONS ====================
+
+    // Existing validations (keeping for backward compatibility)
     function isValidBudget() {
       let data = request.resource.data;
       return (
         // Required fields exist
         data.keys().hasAll([
-          'name', 'limit', 'spent', 'icon', 
+          'name', 'limit', 'spent', 'icon',
           'color', 'isCardAssigned', 'createdAt'
         ]) &&
-        
+
         // Name validation
         data.name is string &&
         data.name.size() > 0 &&
         data.name.size() <= 50 &&
-        
+
         // Limit validation
         data.limit is number &&
         data.limit > 0 &&
         data.limit <= 1000000 && // 1 million max
-        
+
         // Spent validation
         data.spent is number &&
         data.spent >= 0 &&
         data.spent <= data.limit &&
-        
+
         // Boolean validation
         data.isCardAssigned is bool &&
-        
+
         // String validation
         data.icon is string &&
         data.color is string &&
-        
+
         // Timestamp validation
         data.createdAt == request.time
       );
     }
-    
-    // ==================== VAULT VALIDATION ====================
-    
+
     function isValidVault() {
       let data = request.resource.data;
-      
+
       return (
         // Required fields exist
         data.keys().hasAll([
-          'name', 'target', 'current', 'icon', 
+          'name', 'target', 'current', 'icon',
           'color', 'isSavingsAccount', 'createdAt'
         ]) &&
-        
+
         // Name validation
         data.name is string &&
         data.name.size() > 0 &&
         data.name.size() <= 50 &&
-        
+
         // Target validation
         data.target is number &&
         data.target >= 0 &&
-        
+
         // Current validation
         data.current is number &&
         data.current >= 0 &&
         data.current <= data.target &&
-        
+
         // Boolean validation
         data.isSavingsAccount is bool &&
-        
+
         // String validation
         data.icon is string &&
         data.color is string
       );
     }
-    
-    // ==================== TRANSACTION VALIDATION ====================
-    
+
     function isValidTransaction() {
       let data = request.resource.data;
-      
+
       return (
         data.keys().hasAll(['desc', 'cat', 'amount', 'date', 'createdAt']) &&
         data.desc is string &&
@@ -109,26 +106,22 @@ service cloud.firestore {
         data.createdAt == request.time
       );
     }
-    
-    // ==================== ACCOUNT VALIDATION ====================
-    
+
     function isValidAccount() {
       let data = request.resource.data;
-      
+
       return (
         data.balance is number &&
         data.balance >= 0 &&
         data.balance <= 100000000 // 100 million max
       );
     }
-    
-    // ==================== USER SETTINGS VALIDATION ====================
-    
+
     function isValidSettings() {
       let data = request.resource.data;
-      
+
       // Ensure settings exists and has correct types if present
-      return !('settings' in data) || 
+      return !('settings' in data) ||
       (
         data.settings is map &&
         (!('theme' in data.settings) || data.settings.theme is string) &&
@@ -136,18 +129,215 @@ service cloud.firestore {
         (!('notifications' in data.settings) || data.settings.notifications is bool)
       );
     }
-    
+
+    // NEW BANKING FEATURE VALIDATIONS
+
+    function isValidBankConnection() {
+      let data = request.resource.data;
+      return (
+        data.keys().hasAll([
+          'bankName', 'bankId', 'connectionStatus', 'lastSynced', 'createdAt'
+        ]) &&
+
+        // Bank identification
+        data.bankName is string &&
+        data.bankName.size() > 0 &&
+        data.bankName.size() <= 100 &&
+        data.bankId is string &&
+        data.bankId.size() > 0 &&
+
+        // Connection status
+        data.connectionStatus is string &&
+        ['connected', 'disconnected', 'error', 'refreshing'].hasAll([data.connectionStatus]) &&
+
+        // Timestamps
+        data.lastSynced is timestamp &&
+        data.createdAt == request.time
+      );
+    }
+
+    function isValidBankAccount() {
+      let data = request.resource.data;
+      return (
+        data.keys().hasAll([
+          'accountName', 'accountNumber', 'bankConnectionId', 'accountType',
+          'balance', 'currency', 'isPrimary', 'isActive', 'createdAt'
+        ]) &&
+
+        // Account details
+        data.accountName is string &&
+        data.accountName.size() > 0 &&
+        data.accountName.size() <= 100 &&
+        data.accountNumber is string &&
+        data.accountNumber.size() >= 8 &&
+        data.accountNumber.size() <= 34 && // IBAN max length
+
+        // References
+        data.bankConnectionId is string &&
+        data.bankConnectionId.size() > 0 &&
+
+        // Account type
+        data.accountType is string &&
+        ['checking', 'savings', 'credit', 'loan', 'investment'].hasAll([data.accountType]) &&
+
+        // Financial info
+        data.balance is number &&
+        data.currency is string &&
+        data.currency.size() == 3 && // ISO 4217 currency codes like USD, EUR, etc.
+
+        // Flags
+        data.isPrimary is bool &&
+        data.isActive is bool &&
+
+        // Timestamp
+        data.createdAt == request.time
+      );
+    }
+
+    function isValidCard() {
+      let data = request.resource.data;
+      return (
+        data.keys().hasAll([
+          'cardNickname', 'lastFour', 'bankAccountId', 'cardType',
+          'network', 'isPrimary', 'isActive', 'spendingLimit', 'createdAt'
+        ]) &&
+
+        // Card details
+        data.cardNickname is string &&
+        data.cardNickname.size() > 0 &&
+        data.cardNickname.size() <= 50 &&
+        data.lastFour is string &&
+        data.lastFour.size() == 4 &&
+        data.lastFour.matches('^[0-9]{4}$') &&
+
+        // References
+        data.bankAccountId is string &&
+        data.bankAccountId.size() > 0 &&
+
+        // Card type
+        data.cardType is string &&
+        ['debit', 'credit', 'prepaid'].hasAll([data.cardType]) &&
+
+        // Network
+        data.network is string &&
+        ['visa', 'mastercard', 'amex', 'discover', 'rupay', 'maestro'].hasAll([data.network]) &&
+
+        // Financial controls
+        data.spendingLimit is number &&
+        data.spendingLimit >= 0 &&
+
+        // Flags
+        data.isPrimary is bool &&
+        data.isActive is bool &&
+
+        // Timestamp
+        data.createdAt == request.time
+      );
+    }
+
+    function isValidPayment() {
+      let data = request.resource.data;
+      return (
+        data.keys().hasAll([
+          'amount', 'currency', 'description', 'category',
+          'sourceAccountId', 'destination', 'destinationType',
+          'status', 'paymentMethod', 'createdAt'
+        ]) &&
+
+        // Payment details
+        data.amount is number &&
+        data.amount != 0 && // Can be negative for refunds/chargebacks
+        data.currency is string &&
+        data.currency.size() == 3,
+        data.description is string &&
+        data.description.size() > 0 &&
+        data.description.size() <= 200,
+        data.category is string &&
+
+        // Source
+        data.sourceAccountId is string &&
+        data.sourceAccountId.size() > 0,
+
+        // Destination (can be account, card, external, etc.)
+        data.destination is string &&
+        data.destination.size() > 0,
+        data.destinationType is string &&
+        ['bank_account', 'card', 'external_account', 'phone', 'email', 'upi_id'].hasAll([data.destinationType]) &&
+
+        // Status
+        data.status is string &&
+        ['pending', 'processing', 'completed', 'failed', 'cancelled', 'refunded'].hasAll([data.status]) &&
+
+        // Payment method
+        data.paymentMethod is string &&
+        ['bank_transfer', 'card', 'upi', 'wallet', 'google_pay', 'apple_pay'].hasAll([data.paymentMethod]) &&
+
+        // Timestamp
+        data.createdAt == request.time
+      );
+    }
+
+    function isValidBeneficiary() {
+      let data = request.resource.data;
+      return (
+        data.keys().hasAll([
+          'beneficiaryName', 'nickname', 'destinationType', 'destinationValue',
+          'isActive', 'createdAt'
+        ]) &&
+
+        // Beneficiary details
+        data.beneficiaryName is string &&
+        data.beneficiaryName.size() > 0 &&
+        data.beneficiaryName.size() <= 100 &&
+        data.nickname is string &&
+        data.nickname.size() > 0 &&
+        data.nickname.size() <= 50 &&
+
+        // Destination info
+        data.destinationType is string &&
+        ['bank_account', 'card', 'phone', 'email', 'upi_id'].hasAll([data.destinationType]) &&
+        data.destinationValue is string &&
+        data.destinationValue.size() > 0,
+
+        // Status
+        data.isActive is bool &&
+
+        // Timestamp
+        data.createdAt == request.time
+      );
+    }
+
+    function isValidPaymentMethod() {
+      let data = request.resource.data;
+      return (
+        data.keys().hasAll([
+          'methodType', 'isEnabled', 'isPrimary', 'createdAt'
+        ]) &&
+
+        // Method type
+        data.methodType is string &&
+        ['google_pay', 'apple_pay', 'samsung_pay', 'paypal'].hasAll([data.methodType]) &&
+
+        // Status
+        data.isEnabled is bool &&
+        data.isPrimary is bool &&
+
+        // Timestamp
+        data.createdAt == request.time
+      );
+    }
+
     // ==================== USER DOCUMENTS ====================
-    
+
     match /users/{userId} {
       // Users can read their own document
       allow read: if isOwner(userId);
-      
+
       // Users can create their own document during signup
-      allow create: if isAuthenticated() && 
+      allow create: if isAuthenticated() &&
                        request.auth.uid == userId &&
                        isValidSettings();
-      
+
       // Users can update their settings
       allow update: if isOwner(userId) &&
                        onlyUpdating(['settings', 'lastLogin']) &&
@@ -156,90 +346,187 @@ service cloud.firestore {
                        !request.resource.data.diff(resource.data)
                          .affectedKeys()
                          .hasAny(['createdAt', 'email']);
-      
+
       // ==================== BUDGETS SUBCOLLECTION ====================
-      
+
       match /budgets/{budgetId} {
         // Users can read their own budgets
         allow read: if isOwner(userId);
-        
+
         // Users can create budgets (with validation)
         allow create: if isOwner(userId) && isVerifiedEmail() &&
                          isValidBudget();
-        
+
         // Users can update budgets (but not spent amount directly)
-        allow update: if isOwner(userId) && 
+        allow update: if isOwner(userId) &&
                          isValidBudget() &&
-            //set points of update possible // onlyUpdating(['name', 'icon', 'color']) &&
-                         // Prevent direct modification of spent
-                         // Spent should only be modified through transactions
+            // Prevent direct modification of spent
+            // Spent should only be modified through transactions
                          request.resource.data.spent == resource.data.spent;
-        
+
         // Users can delete budgets (but only if not assigned to card)
         allow delete: if isOwner(userId) &&
                          resource.data.isCardAssigned == false;
       }
-      
+
       // ==================== VAULTS SUBCOLLECTION ====================
-      
+
       match /vaults/{vaultId} {
         allow read: if isOwner(userId);
-        
-        allow create: if isOwner(userId) && 
+
+        allow create: if isOwner(userId) &&
                          isValidVault();
-        
+
         // Allow updates with validation
         allow update: if isOwner(userId) &&
-        //set points of update possible // onlyUpdating(['name', 'target', 'icon', 'color']) && 
                          request.resource.data.current == resource.data.current &&
                          isValidVault();
-        
+
         // Cannot delete savings account
         allow delete: if isOwner(userId) &&
                          resource.data.isSavingsAccount == false;
       }
-      
+
       // ==================== ACCOUNTS SUBCOLLECTION ====================
-      
+
       match /accounts/{accountId} {
         allow read: if isOwner(userId);
-        
+
         // Accounts are created during signup, not by users
         allow create: if false;
-        
-        //currently balance is linked with accountId  
+
         // Users can update account balance
-        allow update: if isOwner(userId) && 
+        allow update: if isOwner(userId) &&
                          isValidAccount();
-        
+
         // Users cannot delete accounts
         allow delete: if false;
       }
-      
+
       // ==================== TRANSACTIONS SUBCOLLECTION ====================
-      
+
       match /transactions/{transactionId} {
         allow read: if isOwner(userId);
-        
+
         allow create: if isOwner(userId) &&
-                         isVerifiedEmail() && 
+                         isVerifiedEmail() &&
                          isValidTransaction();
-        
+
         // Transactions are immutable
         allow update: if false;
-        
-        allow delete: if false; // users are not allowed to delete transections
+
+        allow delete: if false; // users are not allowed to delete transactions
       }
-      
+
       // ==================== HISTORY SUBCOLLECTION ====================
-      
+
       match /history/{historyId} {
         allow read: if isOwner(userId);
-        
+
         allow create: if false; // created by system not users
-        
+
         // History is append-only (no updates or deletes)
         allow update, delete: if false;
+      }
+
+      // ==================== BANK CONNECTIONS SUBCOLLECTION ====================
+
+      match /bankConnections/{connectionId} {
+        allow read: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidBankConnection();
+
+        allow update: if isOwner(userId) &&
+                         isValidBankConnection() &&
+                         // Only allow updating certain fields
+                         onlyUpdating(['connectionStatus', 'lastSynced']);
+
+        allow delete: if isOwner(userId);
+      }
+
+      // ==================== BANK ACCOUNTS SUBCOLLECTION ====================
+
+      match /bankAccounts/{accountId} {
+        allow read: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidBankAccount();
+
+        allow update: if isOwner(userId) &&
+                         isValidBankAccount() &&
+                         // Only allow updating certain fields (balance is updated via transactions)
+                         onlyUpdating(['accountName', 'isPrimary', 'isActive']);
+
+        allow delete: if isOwner(userId);
+      }
+
+      // ==================== CARDS SUBCOLLECTION ====================
+
+      match /cards/{cardId} {
+        allow read: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidCard();
+
+        allow update: if isOwner(userId) &&
+                         isValidCard() &&
+                         // Only allow updating certain fields
+                         onlyUpdating(['cardNickname', 'isPrimary', 'isActive', 'spendingLimit']);
+
+        allow delete: if isOwner(userId);
+      }
+
+      // ==================== PAYMENTS SUBCOLLECTION ====================
+
+      match /payments/{paymentId} {
+        allow read: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+                         isVerifiedEmail() &&
+                         isValidPayment();
+
+        // Payments are mostly immutable after creation
+        allow update: if isOwner(userId) &&
+                         // Only allow updating status and description for failed/pending payments
+                         (request.resource.data.status in ['pending', 'processing'] &&
+                          request.resource.data.amount == resource.data.amount &&
+                          request.resource.data.currency == resource.data.currency &&
+                          onlyUpdating(['status', 'description']));
+
+        allow delete: if false; // payments are historical records
+      }
+
+      // ==================== BENEFICIARIES SUBCOLLECTION ====================
+
+      match /beneficiaries/{beneficiaryId} {
+        allow read: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidBeneficiary();
+
+        allow update: if isOwner(userId) &&
+                         isValidBeneficiary() &&
+                         // Only allow updating certain fields
+                         onlyUpdating(['beneficiaryName', 'nickname', 'destinationValue', 'isActive']);
+
+        allow delete: if isOwner(userId);
+      }
+
+      // ==================== PAYMENT METHODS SUBCOLLECTION ====================
+
+      match /paymentMethods/{methodId} {
+        allow read: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidPaymentMethod();
+
+        allow update: if isOwner(userId) &&
+                         isValidPaymentMethod() &&
+                         // Only allow updating certain fields
+                         onlyUpdating(['isEnabled', 'isPrimary']);
+
+        allow delete: if isOwner(userId);
       }
     }
   }

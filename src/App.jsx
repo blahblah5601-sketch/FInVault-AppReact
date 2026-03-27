@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import ToastNotification from './components/ToastNotification';
+import PageLoading from './components/PageLoading'; // NEW - Import PageLoading
 import './App.css';
 import { auth, db } from './firebase'; // Import from your new firebase.js file
 import { onAuthStateChanged, signOut } from 'firebase/auth';
@@ -22,6 +23,7 @@ function App( ) {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [theme, setTheme] = useState('Slate');
+  const [isDataLoading, setIsDataLoading] = useState(true); // NEW - Track data loading
 
   // Toast Notification State
   const [toast, setToast] = useState({ message: '', isVisible: false });
@@ -33,7 +35,7 @@ function App( ) {
       setToast({ message: '', isVisible: false });
     }, 3000);
   };
-  
+
   // States to hold your application data
   const [accounts, setAccounts] = useState([]);
   const [budgetsData, setBudgetsData] = useState([]);
@@ -44,14 +46,15 @@ function App( ) {
   useEffect(() => {
     // onAuthStateChanged is the Firebase listener for login/logout events
     let firestoreUnsubscribers = [];
-    
-    const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {  
+
+    const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
       // When auth state changes, first unsubscribe from any old Firestore listeners
       firestoreUnsubscribers.forEach(unsub => unsub());
       firestoreUnsubscribers = []; // Then clear the array
-      
+
       if (currentUser) {
         setUser(currentUser);
+        setIsDataLoading(true); // NEW - Start data loading
 
         const settings = await getUserPreferences();
         if (settings && settings.theme) {
@@ -60,7 +63,7 @@ function App( ) {
         } else {
           applyTheme('Slate'); // Apply default
         }
-        
+
         // This is the direct replacement for your loadAndInitializeAppData function
         const collectionsToSync = {
           accounts: setAccounts,
@@ -70,25 +73,34 @@ function App( ) {
           history: setHistoryData,
         };
 
+        let loadedCount = 0;
+        const totalCollections = Object.keys(collectionsToSync).length;
+
         const unsubscribers = [];
         for (const [colName, setter] of Object.entries(collectionsToSync)) {
           const q = query(collection(db, 'users', currentUser.uid, colName), orderBy("createdAt", "desc"));
           const unsubscribe = onSnapshot(q, (querySnapshot) => {
             const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setter(data); // Update the component's state with the new data
+
+            // NEW - Track loading progress
+            loadedCount++;
+            if (loadedCount === totalCollections) {
+              setIsDataLoading(false); // All data loaded
+            }
           });
           unsubscribers.push(unsubscribe);
         }
-        
+
       } else {
         setUser(null);
-        // Clear all data on logout
         applyTheme('Slate'); // Reset to default theme on logout
         setAccounts([]);
         setBudgetsData([]);
         setVaultsData([]);
         setTransactionsData([]);
         setHistoryData([]);
+        setIsDataLoading(false); // NEW
       }
       setIsLoading(false);
     });
@@ -106,7 +118,7 @@ function App( ) {
   if (isLoading) {
     return <LoadingSpinner />;
   }
-  
+
   if (!user) {
     return <AuthComponent />;
   }
@@ -120,14 +132,15 @@ function App( ) {
       vaults={vaultsData}
       transactions={transactionsData}
       history={historyData}
-      showToast={showToast} 
+      showToast={showToast}
       theme={theme}
       setTheme={setTheme}
+      isDataLoading={isDataLoading} // NEW - Pass loading state
 
       />
       <ToastNotification
         message={toast.message}
-        isVisible={toast.isVisible} 
+        isVisible={toast.isVisible}
       />
       </>
   );

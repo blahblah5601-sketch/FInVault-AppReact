@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm uninstall:*)",
+      "Bash(pnpm uninstall:*)",
+      "Bash({\"\\\\\\\\'\": \"plaid/react''';/d' src/components/BankLinking.jsx\"})",
+      "Bash({'@plaid\\\\\\\\/react': 'd'})"
+    ]
+  }
+}
