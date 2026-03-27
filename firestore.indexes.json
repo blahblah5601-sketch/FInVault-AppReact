@@ -1,4 +1,66 @@
 {
-  "indexes": [],
+  "indexes": [
+    {
+      "collectionGroup": "bankConnections",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "connectionStatus", "order": "ASCENDING" },
+        { "fieldPath": "lastSynced", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "bankAccounts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "bankConnectionId", "order": "ASCENDING" },
+        { "fieldPath": "isPrimary", "order": "ASCENDING" },
+        { "fieldPath": "isActive", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "cards",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "bankAccountId", "order": "ASCENDING" },
+        { "fieldPath": "isPrimary", "order": "ASCENDING" },
+        { "fieldPath": "isActive", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "payments",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "sourceAccountId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "payments",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "destination", "order": "ASCENDING" },
+        { "fieldPath": "destinationType", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "beneficiaries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "destinationType", "order": "ASCENDING" },
+        { "fieldPath": "isActive", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "paymentMethods",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "methodType", "order": "ASCENDING" },
+        { "fieldPath": "isPrimary", "order": "ASCENDING" },
+        { "fieldPath": "isEnabled", "order": "ASCENDING" }
+      ]
+    }
+  ],
   "fieldOverrides": []
 }

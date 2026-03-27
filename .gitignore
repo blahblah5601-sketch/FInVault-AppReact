@@ -11,6 +11,12 @@ node_modules
 dist
 dist-ssr
 *.local
+.claude
+.claudeignore
+.claudeignore.*
+.firebaserc
+plan.md
+
 
 # Editor directories and files
 .vscode/*

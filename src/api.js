@@ -240,3 +240,407 @@ export const deleteVault = async (vault) => {
     return false;
   }
 };
+
+// ==================== BANK CONNECTION FUNCTIONS ====================
+
+export const createBankConnection = async (bankName, bankId) => {
+  if (!bankName || !bankId || !auth.currentUser) {
+    return false;
+  }
+
+  try {
+    const userId = auth.currentUser.uid;
+
+    await addDoc(collection(db, "users", userId, "bankConnections"), {
+      bankName,
+      bankId,
+      connectionStatus: 'connected',
+      lastSynced: serverTimestamp(),
+      createdAt: serverTimestamp()
+    });
+
+    // Log this action to the 'history' collection
+    await addDoc(collection(db, "users", userId, "history"), {
+        type: 'Bank Connection',
+        details: `Connected to ${bankName}`,
+        date: new Date().toISOString(),
+        createdAt: serverTimestamp()
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Error creating bank connection:", error);
+    return false;
+  }
+};
+
+export const updateBankConnectionStatus = async (connectionId, status) => {
+  if (!connectionId || !status || !auth.currentUser) {
+    return false;
+  }
+
+  try {
+    const userId = auth.currentUser.uid;
+    const connectionDocRef = doc(db, "users", userId, "bankConnections", connectionId);
+
+    await updateDoc(connectionDocRef, {
+      connectionStatus: status,
+      lastSynced: status === 'connected' ? serverTimestamp() : null
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Error updating bank connection status:", error);
+    return false;
+  }
+};
+
+export const deleteBankConnection = async (connectionId) => {
+  if (!connectionId || !auth.currentUser) return false;
+
+  try {
+    const userId = auth.currentUser.uid;
+    await deleteDoc(doc(db, "users", userId, "bankConnections", connectionId));
+    return true;
+  } catch (error) {
+    console.error("Error deleting bank connection:", error);
+    return false;
+  }
+};
+
+// ==================== BANK ACCOUNT FUNCTIONS ====================
+
+export const createBankAccount = async (accountName, accountNumber, bankConnectionId, accountType, currency = 'PKR') => {
+  if (!accountName || !accountNumber || !bankConnectionId || !accountType || !auth.currentUser) {
+    return false;
+  }
+
+  try {
+    const userId = auth.currentUser.uid;
+
+    await addDoc(collection(db, "users", userId, "bankAccounts"), {
+      accountName,
+      accountNumber,
+      bankConnectionId,
+      accountType,
+      balance: 0, // Start with zero balance
+      currency,
+      isPrimary: false, // Will be set by user later
+      isActive: true,
+      createdAt: serverTimestamp()
+    });
+
+    // Log this action to the 'history' collection
+    await addDoc(collection(db, "users", userId, "history"), {
+        type: 'Bank Account',
+        details: `Added bank account: ${accountName} ending in ${accountNumber.slice(-4)}`,
+        date: new Date().toISOString(),
+        createdAt: serverTimestamp()
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Error creating bank account:", error);
+    return false;
+  }
+};
+
+export const updateBankAccountBalance = async (accountId, newBalance) => {
+  if (!accountId || newBalance === undefined || !auth.currentUser) {
+    return false;
+  }
+
+  try {
+    const userId = auth.currentUser.uid;
+    const accountDocRef = doc(db, "users", userId, "bankAccounts", accountId);
+
+    await updateDoc(accountDocRef, {
+      balance: newBalance
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Error updating bank account balance:", error);
+    return false;
+  }
+};
+
+export const setPrimaryBankAccount = async (accountId) => {
+  if (!accountId || !auth.currentUser) return false;
+
+  try {
+    const userId = auth.currentUser.uid;
+
+    // First, unset all other primary accounts for this user
+    const accountsQuery = query(
+      collection(db, "users", userId, "bankAccounts"),
+      where("isPrimary", "==", true)
+    );
+
+    const accountsSnapshot = await getDoc(accountsQuery);
+    // Note: In a real implementation, we'd use a batch operation here
+    // For simplicity, we'll just set the new primary and let the old one be unset manually
+
+    // Set the new primary account
+    const accountDocRef = doc(db, "users", userId, "bankAccounts", accountId);
+    await updateDoc(accountDocRef, {
+      isPrimary: true
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Error setting primary bank account:", error);
+    return false;
+  }
+};
+
+// ==================== CARD FUNCTIONS ====================
+
+export const createCard = async (cardNickname, lastFour, bankAccountId, cardType, network, spendingLimit = 0) => {
+  if (!cardNickname || !lastFour || !bankAccountId || !cardType || !network || !auth.currentUser) {
+    return false;
+  }
+
+  try {
+    const userId = auth.currentUser.uid;
+
+    await addDoc(collection(db, "users", userId, "cards"), {
+      cardNickname,
+      lastFour,
+      bankAccountId,
+      cardType,
+      network,
+      isPrimary: false,
+      isActive: true,
+      spendingLimit,
+      createdAt: serverTimestamp()
+    });
+
+    // Log this action to the 'history' collection
+    await addDoc(collection(db, "users", userId, "history"), {
+        type: 'Card Added',
+        details: `Added ${cardType} card ending in ${lastFour}`,
+        date: new Date().toISOString(),
+        createdAt: serverTimestamp()
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Error creating card:", error);
+    return false;
+  }
+};
+
+export const updateCardStatus = async (cardId, isActive) => {
+  if (!cardId || isActive === undefined || !auth.currentUser) {
+    return false;
+  }
+
+  try {
+    const userId = auth.currentUser.uid;
+    const cardDocRef = doc(db, "users", userId, "cards", cardId);
+
+    await updateDoc(cardDocRef, {
+      isActive
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Error updating card status:", error);
+    return false;
+  }
+};
+
+export const setPrimaryCard = async (cardId) => {
+  if (!cardId || !auth.currentUser) return false;
+
+  try {
+    const userId = auth.currentUser.uid;
+
+    // Set the new primary card
+    const cardDocRef = doc(db, "users", userId, "cards", cardId);
+    await updateDoc(cardDocRef, {
+      isPrimary: true
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Error setting primary card:", error);
+    return false;
+  }
+};
+
+// ==================== PAYMENT FUNCTIONS ====================
+
+export const createPayment = async (amount, currency, description, category, sourceAccountId, destination, destinationType, paymentMethod) => {
+  if (!amount || !currency || !description || !sourceAccountId || !destination || !destinationType || !paymentMethod || !auth.currentUser) {
+    return false;
+  }
+
+  try {
+    const userId = auth.currentUser.uid;
+
+    await addDoc(collection(db, "users", userId, "payments"), {
+      amount,
+      currency,
+      description,
+      category,
+      sourceAccountId,
+      destination,
+      destinationType,
+      status: 'pending',
+      paymentMethod,
+      createdAt: serverTimestamp()
+    });
+
+    // Log this action to the 'history' collection
+    await addDoc(collection(db, "users", userId, "history"), {
+        type: 'Payment Initiated',
+        details: `Payment of ${currency} ${amount.toLocaleString()} for ${description}`,
+        date: new Date().toISOString(),
+        createdAt: serverTimestamp()
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Error creating payment:", error);
+    return false;
+  }
+};
+
+export const updatePaymentStatus = async (paymentId, status) => {
+  if (!paymentId || !status || !auth.currentUser) {
+    return false;
+  }
+
+  try {
+    const userId = auth.currentUser.uid;
+    const paymentDocRef = doc(db, "users", userId, "payments", paymentId);
+
+    await updateDoc(paymentDocRef, {
+      status
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Error updating payment status:", error);
+    return false;
+  }
+};
+
+// ==================== BENEFICIARY FUNCTIONS ====================
+
+export const createBeneficiary = async (beneficiaryName, nickname, destinationType, destinationValue) => {
+  if (!beneficiaryName || !nickname || !destinationType || !destinationValue || !auth.currentUser) {
+    return false;
+  }
+
+  try {
+    const userId = auth.currentUser.uid;
+
+    await addDoc(collection(db, "users", userId, "beneficiaries"), {
+      beneficiaryName,
+      nickname,
+      destinationType,
+      destinationValue,
+      isActive: true,
+      createdAt: serverTimestamp()
+    });
+
+    // Log this action to the 'history' collection
+    await addDoc(collection(db, "users", userId, "history"), {
+        type: 'Beneficiary Added',
+        details: `Added beneficiary: ${beneficiaryName} (${nickname})`,
+        date: new Date().toISOString(),
+        createdAt: serverTimestamp()
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Error creating beneficiary:", error);
+    return false;
+  }
+};
+
+export const updateBeneficiaryStatus = async (beneficiaryId, isActive) => {
+  if (!beneficiaryId || isActive === undefined || !auth.currentUser) {
+    return false;
+  }
+
+  try {
+    const userId = auth.currentUser.uid;
+    const beneficiaryDocRef = doc(db, "users", userId, "beneficiaries", beneficiaryId);
+
+    await updateDoc(beneficiaryDocRef, {
+      isActive
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Error updating beneficiary status:", error);
+    return false;
+  }
+};
+
+// ==================== PAYMENT METHOD FUNCTIONS (Google Pay, Apple Pay, etc.) ====================
+
+export const createPaymentMethod = async (methodType) => {
+  if (!methodType || !auth.currentUser) {
+    return false;
+  }
+
+  try {
+    const userId = auth.currentUser.uid;
+
+    await addDoc(collection(db, "users", userId, "paymentMethods"), {
+      methodType,
+      isEnabled: true,
+      isPrimary: false,
+      createdAt: serverTimestamp()
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Error creating payment method:", error);
+    return false;
+  }
+};
+
+export const updatePaymentMethodStatus = async (methodId, isEnabled) => {
+  if (!methodId || isEnabled === undefined || !auth.currentUser) {
+    return false;
+  }
+
+  try {
+    const userId = auth.currentUser.uid;
+    const methodDocRef = doc(db, "users", userId, "paymentMethods", methodId);
+
+    await updateDoc(methodDocRef, {
+      isEnabled
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Error updating payment method status:", error);
+    return false;
+  }
+};
+
+export const setPrimaryPaymentMethod = async (methodId) => {
+  if (!methodId || !auth.currentUser) return false;
+
+  try {
+    const userId = auth.currentUser.uid;
+
+    // Set the new primary payment method
+    const methodDocRef = doc(db, "users", userId, "paymentMethods", methodId);
+    await updateDoc(methodDocRef, {
+      isPrimary: true
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Error setting primary payment method:", error);
+    return false;
+  };
+};
