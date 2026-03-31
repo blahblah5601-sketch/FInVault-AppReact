@@ -1,11 +1,13 @@
 // src/components/Sidebar.jsx
-import {   LayoutDashboard, CreditCard, PieChart, ShieldCheck, List, Settings, UserCircle, LogOut } from 'lucide-react';
+import {   LayoutDashboard, CreditCard, PieChart, ShieldCheck, List, Settings, UserCircle, LogOut, Wallet, Landmark } from 'lucide-react';
 import Logo from './Logo';
 
 function Sidebar({ user, onLogout, activePage, setActivePage }) {
   const navItems = [
     { id: 'dashboard', Icon: LayoutDashboard, label: 'Dashboard' },
+    { id: 'accounts', Icon: Landmark, label: 'Accounts' },
     { id: 'card-control', Icon: CreditCard, label: 'Card Control' },
+    { id: 'payments', Icon: Wallet, label: 'Payments' },
     { id: 'budgets', Icon: PieChart, label: 'Budgets' },
     { id: 'vaults', Icon: ShieldCheck, label: 'Vaults' },
     { id: 'transactions', Icon: List, label: 'Transactions' },

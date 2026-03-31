@@ -10,16 +10,17 @@ export const createBudget = async (name, limit) => {
 
    try {
      const userId = auth.currentUser.uid;
-    
+
      // Add the new budget to the 'budgets' collection
-     await addDoc(collection(db, "users", userId, "budgets"), { 
-         name, 
-         limit, 
-         spent: 0, 
-         icon: 'receipt', 
-         color: 'purple', 
-         isCardAssigned: false, 
-         createdAt: serverTimestamp() 
+     await addDoc(collection(db, "users", userId, "budgets"), {
+         name,
+         limit,
+         spent: 0,
+         icon: 'receipt',
+         color: 'purple',
+         isCardAssigned: false,
+         items: [], // Initialize empty items array for envelope budgets
+         createdAt: serverTimestamp()
      });
 
     // Log this action to the 'history' collection
@@ -29,7 +30,7 @@ export const createBudget = async (name, limit) => {
         date: new Date().toISOString(),
         createdAt: serverTimestamp()
     });
-    
+
     return true; // Indicate success
   } catch (error) {
     console.error("Error creating budget:", error);
@@ -121,18 +122,25 @@ export const handleVaultTransaction = async (vault, accounts, actionType, amount
   }
 };
 
-export const updateBudget = async (budgetId, newName, newLimit) => {
+export const updateBudget = async (budgetId, newName, newLimit, items) => {
   if (!budgetId || !newName || newLimit <= 0 || !auth.currentUser) {
     return false;
   }
   try {
     const userId = auth.currentUser.uid;
     const budgetDocRef = doc(db, "users", userId, "budgets", budgetId);
-    
-    await updateDoc(budgetDocRef, {
+
+    const updateData = {
       name: newName,
       limit: newLimit
-    });
+    };
+
+    // If items are provided, include them in the update
+    if (items !== undefined) {
+      updateData.items = items;
+    }
+
+    await updateDoc(budgetDocRef, updateData);
 
     await addDoc(collection(db, "users", userId, "history"), {
       type: 'Budget Event',
@@ -582,6 +590,74 @@ export const updateBeneficiaryStatus = async (beneficiaryId, isActive) => {
   }
 };
 
+// ==================== BILLER FUNCTIONS ====================
+
+export const createBiller = async (name, category, accountRef) => {
+  if (!name || !category || !accountRef || !auth.currentUser) {
+    return false;
+  }
+
+  try {
+    const userId = auth.currentUser.uid;
+
+    await addDoc(collection(db, "users", userId, "billers"), {
+      name,
+      category,
+      accountRef,
+      lastAmount: 0,
+      createdAt: serverTimestamp()
+    });
+
+    // Log this action to the 'history' collection
+    await addDoc(collection(db, "users", userId, "history"), {
+      type: 'Biller Added',
+      details: `Added biller: '${name}' (${category})`,
+      date: new Date().toISOString(),
+      createdAt: serverTimestamp()
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Error creating biller:", error);
+    return false;
+  }
+};
+
+export const deleteBiller = async (billerId) => {
+  if (!billerId || !auth.currentUser) {
+    return false;
+  }
+
+  try {
+    const userId = auth.currentUser.uid;
+    const billerDocRef = doc(db, "users", userId, "billers", billerId);
+
+    // Get biller data before deleting
+    const billerSnap = await getDoc(billerDocRef);
+    if (!billerSnap.exists()) {
+      return { success: false, message: 'Biller not found' };
+    }
+
+    const billerData = billerSnap.data();
+
+    // Delete the document
+    await deleteDoc(billerDocRef);
+
+    // Log the deletion to the 'history' collection
+    await addDoc(collection(db, "users", userId, "history"), {
+      type: 'Biller Deleted',
+      details: `Deleted biller: '${billerData.name}'`,
+      date: new Date().toISOString(),
+      createdAt: serverTimestamp()
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting biller:", error);
+    return { success: false, message: 'Failed to delete biller' };
+  }
+};
+
 // ==================== PAYMENT METHOD FUNCTIONS (Google Pay, Apple Pay, etc.) ====================
 
 export const createPaymentMethod = async (methodType) => {
@@ -642,5 +718,270 @@ export const setPrimaryPaymentMethod = async (methodId) => {
   } catch (error) {
     console.error("Error setting primary payment method:", error);
     return false;
-  };
+  }
+};
+
+// ==================== MULTI-ACCOUNT SYSTEM FUNCTIONS ====================
+
+export const getAccounts = async () => {
+  if (!auth.currentUser) return [];
+  try {
+    const userId = auth.currentUser.uid;
+    const accountsSnapshot = await getDocs(collection(db, "users", userId, "accounts"));
+    const accounts = [];
+    accountsSnapshot.forEach((doc) => {
+      accounts.push({ id: doc.id, ...doc.data() });
+    });
+    return accounts;
+  } catch (error) {
+    console.error("Error getting accounts:", error);
+    return [];
+  }
+};
+
+// ==================== BILLER FUNCTIONS ====================
+
+import { query, getDocs } from 'firebase/firestore';
+import { generateAccountNumber, generateIBAN, validateIBAN, formatIBAN, BANK_BICS } from './utils/ibanUtils';
+
+// ==================== ENVELOPE BUDGETS FUNCTIONS ====================
+
+export const addBudgetItem = async (budgetId, item) => {
+  if (!budgetId || !item || !auth.currentUser) {
+    return false;
+  }
+
+  try {
+    const userId = auth.currentUser.uid;
+    const budgetDocRef = doc(db, "users", userId, "budgets", budgetId);
+
+    // Get the budget first
+    const budgetSnap = await getDoc(budgetDocRef);
+    if (!budgetSnap.exists()) {
+      return { success: false, message: 'Budget not found' };
+    }
+
+    const budgetData = budgetSnap.data();
+    const items = budgetData.items || [];
+
+    // Add new item with unique ID
+    const newItem = {
+      id: item.id || Date.now().toString(),
+      name: item.name,
+      allocatedAmount: item.allocatedAmount,
+      spentAmount: item.spentAmount || 0,
+      icon: item.icon || 'circle'
+    };
+
+    // Update the budget with new items array
+    await updateDoc(budgetDocRef, {
+      items: [...items, newItem]
+    });
+
+    // Log this action to the 'history' collection
+    await addDoc(collection(db, "users", userId, "history"), {
+      type: 'Budget Event',
+      details: `Added envelope item '${newItem.name}' to budget '${budgetData.name}'`,
+      date: new Date().toISOString(),
+      createdAt: serverTimestamp()
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error adding budget item:", error);
+    return { success: false, message: 'Failed to add budget item' };
+  }
+};
+
+export const removeBudgetItem = async (budgetId, itemId) => {
+  if (!budgetId || !itemId || !auth.currentUser) {
+    return false;
+  }
+
+  try {
+    const userId = auth.currentUser.uid;
+    const budgetDocRef = doc(db, "users", userId, "budgets", budgetId);
+
+    // Get the budget first
+    const budgetSnap = await getDoc(budgetDocRef);
+    if (!budgetSnap.exists()) {
+      return { success: false, message: 'Budget not found' };
+    }
+
+    const budgetData = budgetSnap.data();
+    const items = budgetData.items || [];
+
+    // Remove item with matching ID
+    const updatedItems = items.filter(item => item.id !== itemId);
+
+    // Update the budget with new items array
+    await updateDoc(budgetDocRef, {
+      items: updatedItems
+    });
+
+    // Log this action to the 'history' collection
+    await addDoc(collection(db, "users", userId, "history"), {
+      type: 'Budget Event',
+      details: `Removed envelope item from budget '${budgetData.name}'`,
+      date: new Date().toISOString(),
+      createdAt: serverTimestamp()
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error removing budget item:", error);
+    return { success: false, message: 'Failed to remove budget item' };
+  }
+};
+
+export const createSubAccount = async (name, bicCode, parentAccountId) => {
+  if (!name || !bicCode || !parentAccountId || !auth.currentUser) {
+    return false;
+  }
+
+  try {
+    const userId = auth.currentUser.uid;
+
+    // Check if user already has 3 sub-accounts
+    const accountsQuery = query(
+      collection(db, "users", userId, "accounts"),
+      where("parentAccountId", "!=", null)
+    );
+    const accountsSnapshot = await getDocs(accountsQuery);
+    if (accountsSnapshot.size >= 3) {
+      return { success: false, message: "Maximum of 3 sub-accounts allowed" };
+    }
+
+    // Generate account number and IBAN
+    // Find the highest subAccountIndex among existing sub-accounts
+    let maxIndex = 0;
+    accountsSnapshot.forEach(doc => {
+      const data = doc.data();
+      if (data.subAccountIndex && data.subAccountIndex > maxIndex) {
+        maxIndex = data.subAccountIndex;
+      }
+    });
+    const accountIndex = maxIndex + 1;
+
+    const accountNumber = generateAccountNumber(userId, accountIndex);
+    const ibanNumber = generateIBAN(bicCode, accountNumber);
+
+    // Get bank name from BIC code
+    const bankInfo = BANK_BICS[bicCode] || { name: 'Unknown Bank' };
+    const bankName = bankInfo.name;
+
+    // Create the sub-account document
+    await addDoc(collection(db, "users", userId, "accounts"), {
+      name,
+      accountLevel: 'sub',
+      parentAccountId,
+      ibanNumber,
+      accountNumber,
+      bankBic: bicCode,
+      bankName,
+      subAccountIndex: accountIndex,
+      balance: 0,
+      createdAt: serverTimestamp()
+    });
+
+    // Log this action to the 'history' collection
+    await addDoc(collection(db, "users", userId, "history"), {
+      type: 'Account Event',
+      details: `Created sub-account: '${name}' with IBAN ${formatIBAN(ibanNumber)}`,
+      date: new Date().toISOString(),
+      createdAt: serverTimestamp()
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error creating sub-account:", error);
+    return { success: false, message: 'Failed to create sub-account' };
+  }
+};
+
+export const deleteSubAccount = async (accountId) => {
+  if (!accountId || !auth.currentUser) {
+    return false;
+  }
+
+  try {
+    const userId = auth.currentUser.uid;
+    const accountDocRef = doc(db, "users", userId, "accounts", accountId);
+
+    // Get account data before deleting to check if it's a main account
+    const accountSnap = await getDoc(accountDocRef);
+    if (!accountSnap.exists()) {
+      return { success: false, message: 'Account not found' };
+    }
+
+    const accountData = accountSnap.data();
+
+    // Prevent deletion of main account
+    if (accountData.accountLevel === 'main') {
+      return { success: false, message: 'Cannot delete main account' };
+    }
+
+    // Delete the document
+    await deleteDoc(accountDocRef);
+
+    // Log the deletion to the 'history' collection
+    await addDoc(collection(db, "users", userId, "history"), {
+      type: 'Account Event',
+      details: `Deleted sub-account: '${accountData.name}'`,
+      date: new Date().toISOString(),
+      createdAt: serverTimestamp()
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting sub-account:", error);
+    return { success: false, message: 'Failed to delete sub-account' };
+  }
+};
+
+export const setActiveSubAccount = async (accountId) => {
+  if (!accountId || !auth.currentUser) {
+    return false;
+  }
+
+  try {
+    const userId = auth.currentUser.uid;
+
+    // First, unset all other active sub-accounts
+    const accountsQuery = query(
+      collection(db, "users", userId, "accounts"),
+      where("accountLevel", "==", "sub"),
+      where("isActive", "==", true)
+    );
+    const accountsSnapshot = await getDocs(accountsQuery);
+
+    const batch = writeBatch(db);
+    accountsSnapshot.forEach(doc => {
+      const accountDocRef = doc(db, "users", userId, "accounts", doc.id);
+      batch.update(accountDocRef, { isActive: false });
+    });
+
+    // Set the selected account as active
+    const accountDocRef = doc(db, "users", userId, "accounts", accountId);
+    batch.update(accountDocRef, { isActive: true });
+
+    await batch.commit();
+
+    // Log this action to the 'history' collection
+    const accountSnap = await getDoc(accountDocRef);
+    if (accountSnap.exists()) {
+      const accountData = accountSnap.data();
+      await addDoc(collection(db, "users", userId, "history"), {
+        type: 'Account Event',
+        details: `Set active sub-account: '${accountData.name}'`,
+        date: new Date().toISOString(),
+        createdAt: serverTimestamp()
+      });
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error setting active sub-account:", error);
+    return { success: false, message: 'Failed to set active sub-account' };
+  }
 };

@@ -4,6 +4,7 @@ import { auth, db } from '../firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp, writeBatch, collection } from 'firebase/firestore';
 import { validateEmail, validatePassword } from '../utils/validation';
+import { generateAccountNumber, generateIBAN } from '../utils/ibanUtils';
 import Logo from './Logo';
 import { Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react';
 
@@ -21,13 +22,23 @@ const setupNewUser = async (user) => {
     }
   });
   
-  // Add default account
+  // Add default account with IBAN
   const accountsCol = collection(userDocRef, "accounts");
-  batch.set(doc(accountsCol, "current"), { 
-    name: 'Current Account', 
-    balance: 50000, 
-    type: 'account', 
-    createdAt: serverTimestamp() 
+  const accountNumber = generateAccountNumber(user.uid, 0); // 0 for main account
+  const ibanNumber = generateIBAN('FNVT', accountNumber); // Using FinVault's BIC
+
+  batch.set(doc(accountsCol, "current"), {
+    name: 'Current Account',
+    balance: 50000,
+    type: 'account',
+    accountLevel: 'main',
+    parentAccountId: null,
+    ibanNumber,
+    accountNumber,
+    bankBic: 'FNVT',
+    bankName: 'FinVault',
+    subAccountIndex: 0,
+    createdAt: serverTimestamp()
   });
   
   // Add default savings account

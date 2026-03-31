@@ -9,6 +9,7 @@ import AuthComponent from './components/AuthComponent';
 import AppLayout from './components/AppLayout';
 import { getUserPreferences } from './api'; // <-- Import getUserSettings
 import { applyTheme } from './theme.js'; // <-- Import applyTheme
+import OnboardingController from './components/onboarding/OnboardingController';
 
 // --- Helper Components (we will move these to their own files later) ---
 
@@ -124,20 +125,22 @@ function App( ) {
   }
 
   return (
-    <><AppLayout
-      user={user}
-      onLogout={handleLogout}
-      accounts={accounts}
-      budgets={budgetsData}
-      vaults={vaultsData}
-      transactions={transactionsData}
-      history={historyData}
-      showToast={showToast}
-      theme={theme}
-      setTheme={setTheme}
-      isDataLoading={isDataLoading} // NEW - Pass loading state
+    <><OnboardingController>
+      <AppLayout
+        user={user}
+        onLogout={handleLogout}
+        accounts={accounts}
+        budgets={budgetsData}
+        vaults={vaultsData}
+        transactions={transactionsData}
+        history={historyData}
+        showToast={showToast}
+        theme={theme}
+        setTheme={setTheme}
+        isDataLoading={isDataLoading} // NEW - Pass loading state
 
       />
+    </OnboardingController>
       <ToastNotification
         message={toast.message}
         isVisible={toast.isVisible}

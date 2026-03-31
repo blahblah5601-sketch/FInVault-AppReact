@@ -1,12 +1,11 @@
 // src/components/BudgetsPage.jsx
-import { createBudget, updateBudget, deleteBudget, toggleBudgetCardAssignment } from '../api';
-import { useState } from 'react';
+import { createBudget, updateBudget, deleteBudget, toggleBudgetCardAssignment, getUserPreferences, updateUserPreferences } from '../api';
+import { useState, useEffect } from 'react';
 import BudgetItem from './BudgetItem';
 import { Plus } from 'lucide-react';
 import CreateBudgetModal from './modals/CreateBudgetModal';
 import UpdateBudgetModal from './modals/UpdateBudgetModal';
 import ConfirmDeleteModal from './modals/ConfirmDeleteModal';
-
 
 function BudgetsPage({ budgets, showToast }) {
   // Calculate summary totals from the budgets prop
@@ -14,15 +13,43 @@ function BudgetsPage({ budgets, showToast }) {
   const MAX_BUDGETS = 5;
   const totalBudgeted = budgets.reduce((sum, b) => sum + b.limit, 0);
   const totalSpent = budgets.reduce((sum, b) => sum + b.spent, 0);
+  const totalRemaining = totalBudgeted - totalSpent;
+  const assignedCount = budgets.filter(b => b.isCardAssigned).length;
+  const canAssignMore = assignedCount < MAX_CARD_ASSIGNMENTS;
+
+  // State for modals
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [budgetToEdit, setBudgetToEdit] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false); // 1. Add isDeleting state
-  const totalRemaining = totalBudgeted - totalSpent;
-  const assignedCount = budgets.filter(b => b.isCardAssigned).length;
-  const canAssignMore = assignedCount < MAX_CARD_ASSIGNMENTS;
+
+  // State for visual view preference (loaded from user preferences)
+  const [useVisualBudgetView, setUseVisualBudgetView] = useState(false);
+
+  // Load user preference for visual view on mount
+  useEffect(() => {
+    const loadPreference = async () => {
+      const prefs = await getUserPreferences();
+      if (prefs && prefs.useVisualBudgetView !== undefined) {
+        setUseVisualBudgetView(prefs.useVisualBudgetView);
+      }
+    };
+    loadPreference();
+  }, []);
+
+  // Toggle visual view preference and update user preferences
+  const toggleVisualView = async () => {
+    const newView = !useVisualBudgetView;
+    setUseVisualBudgetView(newView);
+    try {
+      await updateUserPreferences({ useVisualBudgetView: newView });
+    } catch (error) {
+      console.error("Failed to update user preferences:", error);
+      showToast("Failed to save preference");
+    }
+  };
 
   const handleCreateBudget = async (name, limit) => {
     const success = await createBudget(name, limit);
@@ -74,73 +101,188 @@ function BudgetsPage({ budgets, showToast }) {
     }
   };
 
-  return (
-    <><section id="budgets" className="page-section space-y-8">
-          <div className="flex justify-between items-center">
-              <div>
-                  <h2 className="text-2xl font-semibold">My Budgets</h2>
-                  <p className="text-sm text-text-secondary mt-1">
-                      {budgets.length} of {MAX_BUDGETS} budgets created.
-                  </p>
-              </div>
-              <button
-                  onClick={() => setIsModalOpen(true)}
-                  id="new-budget-btn"
-                  className="btn-primary py-2 px-4 rounded-lg flex items-center"
-              >
-                  <Plus className="w-5 h-5 mr-2" />
-                  New Budget
-              </button>
-          </div>
+  // Function to generate a random color for budgets (if needed, but we use budget.color)
+  // We don't need this because budgets already have a color
 
-          {/* Budget Summary - now with live data */}
+  // Function to calculate the angle for a budget segment in the donut chart
+  const getAngle = (limit, total) => {
+    return (limit / total) * 360;
+  };
+
+  // Function to convert polar coordinates to Cartesian coordinates for SVG path
+  const polarToCartesian = (centerX, centerY, radius, angleInDegrees) => {
+    const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
+    return {
+      x: centerX + radius * Math.cos(angleInRadians),
+      y: centerY + radius * Math.sin(angleInRadians)
+    };
+  };
+
+  // Function to describe the arc for a budget segment
+  const describeArc = (x, y, radius, startAngle, endAngle) => {
+    const start = polarToCartesian(x, y, radius, endAngle);
+    const end = polarToCartesian(x, y, radius, startAngle);
+    const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+    const d = [
+      "M", start.x, start.y,
+      "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y
+    ].join(" ");
+    return d;
+  };
+
+  return (
+    <>
+      <section id="budgets" className="page-section space-y-8">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-semibold">My Budgets</h2>
+            <p className="text-sm text-text-secondary mt-1">
+              {budgets.length} of {MAX_BUDGETS} budgets created.
+            </p>
+          </div>
+          <div className="flex space-x-3">
+            <button
+              onClick={toggleVisualView}
+              className={`btn-secondary py-2 px-4 rounded-lg flex items-center ${useVisualBudgetView ? 'bg-primary/20 text-primary' : ''}`}
+            >
+              {useVisualBudgetView ? 'List View' : 'Visual View'}
+            </button>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              id="new-budget-btn"
+              className="btn-primary py-2 px-4 rounded-lg flex items-center"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              New Budget
+            </button>
+          </div>
+        </div>
+
+        {useVisualBudgetView ? (
+          // Visual View (Donut Chart)
           <div className="bg-background/50 p-6 rounded-2xl">
+            {totalBudgeted > 0 ? (
+              <>
+                <div className="text-center mb-6">
+                  <svg className="w-24 h-24 mx-auto mb-4" viewBox="0 0 100 100">
+                    {/* Donut chart background (circle) */}
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="40"
+                      fill="none"
+                      stroke="bg-sidebar"
+                      stroke-width="10"
+                    />
+                    {/* Budget segments */}
+                    {budgets.map((budget, index) => {
+                      const startAngle = budgets.slice(0, index).reduce((sum, b) => sum + b.limit, 0);
+                      const endAngle = startAngle + budget.limit;
+                      const startAngleDeg = getAngle(startAngle, totalBudgeted);
+                      const endAngleDeg = getAngle(endAngle, totalBudgeted);
+                      return (
+                        <path
+                          key={budget.id}
+                          d={describeArc(50, 50, 40, startAngleDeg, endAngleDeg)}
+                          fill={budget.color}
+                          stroke="bg-background"
+                          stroke-width="2"
+                          cursor="pointer"
+                          onClick={() => handleOpenUpdateModal(budget)}
+                        />
+                      );
+                    })}
+                    {/* Center circle (hole of the donut) */}
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="20"
+                      fill="bg-background"
+                    />
+                    {/* Total budgeted amount in the center */}
+                    <text
+                      x="50"
+                      y="55"
+                      textAnchor="middle"
+                      className="font-bold text-text-primary"
+                    >
+                      Rs {totalBudgeted.toLocaleString('en-US')}
+                    </text>
+                  </svg>
+                  <p className="text-sm text-text-secondary mt-2">
+                    Total Budgeted
+                  </p>
+                </div>
+                {/* Budget details on click (we'll show the update modal when a segment is clicked) */}
+                {/* The update modal is handled by the state and the UpdateBudgetModal component */}
+              </>
+            ) : (
+              <p className="text-text-secondary text-center py-8">
+                No budgets to display. Create a budget to get started.
+              </p>
+            )}
+          </div>
+        ) : (
+          // List View (existing functionality)
+          <>
+            {/* Budget Summary - now with live data */}
+            <div className="bg-background/50 p-6 rounded-2xl">
               <h3 className="font-semibold text-lg mb-4">Monthly Summary</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-                  <div>
-                      <p className="text-sm text-text-secondary">Total Budgeted</p>
-                      <p className="text-2xl font-bold font-mono">Rs {totalBudgeted.toLocaleString('en-US')}</p>
-                  </div>
-                  <div>
-                      <p className="text-sm text-text-secondary">Total Spent</p>
-                      <p className="text-2xl font-bold font-mono">Rs {totalSpent.toLocaleString('en-US')}</p>
-                  </div>
-                  <div>
-                      <p className="text-sm text-text-secondary">Remaining</p>
-                      <p className="text-2xl font-bold font-mono">Rs {totalRemaining.toLocaleString('en-US')}</p>
-                  </div>
+                <div>
+                  <p className="text-sm text-text-secondary">Total Budgeted</p>
+                  <p className="text-2xl font-bold font-mono">Rs {totalBudgeted.toLocaleString('en-US')}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-text-secondary">Total Spent</p>
+                  <p className="text-2xl font-bold font-mono">Rs {totalSpent.toLocaleString('en-US')}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-text-secondary">Remaining</p>
+                  <p className="text-2xl font-bold font-mono">Rs {totalRemaining.toLocaleString('en-US')}</p>
+                </div>
               </div>
-          </div>
+            </div>
 
-          {/* Budget List - now dynamically rendered */}
-          <div id="budgets-list" className="bg-background/50 p-6 rounded-2xl">
+            {/* Budget List - now dynamically rendered */}
+            <div id="budgets-list" className="bg-background/50 p-6 rounded-2xl">
               {budgets.map(budget => (
-                  <BudgetItem key={budget.id} budget={budget} onUpdate={() => handleOpenUpdateModal(budget)} onDelete={() => handleOpenDeleteModal(budget)} onAssign={handleAssignBudget} canAssignMore={canAssignMore}/>
+                <BudgetItem
+                  key={budget.id}
+                  budget={budget}
+                  onUpdate={() => handleOpenUpdateModal(budget)}
+                  onDelete={() => handleOpenDeleteModal(budget)}
+                  onAssign={handleAssignBudget}
+                  canAssignMore={canAssignMore}
+                />
               ))}
-          </div>
-      </section>
+            </div>
+          </>
+        )}
 
+        {/* Modals */}
         <CreateBudgetModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            onSubmit={handleCreateBudget} 
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSubmit={handleCreateBudget}
         />
 
         <UpdateBudgetModal
-        isOpen={isUpdateModalOpen}
-        onClose={() => setIsUpdateModalOpen(false)}
-        onSubmit={handleUpdateBudget}
-        budgetToEdit={budgetToEdit}
+          isOpen={isUpdateModalOpen}
+          onClose={() => setIsUpdateModalOpen(false)}
+          onSubmit={handleUpdateBudget}
+          budgetToEdit={budgetToEdit}
         />
 
         <ConfirmDeleteModal
-        isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
-        onConfirm={handleConfirmDelete}
-        itemType="budget"
-        itemName={itemToDelete?.name}
-        isDeleting={isDeleting}
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={handleConfirmDelete}
+          itemType="budget"
+          itemName={itemToDelete?.name}
+          isDeleting={isDeleting}
         />
+      </section>
     </>
   );
 }

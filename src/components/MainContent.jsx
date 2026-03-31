@@ -4,8 +4,10 @@ import CardControlPage from './CardControlPage';
 import BudgetsPage from './BudgetsPage';
 import VaultsPage from './VaultsPage';
 import TransactionsPage from './TransactionsPage';
-import SettingsPage from './SettingsPage'; 
+import SettingsPage from './SettingsPage';
 import Dashboard_simple from './Dashboard_simple';
+import PaymentsPage from './PaymentsPage';
+import AccountsPage from './AccountsPage';
 
 // This component will eventually show the correct page component
 function MainContent({ activePage, accounts, budgets, vaults, transactions, showToast, theme, setTheme, history, setActivePage }) {
@@ -34,12 +36,16 @@ function MainContent({ activePage, accounts, budgets, vaults, transactions, show
       {activePage === 'transactions' && (
         <TransactionsPage transactions={transactions} />
       )}
-    
+
+      {activePage === 'payments' && (
+        <PaymentsPage showToast={showToast}/>
+      )}
+
       {activePage === 'settings' && (
         // Pass the theme state and the function to update it
-        <SettingsPage 
-          currentTheme={theme} 
-          setCurrentTheme={setTheme} 
+        <SettingsPage
+          currentTheme={theme}
+          setCurrentTheme={setTheme}
         />
       )}
       {activePage === 'card-control' && <CardControlPage accounts={accounts} budgets={budgets} showToast={showToast} />}

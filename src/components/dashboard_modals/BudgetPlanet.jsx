@@ -28,7 +28,7 @@ export default function BudgetPlanet({ name, progress, orbitPosition, setActiveP
     <motion.div
       className="absolute top-1/2 left-1/2"
       // style={{ x, y }}
-      style={{ x, y, left: '50%', top: '50%', x: '-50%', y: '-50%', translateX: x, translateY: y }}
+      style={{ left: '50%', top: '50%', translateX: x, translateY: y }}
       initial={{ scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       whileHover={{ scale: 1.05 }}

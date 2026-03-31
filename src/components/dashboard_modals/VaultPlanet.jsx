@@ -16,7 +16,7 @@ export default function VaultPlanet({ name, balance, orbitPosition, setActivePag
     <motion.div
       className="absolute top-1/2 left-1/2"
       //style={{ x, y }}
-      style={{ x, y, right: '50%', top: '50%', x: '-50%', y: '-50%', translateX: x, translateY: y }}
+      style={{ right: '50%', top: '50%', translateX: x, translateY: y }}
       initial={{ scale: 0, opacity: 0, rotate: -180 }}
       animate={{ scale: 1, opacity: 1, rotate: 0 }}
       transition={{ delay: 0.5, duration: 0.7 }}
