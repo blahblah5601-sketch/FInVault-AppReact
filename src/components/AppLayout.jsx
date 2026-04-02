@@ -5,9 +5,10 @@ import Header from './Header';
 import MainContent from './MainContent';
 
 // The component receives props, including the onLogout function
-function AppLayout({ user, onLogout, showToast, theme, setTheme, accounts, budgets, vaults, transactions, history }) {
+function AppLayout({ user, onLogout, showToast, theme, setTheme, accounts, budgets, vaults, transactions, history, billers, beneficiaries }) {
     const [activePage, setActivePage] = useState('dashboard');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [activePanelId, setActivePanelId] = useState(null); // 'send' | 'add' | 'qr' | 'nfc' | null
     // useEffect for lucide.createIcons() was deleted as pnpm install lucide-react was done to fix lucide icons issue
 
     return (
@@ -45,10 +46,10 @@ function AppLayout({ user, onLogout, showToast, theme, setTheme, accounts, budge
                 activePage={activePage} 
                 onMenuClick={() => setIsMobileMenuOpen(true)} 
             />
-            <MainContent 
+            <MainContent
                 activePage={activePage}
                 setActivePage={setActivePage}
-                accounts={accounts} 
+                accounts={accounts}
                 budgets={budgets}
                 vaults={vaults}
                 transactions={transactions}
@@ -56,9 +57,49 @@ function AppLayout({ user, onLogout, showToast, theme, setTheme, accounts, budge
                 showToast={showToast}
                 theme={theme}
                 setTheme={setTheme}
+                billers={billers}
+                beneficiaries={beneficiaries}
+                onOpenSendMoney={() => setActivePanelId('send')}
+                onOpenAddFunds={() => setActivePanelId('add')}
+                onOpenQRPayment={() => setActivePanelId('qr')}
+                onOpenNFCPayment={() => setActivePanelId('nfc')}
             />
         </main>
-    </div>
-);
+
+       {/* 5. Panels - Rendered at app level to overlay everything */}
+       <SendMoneyPanel
+         isOpen={activePanelId === 'send'}
+         onClose={() => setActivePanelId(null)}
+         onSuccess={() => {
+           setActivePanelId(null);
+           showToast('Transaction successful!');
+         }}
+       />
+       <AddFundsPanel
+         isOpen={activePanelId === 'add'}
+         onClose={() => setActivePanelId(null)}
+         onSuccess={() => {
+           setActivePanelId(null);
+           showToast('Funds added successfully!');
+         }}
+       />
+       <QRPaymentPanel
+         isOpen={activePanelId === 'qr'}
+         onClose={() => setActivePanelId(null)}
+         onSuccess={() => {
+           setActivePanelId(null);
+           showToast('QR payment completed!');
+         }}
+       />
+       <NFCPaymentPanel
+         isOpen={activePanelId === 'nfc'}
+         onClose={() => setActivePanelId(null)}
+         onSuccess={() => {
+           setActivePanelId(null);
+           showToast('NFC payment completed!');
+         }}
+       />
+   </div>
+   );
 }
 export default AppLayout;

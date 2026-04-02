@@ -38,7 +38,16 @@ function MainContent({ activePage, accounts, budgets, vaults, transactions, show
       )}
 
       {activePage === 'payments' && (
-        <PaymentsPage showToast={showToast}/>
+        <PaymentsPage
+          showToast={showToast}
+          billers={billers || []}
+          beneficiaries={beneficiaries || []}
+          history={history}
+          onSendMoney={() => {/* open send money panel */}}
+          onAddFunds={() => {/* open add funds panel */}}
+          onQRPayment={() => {/* open QR panel */}}
+          onNFCPayment={() => {/* open NFC panel */}}
+        />
       )}
 
       {activePage === 'settings' && (

@@ -5,22 +5,39 @@ import { Plus } from 'lucide-react';
 import HintTooltip from './HintTooltip.jsx';
 import { formatIBAN } from '../utils/ibanUtils';
 
-function PaymentsPage({ showToast }) {
+function PaymentsPage({ showToast, billers, beneficiaries, history, onSendMoney, onAddFunds, onQRPayment, onNFCPayment }) {
   const [isAddBillerModalOpen, setIsAddBillerModalOpen] = useState(false);
   const [isAddBeneficiaryModalOpen, setIsAddBeneficiaryModalOpen] = useState(false);
-  const [billers, setBillers] = useState([]);
-  const [beneficiaries, setBeneficiaries] = useState([]);
-  const [recentPayments, setRecentPayments] = useState([]);
+  const [billersState, setBillersState] = useState(billers || []);
+  const [beneficiariesState, setBeneficiariesState] = useState(beneficiaries || []);
+  const [recentPayments, setRecentPayments] = useState(history || []);
+
+  // Controlled state for biller form
+  const [billerName, setBillerName] = useState('');
+  const [billerCategory, setBillerCategory] = useState('');
+  const [billerAccountRef, setBillerAccountRef] = useState('');
+  const [billerLastAmount, setBillerLastAmount] = useState('');
+
+  // Controlled state for beneficiary form
+  const [beneficiaryName, setBeneficiaryName] = useState('');
+  const [beneficiaryNickname, setBeneficiaryNickname] = useState('');
+  const [beneficiaryType, setBeneficiaryType] = useState('');
+  const [beneficiaryValue, setBeneficiaryValue] = useState('');
 
   // In a real implementation, we would fetch these from Firestore
   // For now, we'll use mock data to demonstrate the structure
 
-  const handleAddBiller = async (name, category, accountRef) => {
-    const success = await createBiller(name, category, accountRef);
+  const handleAddBiller = async () => {
+    const success = await createBiller(billerName, billerCategory, billerAccountRef);
     if (success) {
       setIsAddBillerModalOpen(false);
       // In a real app, we would refetch the billers list
-      showToast(`Biller '${name}' added successfully.`);
+      showToast(`Biller '${billerName}' added successfully.`);
+      // Reset form
+      setBillerName('');
+      setBillerCategory('');
+      setBillerAccountRef('');
+      setBillerLastAmount('');
     } else {
       alert("Failed to add biller.");
     }
@@ -36,38 +53,23 @@ function PaymentsPage({ showToast }) {
     }
   };
 
-  const handleAddBeneficiary = async (beneficiaryName, nickname, destinationType, destinationValue) => {
-    const success = await createBeneficiary(beneficiaryName, nickname, destinationType, destinationValue);
+  const handleAddBeneficiary = async () => {
+    const success = await createBeneficiary(beneficiaryName, beneficiaryNickname, beneficiaryType, beneficiaryValue);
     if (success) {
       setIsAddBeneficiaryModalOpen(false);
       // In a real app, we would refetch the beneficiaries list
       showToast(`Beneficiary '${beneficiaryName}' added successfully.`);
+      // Reset form
+      setBeneficiaryName('');
+      setBeneficiaryNickname('');
+      setBeneficiaryType('');
+      setBeneficiaryValue('');
     } else {
       alert("Failed to add beneficiary.");
     }
   };
 
-  // Mock data for demonstration
-  // In a real implementation, this data would come from Firestore listeners
-  const mockBillers = [
-    { id: '1', name: 'Electricity Company', category: 'Utilities', accountRef: 'ACC-001', lastAmount: 2500 },
-    { id: '2', name: 'Gas Provider', category: 'Utilities', accountRef: 'ACC-002', lastAmount: 1800 },
-    { id: '3', name: 'Internet Service', category: 'Telecom', accountRef: 'ACC-003', lastAmount: 1500 },
-    { id: '4', name: 'Mobile Top-up', category: 'Telecom', accountRef: 'ACC-004', lastAmount: 500 }
-  ];
-
-  const mockBeneficiaries = [
-    { id: '1', name: 'Ali Hassan', nickname: 'Ali', destinationType: 'IBAN', destinationValue: 'PK36FNVT0000123456789012' },
-    { id: '2', name: 'Fatima Khan', nickname: 'Fatima', destinationType: 'IBAN', destinationValue: 'PK36HABB0000987654321098' },
-    { id: '3', name: 'Ahmed Malik', nickname: 'Ahmed', destinationType: 'IBAN', destinationValue: 'PK36MUCB0000555555555555' }
-  ];
-
-  const mockRecentPayments = [
-    { id: '1', amount: 2500, description: 'Electricity Bill', date: '2026-03-25' },
-    { id: '2', amount: 500, description: 'Mobile Top-up', date: '2026-03-24' },
-    { id: '3', amount: 1500, description: 'Internet Bill', date: '2026-03-23' },
-    { id: '4', amount: 1800, description: 'Gas Bill', date: '2026-03-22' }
-  ];
+  // Data comes from props (passed from AppLayout)
 
   return (
     <>
@@ -133,7 +135,7 @@ function PaymentsPage({ showToast }) {
         <div className="bg-background/50 p-6 rounded-2xl">
           <h3 className="font-semibold text-lg mb-4">Billers</h3>
           <div className="space-y-4">
-            {mockBillers.map(biller => (
+            {billersState.map(biller => (
               <div key={biller.id} className="p-4 bg-white/5 rounded-lg border border-white/10">
                 <div className="flex justify-between items-start">
                   <div>
@@ -162,7 +164,7 @@ function PaymentsPage({ showToast }) {
                 </div>
               </div>
             ))}
-            {mockBillers.length === 0 && (
+            {billersState.length === 0 && (
               <p className="text-text-secondary">No billers added yet. Click "Add Biller" to get started.</p>
             )}
           </div>
@@ -172,7 +174,7 @@ function PaymentsPage({ showToast }) {
         <div className="bg-background/50 p-6 rounded-2xl">
           <h3 className="font-semibold text-lg mb-4">Recent Payments</h3>
           <div className="space-y-3">
-            {mockRecentPayments.map(payment => (
+            {recentPayments.map(payment => (
               <div key={payment.id} className="p-3 bg-white/5 rounded-lg border border-white/10">
                 <div className="flex justify-between items-start">
                   <div>
@@ -183,7 +185,7 @@ function PaymentsPage({ showToast }) {
                 </div>
               </div>
             ))}
-            {mockRecentPayments.length === 0 && (
+            {recentPayments.length === 0 && (
               <p className="text-text-secondary">No recent payments yet.</p>
             )}
           </div>
@@ -207,7 +209,7 @@ function PaymentsPage({ showToast }) {
             </button>
           </div>
           <div className="space-y-3">
-            {mockBeneficiaries.map(beneficiary => (
+            {beneficiariesState.map(beneficiary => (
               <div key={beneficiary.id} className="p-3 bg-white/5 rounded-lg border border-white/10">
                 <div className="flex justify-between items-start">
                   <div>
@@ -229,7 +231,7 @@ function PaymentsPage({ showToast }) {
                 </div>
               </div>
             ))}
-            {mockBeneficiaries.length === 0 && (
+            {beneficiariesState.length === 0 && (
               <p className="text-text-secondary">No beneficiaries added yet. Click "Add Beneficiary" to get started.</p>
             )}
           </div>
@@ -237,129 +239,143 @@ function PaymentsPage({ showToast }) {
       </section>
 
       {/* Modals */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-        {/* Add Biller Modal */}
-        <div className="relative bg-background/90 backdrop-blur-sm rounded-3xl p-6 w-full max-w-md mx-4">
-          <div className="flex justify-between items-start mb-4">
-            <h3 className="text-lg font-semibold">Add Biller</h3>
-            <button
-              onClick={() => setIsAddBillerModalOpen(false)}
-              className="text-xs btn-danger py-1 px-2 rounded"
-            >
-              ×
-            </button>
-          </div>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-text-primary mb-2">Biller Name</label>
-              <input
-                type="text"
-                placeholder="Enter biller name"
-                className="w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-gray-300"
-              />
-            </div>
-            <div>
-              <label className="block text-text-primary mb-2">Category</label>
-              <select
-                className="w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-gray-300"
+      {isAddBillerModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75" onClick={() => setIsAddBillerModalOpen(false)}>
+          <div className="relative bg-background/90 backdrop-blur-sm rounded-3xl p-6 w-full max-w-md mx-4" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="text-lg font-semibold">Add Biller</h3>
+              <button
+                onClick={() => setIsAddBillerModalOpen(false)}
+                className="text-xs btn-danger py-1 px-2 rounded"
               >
-                <option value="">Select category</option>
-                <option value="Utilities">Utilities</option>
-                <option value="Telecom">Telecom</option>
-                <option value="Finance">Finance</option>
-                <option value="Education">Education</option>
-                <option value="Healthcare">Healthcare</option>
-                <option value="Other">Other</option>
-              </select>
+                ×
+              </button>
             </div>
-            <div>
-              <label className="block text-text-primary mb-2">Account Reference</label>
-              <input
-                type="text"
-                placeholder="Enter account reference"
-                className="w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-gray-300"
-              />
+            <div className="space-y-4">
+              <div>
+                <label className="block text-text-primary mb-2">Biller Name</label>
+                <input
+                  value={billerName}
+                  onChange={(e) => setBillerName(e.target.value)}
+                  type="text"
+                  placeholder="Enter biller name"
+                  className="w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-gray-300"
+                />
+              </div>
+              <div>
+                <label className="block text-text-primary mb-2">Category</label>
+                <select
+                  value={billerCategory}
+                  onChange={(e) => setBillerCategory(e.target.value)}
+                  className="w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-gray-300"
+                >
+                  <option value="">Select category</option>
+                  <option value="Utilities">Utilities</option>
+                  <option value="Telecom">Telecom</option>
+                  <option value="Finance">Finance</option>
+                  <option value="Education">Education</option>
+                  <option value="Healthcare">Healthcare</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-text-primary mb-2">Account Reference</label>
+                <input
+                  value={billerAccountRef}
+                  onChange={(e) => setBillerAccountRef(e.target.value)}
+                  type="text"
+                  placeholder="Enter account reference"
+                  className="w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-gray-300"
+                />
+              </div>
+              <div>
+                <label className="block text-text-primary mb-2">Last Amount (Optional)</label>
+                <input
+                  value={billerLastAmount}
+                  onChange={(e) => setBillerLastAmount(e.target.value)}
+                  type="number"
+                  placeholder="Enter last amount paid"
+                  className="w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-gray-300"
+                />
+              </div>
+              <button
+                onClick={handleAddBiller}
+                className="w-full btn-primary py-2 px-4 rounded-lg"
+              >
+                Add Biller
+              </button>
             </div>
-            <div>
-              <label className="block text-text-primary mb-2">Last Amount (Optional)</label>
-              <input
-                type="number"
-                placeholder="Enter last amount paid"
-                className="w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-gray-300"
-              />
-            </div>
-            <button
-              onClick={() => {
-                // In a real implementation, we would get values from form inputs
-                handleAddBiller('Test Biller', 'Utilities', 'ACC-005');
-              }}
-              className="w-full btn-primary py-2 px-4 rounded-lg"
-            >
-              Add Biller
-            </button>
           </div>
         </div>
+      )}
 
-        {/* Add Beneficiary Modal */}
-        <div className="relative bg-background/90 backdrop-blur-sm rounded-3xl p-6 w-full max-w-md mx-4">
-          <div className="flex justify-between items-start mb-4">
-            <h3 className="text-lg font-semibold">Add Beneficiary</h3>
-            <button
-              onClick={() => setIsAddBeneficiaryModalOpen(false)}
-              className="text-xs btn-danger py-1 px-2 rounded"
-            >
-              ×
-            </button>
-          </div>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-text-primary mb-2">Beneficiary Name</label>
-              <input
-                type="text"
-                placeholder="Enter beneficiary name"
-                className="w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-gray-300"
-              />
-            </div>
-            <div>
-              <label className="block text-text-primary mb-2">Nickname</label>
-              <input
-                type="text"
-                placeholder="Enter nickname"
-                className="w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-gray-300"
-              />
-            </div>
-            <div>
-              <label className="block text-text-primary mb-2">Destination Type</label>
-              <select
-                className="w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-gray-300"
+      {isAddBeneficiaryModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75" onClick={() => setIsAddBeneficiaryModalOpen(false)}>
+          <div className="relative bg-background/90 backdrop-blur-sm rounded-3xl p-6 w-full max-w-md mx-4" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="text-lg font-semibold">Add Beneficiary</h3>
+              <button
+                onClick={() => setIsAddBeneficiaryModalOpen(false)}
+                className="text-xs btn-danger py-1 px-2 rounded"
               >
-                <option value="">Select type</option>
-                <option value="IBAN">IBAN</option>
-                <option value="Account Number">Account Number</option>
-                <option value="Phone Number">Phone Number</option>
-                <option value="Email">Email</option>
-              </select>
+                ×
+              </button>
             </div>
-            <div>
-              <label className="block text-text-primary mb-2">Destination Value</label>
-              <input
-                type="text"
-                placeholder="Enter destination value"
-                className="w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-gray-300"
-              />
+            <div className="space-y-4">
+              <div>
+                <label className="block text-text-primary mb-2">Beneficiary Name</label>
+                <input
+                  value={beneficiaryName}
+                  onChange={(e) => setBeneficiaryName(e.target.value)}
+                  type="text"
+                  placeholder="Enter beneficiary name"
+                  className="w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-gray-300"
+                />
+              </div>
+              <div>
+                <label className="block text-text-primary mb-2">Nickname</label>
+                <input
+                  value={beneficiaryNickname}
+                  onChange={(e) => setBeneficiaryNickname(e.target.value)}
+                  type="text"
+                  placeholder="Enter nickname"
+                  className="w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-gray-300"
+                />
+              </div>
+              <div>
+                <label className="block text-text-primary mb-2">Destination Type</label>
+                <select
+                  value={beneficiaryType}
+                  onChange={(e) => setBeneficiaryType(e.target.value)}
+                  className="w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-gray-300"
+                >
+                  <option value="">Select type</option>
+                  <option value="IBAN">IBAN</option>
+                  <option value="Account Number">Account Number</option>
+                  <option value="Phone Number">Phone Number</option>
+                  <option value="Email">Email</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-text-primary mb-2">Destination Value</label>
+                <input
+                  value={beneficiaryValue}
+                  onChange={(e) => setBeneficiaryValue(e.target.value)}
+                  type="text"
+                  placeholder="Enter destination value"
+                  className="w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-gray-300"
+                />
+              </div>
+              <button
+                onClick={handleAddBeneficiary}
+                className="w-full btn-primary py-2 px-4 rounded-lg"
+              >
+                Add Beneficiary
+              </button>
             </div>
-            <button
-              onClick={() => {
-                // In a real implementation, we would get values from form inputs
-                handleAddBeneficiary('Test Beneficiary', 'Test', 'IBAN', 'PK36FNVT0000123456789012');
-              }}
-              className="w-full btn-primary py-2 px-4 rounded-lg"
-            >
-              Add Beneficiary
-            </button>
           </div>
         </div>
-      </div>
+      )}
     </>
   );
 }

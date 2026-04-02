@@ -2,6 +2,7 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import HintTooltip from './HintTooltip.jsx';
+import { Eye, EyeOff } from 'lucide-react';
 
 // Custom SVG icons for the dashboard
 const SendMoneyIcon = () => (
@@ -53,8 +54,10 @@ export default function DashboardPage({
   vaults,
   setActivePage,
   activePage,
-  currentTheme,
-  setCurrentTheme,
+  onSendMoney,
+  onAddFunds,
+  onQRPayment,
+  onNFCPayment,
   showIconTooltips = true,
   showIBANOnHero = true,
   showBalanceByDefault = true
@@ -67,9 +70,11 @@ export default function DashboardPage({
   // Count active vaults (with current > 0)
   const activeVaultsCount = vaults?.filter(v => v.current > 0).length || 0;
 
+  const [balanceVisible, setBalanceVisible] = useState(showBalanceByDefault);
+
   // Format balance for display
   const formatBalance = (balance) => {
-    if (!showBalanceByDefault) {
+    if (!balanceVisible) {
       return '● ● ● ● ● ●';
     }
     return `Rs ${balance?.toLocaleString('en-US') || '0.00'}`;
@@ -86,7 +91,7 @@ export default function DashboardPage({
 
   return (
     /* h-full and overflow-hidden removes the page scroll */
-    <section id="dashboard" className="h-full flex flex-col overflow-hidden p-4">
+    <section id="dashboard" className="h-full flex flex-col overflow-y-auto max-h-screen p-4">
       {/* Hidden navigation links for accessibility */}
       <div className="hidden">
         <a id="dashboard-link" href="#dashboard" tabIndex="-1"></a>
@@ -100,7 +105,7 @@ export default function DashboardPage({
       {/* Main Hero Card */}
       <motion.div
         whileHover={{ scale: 1.02 }}
-        className="flex-none flex flex-col items-center justify-center py-8 bg-background/30 rounded-3xl border border-white/5 w-full max-w-2xl mx-auto"
+        className="flex-shrink-0 flex flex-col items-center justify-center py-8 bg-background/30 rounded-3xl border border-white/5 w-full max-w-2xl mx-auto"
       >
         {/* Account Name */}
         <p className="text-base text-text-secondary uppercase tracking-widest">
@@ -110,9 +115,14 @@ export default function DashboardPage({
         {/* Balance Section */}
         <div className="mt-6 text-center">
           <p className="text-base text-text-secondary">Total Balance</p>
-          <p className="text-5xl font-extrabold tracking-tight mt-2">
-            {formatBalance(mainAccount?.balance || 0)}
-          </p>
+          <div className="flex items-center justify-center mt-2">
+            <p className="text-5xl font-extrabold tracking-tight">
+              {formatBalance(mainAccount?.balance || 0)}
+            </p>
+            <button onClick={() => setBalanceVisible(v => !v)} className="ml-2 text-text-muted hover:text-text-primary">
+              {balanceVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
           {showIBANOnHero && (
             <p className="text-xl font-mono tracking-[0.2em] mt-4 opacity-50">
               {mainAccount?.ibanNumber ?
@@ -123,17 +133,18 @@ export default function DashboardPage({
         </div>
 
         {/* Icon Grid */}
-        <div className="flex gap-4 mt-8 w-full justify-center">
+        <div className="grid grid-cols-4 md:grid-cols-8 gap-2 mt-8 w-full px-2">
           {/* Send Money */}
           <motion.div
             whileHover={{ scale: 1.08 }}
-            className="relative flex-1 flex flex-col items-center p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 hover:bg-white/20 transition-all duration-200"
+            className="relative w-full min-w-0 flex flex-col items-center justify-center p-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 hover:bg-white/20 transition-all duration-200 cursor-pointer aspect-square"
+            onClick={onSendMoney}
           >
             <SendMoneyIcon className="mb-2" />
             <span className="text-xs text-text-secondary">Send</span>
             {showIconTooltips && (
               <HintTooltip hint="Send Money — Transfer funds to any account using IBAN or saved beneficiary">
-                {/* Tooltip is handled by the HintTooltip component */}
+                <span className="absolute top-1 right-1 w-3 h-3 rounded-full bg-white/20 text-[8px] flex items-center justify-center cursor-help">?</span>
               </HintTooltip>
             )}
           </motion.div>
@@ -141,13 +152,14 @@ export default function DashboardPage({
           {/* Add Funds */}
           <motion.div
             whileHover={{ scale: 1.08 }}
-            className="relative flex-1 flex flex-col items-center p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 hover:bg-white/20 transition-all duration-200"
+            className="relative w-full min-w-0 flex flex-col items-center justify-center p-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 hover:bg-white/20 transition-all duration-200 cursor-pointer aspect-square"
+            onClick={onAddFunds}
           >
             <AddFundsIcon className="mb-2" />
             <span className="text-xs text-text-secondary">Add</span>
             {showIconTooltips && (
               <HintTooltip hint="Add Funds — Add money to your account from card or bank transfer">
-                {/* Tooltip is handled by the HintTooltip component */}
+                <span className="absolute top-1 right-1 w-3 h-3 rounded-full bg-white/20 text-[8px] flex items-center justify-center cursor-help">?</span>
               </HintTooltip>
             )}
           </motion.div>
@@ -155,13 +167,14 @@ export default function DashboardPage({
           {/* QR Payment */}
           <motion.div
             whileHover={{ scale: 1.08 }}
-            className="relative flex-1 flex flex-col items-center p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 hover:bg-white/20 transition-all duration-200"
+            className="relative w-full min-w-0 flex flex-col items-center justify-center p-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 hover:bg-white/20 transition-all duration-200 cursor-pointer aspect-square"
+            onClick={onQRPayment}
           >
             <QRPaymentIcon className="mb-2" />
             <span className="text-xs text-text-secondary">QR</span>
             {showIconTooltips && (
               <HintTooltip hint="QR Payment — Scan QR codes to pay or display your QR code to receive payments">
-                {/* Tooltip is handled by the HintTooltip component */}
+                <span className="absolute top-1 right-1 w-3 h-3 rounded-full bg-white/20 text-[8px] flex items-center justify-center cursor-help">?</span>
               </HintTooltip>
             )}
           </motion.div>
@@ -169,13 +182,14 @@ export default function DashboardPage({
           {/* NFC Payment */}
           <motion.div
             whileHover={{ scale: 1.08 }}
-            className="relative flex-1 flex flex-col items-center p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 hover:bg-white/20 transition-all duration-200"
+            className="relative w-full min-w-0 flex flex-col items-center justify-center p-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 hover:bg-white/20 transition-all duration-200 cursor-pointer aspect-square"
+            onClick={onNFCPayment}
           >
             <NFCPaymentIcon className="mb-2" />
             <span className="text-xs text-text-secondary">NFC</span>
             {showIconTooltips && (
               <HintTooltip hint="NFC Payment — Tap to pay or receive payments using NFC (requires mobile app)">
-                {/* Tooltip is handled by the HintTooltip component */}
+                <span className="absolute top-1 right-1 w-3 h-3 rounded-full bg-white/20 text-[8px] flex items-center justify-center cursor-help">?</span>
               </HintTooltip>
             )}
           </motion.div>
@@ -183,7 +197,7 @@ export default function DashboardPage({
           {/* Budgets */}
           <motion.div
             whileHover={{ scale: 1.08 }}
-            className="relative flex-1 flex flex-col items-center p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 hover:bg-white/20 transition-all duration-200"
+            className="relative w-full min-w-0 flex flex-col items-center justify-center p-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 hover:bg-white/20 transition-all duration-200 cursor-pointer aspect-square"
             onClick={() => setActivePage('budgets')}
           >
             <BudgetsIcon className="mb-2" />
@@ -200,7 +214,7 @@ export default function DashboardPage({
             )}
             {showIconTooltips && (
               <HintTooltip hint="Budgets — View and manage your spending budgets">
-                {/* Tooltip is handled by the HintTooltip component */}
+                <span className="absolute top-1 right-1 w-3 h-3 rounded-full bg-white/20 text-[8px] flex items-center justify-center cursor-help">?</span>
               </HintTooltip>
             )}
           </motion.div>
@@ -208,7 +222,7 @@ export default function DashboardPage({
           {/* Vaults */}
           <motion.div
             whileHover={{ scale: 1.08 }}
-            className="relative flex-1 flex flex-col items-center p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 hover:bg-white/20 transition-all duration-200"
+            className="relative w-full min-w-0 flex flex-col items-center justify-center p-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 hover:bg-white/20 transition-all duration-200 cursor-pointer aspect-square"
             onClick={() => setActivePage('vaults')}
           >
             <VaultsIcon className="mb-2" />
@@ -225,7 +239,7 @@ export default function DashboardPage({
             )}
             {showIconTooltips && (
               <HintTooltip hint="Vaults — View and manage your savings vaults">
-                {/* Tooltip is handled by the HintTooltip component */}
+                <span className="absolute top-1 right-1 w-3 h-3 rounded-full bg-white/20 text-[8px] flex items-center justify-center cursor-help">?</span>
               </HintTooltip>
             )}
           </motion.div>
@@ -233,14 +247,14 @@ export default function DashboardPage({
           {/* Accounts */}
           <motion.div
             whileHover={{ scale: 1.08 }}
-            className="relative flex-1 flex flex-col items-center p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 hover:bg-white/20 transition-all duration-200"
+            className="relative w-full min-w-0 flex flex-col items-center justify-center p-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 hover:bg-white/20 transition-all duration-200 cursor-pointer aspect-square"
             onClick={() => setActivePage('accounts')}
           >
             <AccountsIcon className="mb-2" />
             <span className="text-xs text-text-secondary">Accounts</span>
             {showIconTooltips && (
               <HintTooltip hint="Accounts — View and manage your bank accounts and sub-accounts">
-                {/* Tooltip is handled by the HintTooltip component */}
+                <span className="absolute top-1 right-1 w-3 h-3 rounded-full bg-white/20 text-[8px] flex items-center justify-center cursor-help">?</span>
               </HintTooltip>
             )}
           </motion.div>

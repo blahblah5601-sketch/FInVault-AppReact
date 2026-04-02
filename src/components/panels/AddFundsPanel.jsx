@@ -206,7 +206,7 @@ const AddFundsPanel = ({ isOpen, onClose, onSuccess }) => {
                 <>
                   {/* Card Scan/Tap Section */}
                   <div className="mb-6 text-center">
-                    {/!* Android Capacitor NFC *!/}
+                    {/* Android Capacitor NFC */}
                     <button
                       onClick={handleTapCard}
                       className="w-full mb-4 btn-secondary py-2 px-4 rounded flex items-center justify-center"

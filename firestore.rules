@@ -352,6 +352,32 @@ service cloud.firestore {
       );
     }
 
+    function isValidBiller() {
+      let data = request.resource.data;
+      return (
+        data.keys().hasAll([
+          'name', 'category', 'accountRef', 'lastAmount', 'createdAt'
+        ]) &&
+
+        // Biller details
+        data.name is string &&
+        data.name.size() > 0 &&
+        data.name.size() <= 100 &&
+        data.category is string &&
+        data.category.size() > 0 &&
+        data.category.size() <= 50 &&
+        data.accountRef is string &&
+        data.accountRef.size() > 0 &&
+
+        // Financial info
+        data.lastAmount is number &&
+        data.lastAmount >= 0,
+
+        // Timestamp
+        data.createdAt == request.time
+      );
+    }
+
     function isValidPaymentMethod() {
       let data = request.resource.data;
       return (
@@ -559,6 +585,22 @@ service cloud.firestore {
                          isValidBeneficiary() &&
                          // Only allow updating certain fields
                          onlyUpdating(['beneficiaryName', 'nickname', 'destinationValue', 'isActive']);
+
+        allow delete: if isOwner(userId);
+      }
+
+      // ==================== BILLERS SUBCOLLECTION ====================
+
+      match /billers/{billerId} {
+        allow read: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidBiller();
+
+        allow update: if isOwner(userId) &&
+                         isValidBiller() &&
+                         // Only allow updating certain fields
+                         onlyUpdating(['name', 'category', 'accountRef', 'lastAmount']);
 
         allow delete: if isOwner(userId);
       }

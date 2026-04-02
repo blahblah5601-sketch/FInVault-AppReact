@@ -49,6 +49,19 @@ const SendMoneyPanel = ({ isOpen, onClose, onSuccess }) => {
     setDescription(e.target.value);
   };
 
+  // Auto-validate IBAN when recipient looks like a full IBAN (24 chars after removing spaces)
+  useEffect(() => {
+    const clean = recipient.replace(/\s/g, '');
+    if (clean.length === 24) {
+      const result = validateIBAN(clean);
+      setIsValidIBAN(result.valid);
+      setIbanError(result.valid ? null : result.error);
+    } else {
+      setIsValidIBAN(false);
+      setIbanError(null);
+    }
+  }, [recipient]);
+
   const handleIBANValidation = () => {
     if (!recipient) {
       setIbanError('Please enter an IBAN');
@@ -70,8 +83,10 @@ const SendMoneyPanel = ({ isOpen, onClose, onSuccess }) => {
     setRecipient(beneficiary.iban);
     setIsSearching(false);
     setSearchResults([]);
-    // Auto-validate the selected IBAN
-    handleIBANValidation();
+    // Directly validate the selected IBAN
+    const result = validateIBAN(beneficiary.iban);
+    setIsValidIBAN(result.valid);
+    setIbanError(result.valid ? null : result.error);
   };
 
   const handleSendMoney = async () => {
@@ -171,7 +186,7 @@ const SendMoneyPanel = ({ isOpen, onClose, onSuccess }) => {
                       ) : (
                         <span className="text-red-400">
                           ✗ Invalid IBAN
-                        }
+                        </span>
                       )}
                       <button
                         onClick={handleIBANValidation}

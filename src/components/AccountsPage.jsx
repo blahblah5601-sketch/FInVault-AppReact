@@ -1,8 +1,9 @@
 // src/components/AccountsPage.jsx
 import { useState, useEffect } from 'react';
 import { getAccounts, createSubAccount, deleteSubAccount, setActiveSubAccount } from '../api';
-import { formatIBAN } from '../utils/ibanUtils';
+import { formatIBAN, BANK_BICS } from '../utils/ibanUtils';
 import { Plus, Trash2, Loader2, Menu } from 'lucide-react';
+import ConfirmDeleteModal from './modals/ConfirmDeleteModal';
 
 const AccountsPage = ({ showToast }) => {
   const [accounts, setAccounts] = useState([]);
@@ -11,6 +12,9 @@ const AccountsPage = ({ showToast }) => {
   const [newAccountName, setNewAccountName] = useState('');
   const [selectedBic, setSelectedBic] = useState('FNVT'); // Default to FinVault
   const [activeAccountId, setActiveAccountId] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [accountToDelete, setAccountToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Load accounts on mount
   useEffect(() => {
@@ -69,25 +73,31 @@ const AccountsPage = ({ showToast }) => {
   };
 
   // Handle deleting a sub-account
-  const handleDeleteSubAccount = async (accountId) => {
-    if (!window.confirm('Are you sure you want to delete this sub-account? This action cannot be undone.')) {
-      return;
-    }
+  const handleDeleteSubAccount = async (account) => {
+    setAccountToDelete(account);
+    setIsDeleteModalOpen(true);
+  };
 
-    try {
-      const success = await deleteSubAccount(accountId);
-      if (success) {
-        showToast('Sub-account deleted successfully');
-        // Reload accounts
-        const accountsData = await getAccounts();
-        setAccounts(accountsData);
-      } else {
-        showToast('Failed to delete sub-account');
-      }
-    } catch (error) {
-      console.error('Error deleting sub-account:', error);
-      showToast('Failed to delete sub-account');
+  const handleConfirmDelete = async () => {
+    if (!accountToDelete) return;
+    setIsDeleting(true);
+    const success = await deleteSubAccount(accountToDelete.id);
+    setIsDeleting(false);
+    setIsDeleteModalOpen(false);
+    if (success) {
+      showToast(`Sub-account '${accountToDelete.name}' deleted.`);
+      // Reload accounts
+      const accountsData = await getAccounts();
+      setAccounts(accountsData);
+    } else {
+      showToast('Failed to delete sub-account.');
     }
+    setAccountToDelete(null);
+  };
+
+  const handleCancelDelete = () => {
+    setIsDeleteModalOpen(false);
+    setAccountToDelete(null);
   };
 
   // Handle setting active sub-account
@@ -174,56 +184,34 @@ const AccountsPage = ({ showToast }) => {
         {subAccounts.length > 0 ? (
           <div className="space-y-4">
             {subAccounts.map((account) => (
-              <div key={account.id} className="bg-background/50 p-4 rounded-xl flex items-center space-x-4">
-                <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
-                  <span className="text-primary">#️⃣</span>
-                </div>
-                <div className="flex-1 space-y-1">
-                  <h3 className="font-semibold">{account.name}</h3>
-                  <p className="text-text-secondary">{account.bankName} • Sub-account #{account.subAccountIndex}</p>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="text-sm space-y-1">
-                    <p className="text-text-secondary">Account Number</p>
-                    <p className="font-mono text-text-primary">{account.accountNumber}</p>
-                  </div>
-                  <div className="text-sm space-y-1">
-                    <p className="text-text-secondary">IBAN</p>
-                    <div className="flex items-center space-x-1">
-                      <p className="font-mono text-text-primary">{formatIBAN(account.ibanNumber)}</p>
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(account.ibanNumber);
-                          showToast('IBAN copied to clipboard');
-                        }}
-                        className="text-xs btn-secondary py-1 px-2 rounded hover:bg-primary/20"
-                      >
-                        Copy
-                      </button>
+              <div key={account.id} className="bg-background/50 p-4 rounded-xl">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
+                      <span className="text-primary text-sm">#{account.subAccountIndex}</span>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold">{account.name}</h3>
+                      <p className="text-sm text-text-secondary">{account.bankName}</p>
                     </div>
                   </div>
-                  <div className="text-sm space-y-1">
-                    <p className="text-text-secondary">Balance</p>
-                    <p className="font-mono text-text-primary">Rs {account.balance?.toLocaleString('en-US') || '0.00'}</p>
+                  <div className="flex items-center gap-2">
+                    {account.isActive
+                      ? <span className="text-xs btn-primary py-1 px-2 rounded">Active</span>
+                      : <button onClick={() => handleSetActiveSubAccount(account.id)} className="text-xs btn-secondary py-1 px-2 rounded">Set Active</button>
+                    }
+                    <button onClick={() => handleDeleteSubAccount(account)} className="text-xs btn-danger py-1 px-2 rounded">Delete</button>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    {!account.isActive && (
-                      <button
-                        onClick={() => handleSetActiveSubAccount(account.id)}
-                        className="btn-secondary py-1 px-3 rounded hover:bg-primary/20"
-                      >
-                        Set Active
-                      </button>
-                    )}
-                    {account.isActive && (
-                      <span className="text-xs btn-success py-1 px-2 rounded">Active</span>
-                    )}
-                    <button
-                      onClick={() => handleDeleteSubAccount(account.id)}
-                      className="text-xs btn-danger py-1 px-2 rounded"
-                    >
-                      Delete
-                    </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div><p className="text-text-secondary">Account No</p><p className="font-mono">{account.accountNumber}</p></div>
+                  <div><p className="text-text-secondary">Balance</p><p className="font-mono">Rs {account.balance?.toLocaleString('en-US') || '0'}</p></div>
+                  <div className="col-span-2">
+                    <p className="text-text-secondary">IBAN</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-mono text-xs">{formatIBAN(account.ibanNumber)}</p>
+                      <button onClick={() => { navigator.clipboard.writeText(account.ibanNumber); showToast('IBAN copied'); }} className="text-xs btn-secondary py-1 px-2 rounded">Copy</button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -289,18 +277,18 @@ const AccountsPage = ({ showToast }) => {
       </div>
     </div>
   );
-};
 
-// Define BANK_BICS for the bank picker (same as in ibanUtils.js)
-const BANK_BICS = {
-  FINVAULT: { code: 'FNVT', name: 'FinVault', color: '#3b82f6' },
-  HBL: { code: 'HABB', name: 'HBL (Habib Bank)', color: '#10b981' },
-  MCB: { code: 'MUCB', name: 'MCB Bank', color: '#f59e0b' },
-  UBL: { code: 'UMBL', name: 'UBL (United Bank)', color: '#8b5cf6' },
-  MEEZAN: { code: 'MEZN', name: 'Meezan Bank', color: '#06b6d4' },
-  ABL: { code: 'ABPA', name: 'Allied Bank', color: '#ef4444' },
-  FAYSAL: { code: 'FAYS', name: 'Faysal Bank', color: '#84cc16' },
-  ASKARI: { code: 'ASCM', name: 'Askari Bank', color: '#f97316' },
+  // Delete Confirmation Modal
+  {isDeleteModalOpen && (
+    <ConfirmDeleteModal
+      isOpen={isDeleteModalOpen}
+      onClose={handleCancelDelete}
+      onConfirm={handleConfirmDelete}
+      itemType="sub-account"
+      itemName={accountToDelete?.name || ''}
+      isDeleting={isDeleting}
+    />
+  )}
 };
 
 export default AccountsPage;

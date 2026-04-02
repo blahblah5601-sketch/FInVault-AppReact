@@ -43,6 +43,8 @@ function App( ) {
   const [vaultsData, setVaultsData] = useState([]);
   const [transactionsData, setTransactionsData] = useState([]);
   const [historyData, setHistoryData] = useState([]);
+  const [billersData, setBillersData] = useState([]);
+  const [beneficiariesData, setBeneficiariesData] = useState([]);
 
   useEffect(() => {
     // onAuthStateChanged is the Firebase listener for login/logout events
@@ -72,6 +74,8 @@ function App( ) {
           vaults: setVaultsData,
           transactions: setTransactionsData,
           history: setHistoryData,
+          billers: setBillersData,
+          beneficiaries: setBeneficiariesData,
         };
 
         let loadedCount = 0;
