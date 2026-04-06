@@ -1,150 +1,183 @@
 // src/components/onboarding/TooltipChain.jsx
+// Note: activePage prop is required — this component uses state-based routing,
+// NOT window.location.pathname which always returns the base deploy path.
 import { useState, useEffect } from 'react';
-import HintTooltip from '../HintTooltip.jsx';
+import { motion, AnimatePresence } from 'framer-motion';
 
-const TooltipChain = ({ step, onCompleteStep, onSkip, pagesVisited, setPagesVisited }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isOpen, setIsOpen] = useState(false);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
-
-  // Define tooltip chains for different pages
-  // In a real app, these would be more specific to each page
-  const tooltipChains = {
-    budgets: [
-      { selector: '.budget-card', hint: 'Click on a budget to view details or make changes', position: 'bottom' },
-      { selector: '#new-budget-btn', hint: 'Click here to create a new budget', position: 'top' },
-      { selector: '.visual-view-toggle', hint: 'Switch between list view and visual donut chart view', position: 'right' }
-    ],
-    vaults: [
-      { selector: '.vault-card', hint: 'Tap a vault to see details or make a deposit/withdrawal', position: 'bottom' },
-      { selector: '#new-vault-btn', hint: 'Create a new savings vault for your goals', position: 'top' }
-    ],
-    payments: [
-      { selector: '.biller-card', hint: 'Manage your recurring billers and make quick payments', position: 'bottom' },
-      { selector: '#add-biller-btn', hint: 'Add a new biller for recurring payments', position: 'top' },
-      { selector: '.beneficiary-card', hint: 'Save frequent recipients for faster transfers', position: 'bottom' },
-      { selector: '#add-beneficiary-btn', hint: 'Add a new beneficiary to your list', position: 'top' }
-    ]
-  };
-
-  // Get current page path - simplified for now
-  // In a real app, you'd use useLocation() from react-router-dom
-  const getCurrentPage = () => {
-    // This is a simplified version - in reality you'd check the current route
-    return window.location.pathname.includes('budgets') ? 'budgets' :
-           window.location.pathname.includes('vaults') ? 'vaults' :
-           window.location.pathname.includes('payments') ? 'payments' : null;
-  };
-
-  useEffect(() => {
-    const page = getCurrentPage();
-    if (page && tooltipChains[page]) {
-      const chain = tooltipChains[page];
-
-      // Check if we've already shown this chain for this page
-      if (!pagesVisited.includes(page)) {
-        // Show the first tooltip in the chain
-        if (chain.length > 0) {
-          const tooltip = chain[currentIndex];
-          if (tooltip) {
-            const element = document.querySelector(tooltip.selector);
-            if (element) {
-              const rect = element.getBoundingClientRect();
-              setPosition({
-                top: rect.top + window.scrollY,
-                left: rect.left + window.scrollX
-              });
-              setIsOpen(true);
-            }
-          }
-        }
-      }
+// Define tooltip chains per page
+// selectors must match actual IDs/classes used in those page components
+const CHAINS = {
+  budgets: [
+    {
+      selector: '#new-budget-btn',
+      hint: 'Tap here to create a new budget category for tracking your spending.'
+    },
+    {
+      selector: '#budgets-list',
+      hint: 'Your budgets appear here. Each one shows how much you have spent versus your limit.'
     }
-  }, [step, pagesVisited]);
+  ],
+  vaults: [
+    {
+      selector: '#new-vault-btn',
+      hint: 'Tap here to create a new savings vault for a specific goal.'
+    },
+    {
+      selector: '#vaults-list',
+      hint: 'Each vault tracks your progress toward its savings target.'
+    }
+  ],
+  payments: [
+    {
+      selector: '#payments',
+      hint: 'This is your Payments hub. Manage billers, beneficiaries, and view recent payment history.'
+    }
+  ],
+  accounts: [
+    {
+      selector: '#accounts-page',
+      hint: 'View your main account IBAN and account number here. You can also create sub-accounts.'
+    }
+  ],
+  transactions: [
+    {
+      selector: '#transaction-list',
+      hint: 'All your transactions appear here in reverse chronological order.'
+    }
+  ]
+};
+
+const TooltipChain = ({ activePage, pagesVisited, onMarkVisited }) => {
+  const [index, setIndex] = useState(0);
+  const [rect, setRect] = useState(null);
+
+  const chain = CHAINS[activePage] || [];
+  const alreadyVisited = pagesVisited.includes(activePage);
+  const currentTooltip = chain[index];
+
+  // Reset index whenever the page changes
+  useEffect(() => {
+    setIndex(0);
+  }, [activePage]);
+
+  // Measure the target element whenever the current tooltip changes
+  useEffect(() => {
+    if (!currentTooltip || alreadyVisited) {
+      setRect(null);
+      return;
+    }
+
+    const measureTarget = () => {
+      const el = document.querySelector(currentTooltip.selector);
+      if (el) {
+        const r = el.getBoundingClientRect();
+        setRect({
+          top: r.top,
+          left: r.left,
+          width: r.width,
+          height: r.height
+        });
+      } else {
+        // Element not found (maybe not rendered yet) — hide tooltip
+        setRect(null);
+      }
+    };
+
+    // Small delay to allow page render to settle before measuring
+    const timer = setTimeout(measureTarget, 150);
+
+    window.addEventListener('resize', measureTarget);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', measureTarget);
+    };
+  }, [currentTooltip, alreadyVisited]);
 
   const handleNext = () => {
-    const page = getCurrentPage();
-    if (page && tooltipChains[page]) {
-      const chain = tooltipChains[page];
-      if (currentIndex < chain.length - 1) {
-        // Move to next tooltip in chain
-        setCurrentIndex(prev => prev + 1);
-
-        // Update position for next tooltip
-        const tooltip = chain[currentIndex + 1];
-        if (tooltip) {
-          const element = document.querySelector(tooltip.selector);
-          if (element) {
-            const rect = element.getBoundingClientRect();
-            setPosition({
-              top: rect.top + window.scrollY,
-              left: rect.left + window.scrollX
-            });
-          }
-        }
-      } else {
-        // End of chain for this page
-        setPagesVisited(prev => [...prev, page]);
-        onCompleteStep();
-      }
+    if (index < chain.length - 1) {
+      // Advance to next tooltip in chain
+      setIndex(i => i + 1);
+    } else {
+      // End of chain — mark this page as visited so chain never shows again
+      onMarkVisited(activePage);
     }
   };
 
-  if (!isOpen) return null;
+  const handleSkip = () => {
+    // Mark page as visited immediately
+    onMarkVisited(activePage);
+  };
 
-  const page = getCurrentPage();
-  const chain = page && tooltipChains[page] ? tooltipChains[page] : [];
-  const currentTooltip = chain[currentIndex];
+  // Don't render if: no chain for this page, already visited, no tooltip found, or target not in DOM
+  if (!currentTooltip || alreadyVisited || !rect || chain.length === 0) return null;
+
+  // Position tooltip below the target if space allows, otherwise above
+  const spaceBelow = window.innerHeight - (rect.top + rect.height);
+  const tooltipTop = spaceBelow > 120
+    ? rect.top + rect.height + 12
+    : rect.top - 112;
+
+  // Keep tooltip horizontally within viewport (tooltip is ~216px wide)
+  const tooltipLeft = Math.max(
+    16,
+    Math.min(rect.left, window.innerWidth - 232)
+  );
 
   return (
-    <div className="fixed inset-0 z-50 pointer-events-none">
-      {/* Tooltip */}
-      <div className="fixed z-50 pointer-events-auto"
-           style={{
-             top: position.top - 10,
-             left: position.left - 10
-           }}>
-        <HintTooltip hint={currentTooltip?.hint || ''}>
-          {/* Tooltip content wrapper */}
-          <div className="relative">
-            {/* Arrow pointing to element */}
-            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-background/90
-                         backdrop-blur-sm rounded rotate-45 border border-white/20"/>
-            <div className="bg-background/90 backdrop-blur-sm text-text-primary text-xs
-                         rounded-lg px-3 py-2 border border-white/20 shadow-lg max-w-xs w-48">
-              {currentTooltip?.hint}
-            </div>
-          </div>
-        </HintTooltip>
-      </div>
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={`${activePage}-${index}`}
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -4 }}
+        transition={{ duration: 0.18 }}
+        style={{
+          position: 'fixed',
+          top: tooltipTop,
+          left: tooltipLeft,
+          zIndex: 9999,
+          width: 216
+        }}
+      >
+        <div className="bg-panel border border-white/20 rounded-xl p-4 shadow-2xl">
+          {/* Progress indicator */}
+          <p className="text-xs text-text-muted mb-1">
+            {index + 1} of {chain.length}
+          </p>
 
-      {/* Controls */}
-      <div className="fixed z-50 bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center space-x-2">
-        <div className="flex space-x-3">
-          {currentIndex > 0 && (
-            <button onClick={() => setCurrentIndex(prev => prev - 1)}
-                    className="text-xs btn-secondary py-1 px-2 rounded">
-              Previous
+          {/* Hint text */}
+          <p className="text-sm text-text-secondary mb-3 leading-relaxed">
+            {currentTooltip.hint}
+          </p>
+
+          {/* Controls */}
+          <div className="flex gap-2">
+            <button
+              onClick={handleNext}
+              className="flex-1 btn-primary py-1.5 px-3 rounded-lg text-sm"
+            >
+              {index < chain.length - 1 ? 'Next' : 'Got it'}
             </button>
-          )}
-          {currentIndex < chain.length - 1 ? (
-            <button onClick={handleNext} className="btn-primary py-2 px-6 rounded-lg">
-              Next
+            <button
+              onClick={handleSkip}
+              className="text-xs text-text-muted hover:text-text-primary py-1.5 px-2 transition-colors"
+            >
+              Skip
             </button>
-          ) : (
-            <button onClick={handleNext} className="btn-primary py-2 px-6 rounded-lg">
-              Got it
-            </button>
-          )}
-          <button onClick={onSkip} className="text-xs btn-danger py-1 px-2 rounded">
-            Skip Tour
-          </button>
+          </div>
         </div>
-        <div className="text-text-secondary text-xs text-center">
-          {currentIndex + 1}/{chain.length}
-        </div>
-      </div>
-    </div>
+
+        {/* Arrow pointing up toward the target element */}
+        <div
+          className="absolute -top-2 left-4 w-0 h-0"
+          style={{
+            borderLeft: '6px solid transparent',
+            borderRight: '6px solid transparent',
+            borderBottom: '8px solid var(--color-panel)'
+          }}
+        />
+      </motion.div>
+    </AnimatePresence>
   );
 };
 

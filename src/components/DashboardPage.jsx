@@ -48,6 +48,12 @@ const AccountsIcon = () => (
   </svg>
 );
 
+const PaymentsIcon = () => (
+  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3-3v8a3 3 0 003 3z"/>
+  </svg>
+);
+
 export default function DashboardPage({
   accounts,
   budgets,
@@ -239,6 +245,21 @@ export default function DashboardPage({
             )}
             {showIconTooltips && (
               <HintTooltip hint="Vaults — View and manage your savings vaults">
+                <span className="absolute top-1 right-1 w-3 h-3 rounded-full bg-white/20 text-[8px] flex items-center justify-center cursor-help">?</span>
+              </HintTooltip>
+            )}
+          </motion.div>
+
+          {/* Payments */}
+          <motion.div
+            whileHover={{ scale: 1.08 }}
+            className="relative w-full min-w-0 flex flex-col items-center justify-center p-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 hover:bg-white/20 transition-all duration-200 cursor-pointer aspect-square"
+            onClick={() => setActivePage('payments')}
+          >
+            <PaymentsIcon className="mb-2" />
+            <span className="text-xs text-text-secondary">Payments</span>
+            {showIconTooltips && (
+              <HintTooltip hint="Payments — Send money, pay bills, manage beneficiaries and QR/NFC payments">
                 <span className="absolute top-1 right-1 w-3 h-3 rounded-full bg-white/20 text-[8px] flex items-center justify-center cursor-help">?</span>
               </HintTooltip>
             )}

@@ -128,7 +128,8 @@ const AccountsPage = ({ showToast }) => {
   const subAccounts = accounts.filter(acc => acc.accountLevel === 'sub');
 
   return (
-    <div className="min-h-[calc(100vh-64px)] p-6">
+    <>
+      <div className="min-h-[calc(100vh-64px)] p-6" id="accounts-page">
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Accounts</h1>
         <p className="text-text-secondary">Manage your main account and sub-accounts</p>
@@ -276,10 +277,6 @@ const AccountsPage = ({ showToast }) => {
         </form>
       </div>
     </div>
-  );
-
-  // Delete Confirmation Modal
-  {isDeleteModalOpen && (
     <ConfirmDeleteModal
       isOpen={isDeleteModalOpen}
       onClose={handleCancelDelete}
@@ -288,7 +285,7 @@ const AccountsPage = ({ showToast }) => {
       itemName={accountToDelete?.name || ''}
       isDeleting={isDeleting}
     />
-  )}
+  </>
+  );
 };
-
 export default AccountsPage;

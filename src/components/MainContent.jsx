@@ -10,7 +10,7 @@ import PaymentsPage from './PaymentsPage';
 import AccountsPage from './AccountsPage';
 
 // This component will eventually show the correct page component
-function MainContent({ activePage, accounts, budgets, vaults, transactions, showToast, theme, setTheme, history, setActivePage }) {
+function MainContent({ activePage, accounts, budgets, vaults, transactions, showToast, theme, setTheme, history, setActivePage, billers, beneficiaries, onOpenSendMoney, onOpenAddFunds, onOpenQRPayment, onOpenNFCPayment }) {
   
   return (
     <div 

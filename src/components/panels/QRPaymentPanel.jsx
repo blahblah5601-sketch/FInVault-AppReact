@@ -161,11 +161,7 @@ const QRPaymentPanel = ({ isOpen, onClose, onSuccess }) => {
                         className="w-full btn-secondary py-2 px-4 rounded-lg"
                         disabled={isScanning}
                       >
-                        {isScanning ? (
-                          <span className="mr-2">🔄</span> Scanning...
-                        ) : (
-                          <span className="mr-2">📷</span> Scan QR Code
-                        )}
+                        {isScanning ? <><span>🔄</span>Scanning</> : <><span>📷</span>Scan QR Code</>}
                       </button>
 
                       {/* File upload for desktop */}

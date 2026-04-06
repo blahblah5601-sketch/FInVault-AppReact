@@ -222,11 +222,7 @@ const AddFundsPanel = ({ isOpen, onClose, onSuccess }) => {
                         className="w-full btn-secondary py-2 px-4 rounded flex items-center justify-center"
                         disabled={isScanning}
                       >
-                        {isScanning ? (
-                          <span className="mr-2">🔄</span> Scanning...
-                        ) : (
-                          <span className="mr-2">📷</span> Scan Card with Camera
-                        )}
+                        {(isScanning ? <><span className="mr-2">🔄</span>Scanning</> : <><span className="mr-2">📷</span>Scan Card with Camera</>)}
                       </button>
                       <p className="text-xs text-text-muted mt-2">
                         Hold card to back of phone or use camera to scan card details

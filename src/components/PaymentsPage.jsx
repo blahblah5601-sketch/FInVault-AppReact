@@ -1,6 +1,6 @@
 // src/components/PaymentsPage.jsx
 import { createPayment, createBiller, deleteBiller, createBeneficiary } from '../api';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import HintTooltip from './HintTooltip.jsx';
 import { formatIBAN } from '../utils/ibanUtils';
@@ -10,7 +10,6 @@ function PaymentsPage({ showToast, billers, beneficiaries, history, onSendMoney,
   const [isAddBeneficiaryModalOpen, setIsAddBeneficiaryModalOpen] = useState(false);
   const [billersState, setBillersState] = useState(billers || []);
   const [beneficiariesState, setBeneficiariesState] = useState(beneficiaries || []);
-  const [recentPayments, setRecentPayments] = useState(history || []);
 
   // Controlled state for biller form
   const [billerName, setBillerName] = useState('');
@@ -23,6 +22,21 @@ function PaymentsPage({ showToast, billers, beneficiaries, history, onSendMoney,
   const [beneficiaryNickname, setBeneficiaryNickname] = useState('');
   const [beneficiaryType, setBeneficiaryType] = useState('');
   const [beneficiaryValue, setBeneficiaryValue] = useState('');
+
+  // Sync billers from props when they update
+  useEffect(() => {
+    setBillersState(billers || []);
+  }, [billers]);
+
+  // Sync beneficiaries from props when they update
+  useEffect(() => {
+    setBeneficiariesState(beneficiaries || []);
+  }, [beneficiaries]);
+
+  // Computed recent payments (filtered and sliced from history)
+  const recentPayments = (history || [])
+    .filter(h => h.type === 'Payment Initiated')
+    .slice(0, 10);
 
   // In a real implementation, we would fetch these from Firestore
   // For now, we'll use mock data to demonstrate the structure
@@ -96,7 +110,10 @@ function PaymentsPage({ showToast, billers, beneficiaries, history, onSendMoney,
           <h3 className="font-semibold text-lg mb-4">Quick Actions</h3>
           <div className="flex gap-4">
             {/* Send Money */}
-            <div className="flex-1 flex flex-col items-center p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 hover:bg-white/20 transition-all duration-200">
+            <div
+              className="flex-1 flex flex-col items-center p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 hover:bg-white/20 transition-all duration-200 cursor-pointer"
+              onClick={onSendMoney}
+            >
               {/* Using the same icon as DashboardPage */}
               <svg className="w-6 h-6 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8l4 4-4 4"/>
@@ -106,7 +123,10 @@ function PaymentsPage({ showToast, billers, beneficiaries, history, onSendMoney,
             </div>
 
             {/* Add Funds */}
-            <div className="flex-1 flex flex-col items-center p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 hover:bg-white/20 transition-all duration-200">
+            <div
+              className="flex-1 flex flex-col items-center p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 hover:bg-white/20 transition-all duration-200 cursor-pointer"
+              onClick={onAddFunds}
+            >
               <svg className="w-6 h-6 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/>
               </svg>
@@ -114,7 +134,10 @@ function PaymentsPage({ showToast, billers, beneficiaries, history, onSendMoney,
             </div>
 
             {/* QR Payment */}
-            <div className="flex-1 flex flex-col items-center p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 hover:bg-white/20 transition-all duration-200">
+            <div
+              className="flex-1 flex flex-col items-center p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 hover:bg-white/20 transition-all duration-200 cursor-pointer"
+              onClick={onQRPayment}
+            >
               <svg className="w-6 h-6 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3M6 6h.01M18 6h.01M6 12h12M6 18h.01M18 18h.01"/>
               </svg>
@@ -122,7 +145,10 @@ function PaymentsPage({ showToast, billers, beneficiaries, history, onSendMoney,
             </div>
 
             {/* NFC Payment */}
-            <div className="flex-1 flex flex-col items-center p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 hover:bg-white/20 transition-all duration-200">
+            <div
+              className="flex-1 flex flex-col items-center p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 hover:bg-white/20 transition-all duration-200 cursor-pointer"
+              onClick={onNFCPayment}
+            >
               <svg className="w-6 h-6 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16.5 16.5 21.75 21.75M9 12a3 3 0 100-6 3 3 0 000 6zm0-3a1 1 0 11-2 0 1 1 0 012 0z"/>
               </svg>

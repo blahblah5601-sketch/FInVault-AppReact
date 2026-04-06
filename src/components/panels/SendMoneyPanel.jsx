@@ -1,6 +1,6 @@
 // src/components/panels/SendMoneyPanel.jsx
 import { createPayment } from '../../api';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { validateIBAN, formatIBAN } from '../../utils/ibanUtils';
 import { Search, Users, CreditCard, Phone, Mail } from 'lucide-react';
 

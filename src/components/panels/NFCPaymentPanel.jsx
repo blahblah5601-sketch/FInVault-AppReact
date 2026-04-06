@@ -172,7 +172,7 @@ const NFCPaymentPanel = ({ isOpen, onClose, onSuccess }) => {
                         </div>
                         {isProcessing && (
                           <p className="mt-2 text-xs text-text-muted">
-                            Scanning...
+                            Scanning
                           </p>
                         )}
                         {!isProcessing && nfcData && (
@@ -202,15 +202,13 @@ const NFCPaymentPanel = ({ isOpen, onClose, onSuccess }) => {
                         className="w-full btn-secondary py-2 px-4 rounded-lg"
                         disabled={isProcessing || !!nfcData}
                       >
-                        {isProcessing ? (
-                          <span className="mr-2">🔄</span> Scanning...
-                        ) : (
-                          !!nfcData ? (
-                            <span className="mr-2">✓</span> Scan Another
+                        {(!isProcessing && !nfcData) ? (
+                            <><span className="mr-2">📱</span>Ready to Scan</>
+                          ) : isProcessing ? (
+                            <><span className="mr-2">🔄</span>Scanning</>
                           ) : (
-                            <span className="mr-2">📱</span> Ready to Scan
-                          )
-                        )}
+                            <><span className="mr-2">✓</span>Scan Another</>
+                          )}
                       </button>
                     </>
                   )}
@@ -244,9 +242,9 @@ const NFCPaymentPanel = ({ isOpen, onClose, onSuccess }) => {
                         disabled={isProcessing}
                       >
                         {isProcessing ? (
-                          <span className="mr-2">🔄</span> Processing...
+                          <><span className="mr-2">🔄</span>Processing...</>
                         ) : (
-                          <span className="mr-2">📡</span> Send via NFC
+                          <><span className="mr-2">📡</span>Send via NFC</>
                         )}
                       </button>
                     </>

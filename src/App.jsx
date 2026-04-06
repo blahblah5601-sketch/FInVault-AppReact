@@ -141,6 +141,8 @@ function App( ) {
         showToast={showToast}
         theme={theme}
         setTheme={setTheme}
+        billers={billersData}
+        beneficiaries={beneficiariesData}
         isDataLoading={isDataLoading} // NEW - Pass loading state
 
       />

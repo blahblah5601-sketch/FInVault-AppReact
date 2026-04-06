@@ -1,74 +1,117 @@
 // src/components/onboarding/SpotlightOverlay.jsx
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 
-const SpotlightOverlay = ({ step, onCompleteStep, onSkip }) => {
-  // Define selectors and hints for each step
-  const stepData = {
-    1: { selector: '.hero-account-card', hint: 'This is your main account dashboard. See your total balance and IBAN at a glance.' },
-    2: { selector: '.icon-button', hint: 'Access your most-used financial actions right from the dashboard.' },
-    3: { selector: '#sidebar-nav', hint: 'Switch between different sections of the app using the navigation icons.' },
-    4: { selector: '.budget-card', hint: 'Create and manage budgets to track your spending.' },
-    5: { selector: '.vault-card', hint: 'Save money automatically in secure vaults for specific goals.' }
-  };
-
-  const data = stepData[step + 1];
+const SpotlightOverlay = ({ targetSelector, hint, onNext, onSkip }) => {
+  const [rect, setRect] = useState(null);
 
   useEffect(() => {
-    if (data) {
-      const element = document.querySelector(data.selector);
-      if (element) {
-        element.setAttribute('data-spotlight', 'true');
-        // Add click handler to advance to next step
-        const handler = () => onCompleteStep();
-        element.addEventListener('click', handler);
-        return () => {
-          element.removeAttribute('data-spotlight');
-          element.removeEventListener('click', handler);
-        };
-      }
+    if (!targetSelector) {
+      setRect(null);
+      return;
     }
-  }, [step, data, onCompleteStep]);
 
-  if (!data) return null;
+    const measureTarget = () => {
+      const el = document.querySelector(targetSelector);
+      if (el) {
+        const r = el.getBoundingClientRect();
+        setRect({
+          top: r.top,
+          left: r.left,
+          width: r.width,
+          height: r.height
+        });
+      } else {
+        setRect(null);
+      }
+    };
+
+    measureTarget();
+
+    // Re-measure on resize in case layout shifts
+    window.addEventListener('resize', measureTarget);
+    return () => window.removeEventListener('resize', measureTarget);
+  }, [targetSelector]);
+
+  // If no target found, render nothing
+  if (!rect) return null;
+
+  const padding = 10;
+
+  // The spotlight is a fixed div positioned exactly over the target element
+  // box-shadow creates the dark overlay outside the spotlight area
+  const spotlightStyle = {
+    position: 'fixed',
+    top: rect.top - padding,
+    left: rect.left - padding,
+    width: rect.width + padding * 2,
+    height: rect.height + padding * 2,
+    borderRadius: '12px',
+    // This creates the darkened surround effect:
+    // The box-shadow spreads 9999px in all directions, darkening everything outside this element
+    boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.75)',
+    zIndex: 9998,
+    pointerEvents: 'none' // allow clicks to pass through TO the highlighted element
+  };
+
+  // Position tooltip below the spotlight if there's room, otherwise above
+  const spaceBelow = window.innerHeight - (rect.top + rect.height + padding);
+  const tooltipTop = spaceBelow > 120
+    ? rect.top + rect.height + padding + 12
+    : rect.top - padding - 100; // above if not enough space below
+
+  // Keep tooltip horizontally within viewport
+  const tooltipLeft = Math.max(
+    16,
+    Math.min(rect.left, window.innerWidth - 232)
+  );
 
   return (
-    <div className="fixed inset-0 z-40 pointer-events-none">
-      {/* Dark overlay */}
-      <div className="fixed inset-0 bg-black/50"></div>
+    <>
+      {/* Spotlight cutout — uses box-shadow to darken surroundings */}
+      <div style={spotlightStyle} />
 
-      {/* Spotlight cutout */}
-      {data.selector && (
-        <div
-          className="fixed inset-0 -z-10"
-          style={{
-            pointerEvents: 'none',
-            WebkitMask: `url(${data.selector}) no-repeat`,
-            mask: `url(${data.selector}) no-repeat`,
-            backgroundColor: 'black',
-            backgroundBlendMode: 'destination-out',
-            width: '100vw',
-            height: '100vh'
-          }}
-        />
-      )}
-
-      {/* Tooltip */}
-      <div className="fixed z-50 inset-0 flex items-end pb-10 pointer-events-none">
-        <div className="w-full max-w-xs mx-auto text-center">
-          <div className="bg-background/90 backdrop-blur-sm text-text-primary text-xs rounded-lg px-3 py-2 border border-white/20 shadow-lg">
-            {data.hint}
-          </div>
-          <div className="mt-4 flex justify-center space-x-3">
-            <button onClick={onCompleteStep} className="btn-primary py-2 px-6 rounded-lg">
+      {/* Tooltip and controls — pointer-events enabled here */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        style={{
+          position: 'fixed',
+          top: tooltipTop,
+          left: tooltipLeft,
+          zIndex: 9999,
+          width: 216
+        }}
+      >
+        <div className="bg-panel border border-white/20 rounded-xl p-4 shadow-2xl">
+          <p className="text-sm text-text-secondary mb-3 leading-relaxed">{hint}</p>
+          <div className="flex gap-2">
+            <button
+              onClick={onNext}
+              className="flex-1 btn-primary py-1.5 px-3 rounded-lg text-sm"
+            >
               Got it
             </button>
-            <button onClick={onSkip} className="text-xs btn-danger py-1 px-2 rounded">
-              Skip Tour
+            <button
+              onClick={onSkip}
+              className="text-xs text-text-muted hover:text-text-primary py-1.5 px-2 transition-colors"
+            >
+              Skip
             </button>
           </div>
         </div>
-      </div>
-    </div>
+        {/* Small arrow pointing up toward the spotlight */}
+        <div
+          className="absolute -top-2 left-4 w-0 h-0"
+          style={{
+            borderLeft: '6px solid transparent',
+            borderRight: '6px solid transparent',
+            borderBottom: '8px solid var(--color-panel)'
+          }}
+        />
+      </motion.div>
+    </>
   );
 };
 
