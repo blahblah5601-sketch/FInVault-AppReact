@@ -6,7 +6,7 @@ import { doc, setDoc, serverTimestamp, writeBatch, collection } from 'firebase/f
 import { validateEmail, validatePassword } from '../utils/validation';
 import { generateAccountNumber, generateIBAN } from '../utils/ibanUtils';
 import Logo from './Logo';
-import { Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 
 const setupNewUser = async (user) => {
   const userDocRef = doc(db, "users", user.uid);
@@ -291,14 +291,14 @@ function AuthComponent() {
               <div className="mt-2">
                 <div className="flex justify-between items-center mb-1">
                   <span className="text-xs text-text-secondary">Password Strength</span>
-                  <span className={`text-xs font-medium text-${passwordStrength.color}-400`}>
+                  <span className="text-xs font-medium" style={{ color: passwordStrength.color }}>
                     {passwordStrength.label}
                   </span>
                 </div>
                 <div className="w-full bg-sidebar rounded-full h-1.5">
                   <div
-                    className={`bg-${passwordStrength.color}-500 h-1.5 rounded-full transition-all duration-300`}
-                    style={{ width: `${(passwordStrength.strength / 5) * 100}%` }}
+                    className="h-1.5 rounded-full transition-all duration-300"
+                    style={{ width: `${(passwordStrength.strength / 5) * 100}%`, backgroundColor: passwordStrength.color }}
                   />
                 </div>
               </div>
@@ -347,9 +347,9 @@ function AuthComponent() {
         {!isLoginMode && (
           <p className="text-xs text-center text-text-muted">
             By creating an account, you agree to our{' '}
-            <a href="#" className="text-primary hover:underline">Terms of Service</a>
+            <button type="button" className="text-primary hover:underline">Terms of Service</button>
             {' '}and{' '}
-            <a href="#" className="text-primary hover:underline">Privacy Policy</a>
+            <button type="button" className="text-primary hover:underline">Privacy Policy</button>
           </p>
         )}
       </div>

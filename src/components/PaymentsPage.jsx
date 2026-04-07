@@ -5,7 +5,7 @@ import { Plus } from 'lucide-react';
 import HintTooltip from './HintTooltip.jsx';
 import { formatIBAN } from '../utils/ibanUtils';
 
-function PaymentsPage({ showToast, billers, beneficiaries, history, onSendMoney, onAddFunds, onQRPayment, onNFCPayment }) {
+function PaymentsPage({ showToast, billers, beneficiaries, history, onSendMoney, onAddFunds, onQRPayment, onNFCPayment, setActivePage }) {
   const [isAddBillerModalOpen, setIsAddBillerModalOpen] = useState(false);
   const [isAddBeneficiaryModalOpen, setIsAddBeneficiaryModalOpen] = useState(false);
   const [billersState, setBillersState] = useState(billers || []);
@@ -53,7 +53,7 @@ function PaymentsPage({ showToast, billers, beneficiaries, history, onSendMoney,
       setBillerAccountRef('');
       setBillerLastAmount('');
     } else {
-      alert("Failed to add biller.");
+      showToast("Failed to add biller.");
     }
   };
 
@@ -63,7 +63,7 @@ function PaymentsPage({ showToast, billers, beneficiaries, history, onSendMoney,
       // In a real app, we would refetch the billers list
       showToast("Biller deleted successfully.");
     } else {
-      alert("Failed to delete biller.");
+      showToast("Failed to delete biller.");
     }
   };
 
@@ -79,7 +79,7 @@ function PaymentsPage({ showToast, billers, beneficiaries, history, onSendMoney,
       setBeneficiaryType('');
       setBeneficiaryValue('');
     } else {
-      alert("Failed to add beneficiary.");
+      showToast("Failed to add beneficiary.");
     }
   };
 
@@ -87,213 +87,261 @@ function PaymentsPage({ showToast, billers, beneficiaries, history, onSendMoney,
 
   return (
     <>
-      <section id="payments" className="page-section space-y-8">
+      <section id="payments" className="flex flex-col overflow-y-auto p-4" style={{ color: 'var(--color-text-primary)' }}>
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center mb-6">
           <div>
             <h2 className="text-2xl font-semibold">Payments</h2>
-            <p className="text-sm text-text-secondary mt-1">
+            <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>
               Manage your payments, billers, and beneficiaries
             </p>
           </div>
-          <button
-            onClick={() => setIsAddBillerModalOpen(true)}
-            className="btn-secondary py-2 px-4 rounded-lg flex items-center"
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            Add Biller
-          </button>
-        </div>
-
-        {/* Quick Actions row - same as dashboard hero */}
-        <div className="bg-background/50 p-6 rounded-2xl">
-          <h3 className="font-semibold text-lg mb-4">Quick Actions</h3>
-          <div className="flex gap-4">
-            {/* Send Money */}
-            <div
-              className="flex-1 flex flex-col items-center p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 hover:bg-white/20 transition-all duration-200 cursor-pointer"
-              onClick={onSendMoney}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setIsAddBeneficiaryModalOpen(true)}
+              className="btn-secondary py-2 px-4 rounded-panel flex items-center text-sm"
             >
-              {/* Using the same icon as DashboardPage */}
-              <svg className="w-6 h-6 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8l4 4-4 4"/>
-              </svg>
-              <span className="text-xs text-text-secondary">Send Money</span>
-              {/* Tooltip would be added here in a real implementation */}
-            </div>
-
-            {/* Add Funds */}
-            <div
-              className="flex-1 flex flex-col items-center p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 hover:bg-white/20 transition-all duration-200 cursor-pointer"
-              onClick={onAddFunds}
+              <Plus className="w-4 h-4 mr-1.5" />
+              Add Beneficiary
+            </button>
+            <button
+              onClick={() => setIsAddBillerModalOpen(true)}
+              className="btn-secondary py-2 px-4 rounded-panel flex items-center text-sm"
             >
-              <svg className="w-6 h-6 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/>
-              </svg>
-              <span className="text-xs text-text-secondary">Add Funds</span>
-            </div>
-
-            {/* QR Payment */}
-            <div
-              className="flex-1 flex flex-col items-center p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 hover:bg-white/20 transition-all duration-200 cursor-pointer"
-              onClick={onQRPayment}
-            >
-              <svg className="w-6 h-6 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3M6 6h.01M18 6h.01M6 12h12M6 18h.01M18 18h.01"/>
-              </svg>
-              <span className="text-xs text-text-secondary">QR Payment</span>
-            </div>
-
-            {/* NFC Payment */}
-            <div
-              className="flex-1 flex flex-col items-center p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 hover:bg-white/20 transition-all duration-200 cursor-pointer"
-              onClick={onNFCPayment}
-            >
-              <svg className="w-6 h-6 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16.5 16.5 21.75 21.75M9 12a3 3 0 100-6 3 3 0 000 6zm0-3a1 1 0 11-2 0 1 1 0 012 0z"/>
-              </svg>
-              <span className="text-xs text-text-secondary">NFC Payment</span>
-            </div>
+              <Plus className="w-4 h-4 mr-1.5" />
+              Add Biller
+            </button>
           </div>
         </div>
 
-        {/* Billing section */}
-        <div className="bg-background/50 p-6 rounded-2xl">
-          <h3 className="font-semibold text-lg mb-4">Billers</h3>
-          <div className="space-y-4">
-            {billersState.map(biller => (
-              <div key={biller.id} className="p-4 bg-white/5 rounded-lg border border-white/10">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="font-semibold">{biller.name}</h4>
-                    <p className="text-xs text-text-secondary">{biller.category}</p>
-                    <p className="text-xs text-text-muted">Account: {biller.accountRef}</p>
+        {/* Quick Actions row */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          {[
+            { label: 'Send Money', desc: 'Transfer funds', icon: 'send', onClick: onSendMoney },
+            { label: 'Add Funds', desc: 'Top up account', icon: 'add', onClick: onAddFunds },
+            { label: 'QR Payment', desc: 'Scan to pay', icon: 'qr', onClick: onQRPayment },
+            { label: 'NFC Payment', desc: 'Tap to pay', icon: 'nfc', onClick: onNFCPayment },
+          ].map(action => (
+            <div
+              key={action.icon}
+              className="rounded-panel p-4 border cursor-pointer transition-all duration-200"
+              style={{ backgroundColor: 'var(--color-panel)', borderColor: 'var(--color-border)' }}
+              onClick={action.onClick}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-gold)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; }}
+            >
+              <div className="w-10 h-10 rounded-full flex items-center justify-center mb-3" style={{
+                background: action.icon === 'send' ? 'var(--color-accent, #1a1f3a)' :
+                  action.icon === 'add' ? '#e1f5f2' :
+                  action.icon === 'qr' ? 'var(--color-blue2, #dde8ff)' : '#ede8fe',
+                color: action.icon === 'send' ? 'white' :
+                  action.icon === 'add' ? 'var(--color-teal)' :
+                  action.icon === 'qr' ? 'var(--color-blue-accent)' : '#7c3aed',
+              }}>
+                {action.icon === 'send' && <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8l4 4-4 4"/></svg>}
+                {action.icon === 'add' && <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg>}
+                {action.icon === 'qr' && <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4h6v6H4V4zm10 0h6v6h-6V4zM4 14h6v6H4v-6zm13 0h1v3h-3v1h3v3h1v-3h1v-1h-1v-3z"/></svg>}
+                {action.icon === 'nfc' && <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16.5 16.5L21.75 21.75M9 12a3 3 0 100-6 3 3 0 000 6zm0-3a1 1 0 11-2 0 1 1 0 012 0z"/></svg>}
+              </div>
+              <h4 className="text-sm font-medium">{action.label}</h4>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{action.desc}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Billers section */}
+        <div className="rounded-panel p-5 border mb-4" style={{ backgroundColor: 'var(--color-panel)', borderColor: 'var(--color-border)' }}>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold">Billers</h3>
+            {billersState.length > 0 && (
+              <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(201,168,76,0.15)', color: 'var(--color-gold)' }}>
+                {billersState.length} active
+              </span>
+            )}
+          </div>
+          {billersState.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {billersState.map(biller => (
+                <div
+                  key={biller.id}
+                  className="rounded-sm-panel p-4 border transition-all duration-150"
+                  style={{ backgroundColor: 'rgba(13,15,26,0.06)', borderColor: 'var(--color-border)' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-gold)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; }}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <h4 className="text-sm font-semibold">{biller.name}</h4>
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{biller.category}</p>
+                    </div>
+                    <p className="text-sm font-mono font-semibold">Rs {biller.lastAmount.toLocaleString('en-US')}</p>
                   </div>
-                  <div className="flex items-center space-x-3">
-                    <p className="text-sm font-mono">Rs {biller.lastAmount.toLocaleString('en-US')}</p>
+                  <p className="text-xs mb-3" style={{ color: 'var(--color-text-muted)' }}>Account: {biller.accountRef}</p>
+                  <div className="flex gap-2">
                     <button
                       onClick={() => {
-                        // In a real implementation, this would open SendMoneyPanel with pre-filled data
-                        alert('Send money to biller functionality would go here');
+                        showToast('Send money to biller functionality would go here');
                       }}
-                      className="btn-primary py-1 px-3 rounded"
+                      className="flex-1 py-1.5 rounded text-xs font-medium transition-colors"
+                      style={{ backgroundColor: 'var(--color-accent, #1a1f3a)', color: 'white' }}
                     >
                       Pay Now
                     </button>
                     <button
                       onClick={() => handleDeleteBiller(biller.id)}
-                      className="btn-danger py-1 px-2 rounded text-xs"
+                      className="py-1.5 px-3 rounded text-xs font-medium transition-colors"
+                      style={{ backgroundColor: 'rgba(214,59,59,0.15)', color: 'var(--color-red-accent)' }}
                     >
                       Delete
                     </button>
                   </div>
                 </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3" style={{ backgroundColor: 'var(--color-interactive)' }}>
+                <svg className="w-6 h-6" style={{ color: 'var(--color-text-muted)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 14h6M10 5h4a2 2 0 012 2v9a2 2 0 01-2 2h-4a2 2 0 01-2-2V7a2 2 0 012-2z" />
+                </svg>
               </div>
-            ))}
-            {billersState.length === 0 && (
-              <p className="text-text-secondary">No billers added yet. Click "Add Biller" to get started.</p>
-            )}
-          </div>
+              <p className="text-sm font-medium mb-1">No billers yet</p>
+              <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Click "Add Biller" to get started</p>
+            </div>
+          )}
         </div>
 
         {/* Recent Payments */}
-        <div className="bg-background/50 p-6 rounded-2xl">
-          <h3 className="font-semibold text-lg mb-4">Recent Payments</h3>
-          <div className="space-y-3">
-            {recentPayments.map(payment => (
-              <div key={payment.id} className="p-3 bg-white/5 rounded-lg border border-white/10">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="font-semibold">{payment.description}</p>
-                    <p className="text-xs text-text-muted">{payment.date}</p>
-                  </div>
-                  <p className="font-mono text-lg">Rs {payment.amount.toLocaleString('en-US')}</p>
-                </div>
-              </div>
-            ))}
-            {recentPayments.length === 0 && (
-              <p className="text-text-secondary">No recent payments yet.</p>
-            )}
+        <div className="rounded-panel p-5 border mb-4" style={{ backgroundColor: 'var(--color-panel)', borderColor: 'var(--color-border)' }}>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold">Recent Payments</h3>
+            <button
+              onClick={() => setActivePage?.('transactions')}
+              className="text-xs font-medium transition-colors cursor-pointer"
+              style={{ color: 'var(--color-blue-accent)' }}
+            >
+              View all transactions
+            </button>
           </div>
+          {recentPayments.length > 0 ? (
+            <div className="space-y-2">
+              {recentPayments.map(payment => (
+                <div
+                  key={payment.id}
+                  className="rounded-sm-panel p-3 flex justify-between items-center transition-colors"
+                  style={{ backgroundColor: 'rgba(13,15,26,0.06)' }}
+                >
+                  <div>
+                    <p className="text-sm font-medium">{payment.description}</p>
+                    <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{payment.date}</p>
+                  </div>
+                  <p className="text-sm font-mono font-semibold">Rs {payment.amount.toLocaleString('en-US')}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3" style={{ backgroundColor: 'var(--color-interactive)' }}>
+                <svg className="w-6 h-6" style={{ color: 'var(--color-text-muted)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+              <p className="text-sm font-medium mb-1">No recent payments</p>
+              <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Your payment history will appear here</p>
+            </div>
+          )}
         </div>
 
         {/* Beneficiaries */}
-        <div className="bg-background/50 p-6 rounded-2xl">
-          <h3 className="font-semibold text-lg mb-4">Beneficiaries</h3>
-          <div className="flex justify-between items-center mb-4">
+        <div className="rounded-panel p-5 border" style={{ backgroundColor: 'var(--color-panel)', borderColor: 'var(--color-border)' }}>
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <p className="text-sm text-text-secondary">
-                Saved beneficiaries for quick payments
-              </p>
+              <h3 className="font-semibold">Beneficiaries</h3>
+              <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>Saved beneficiaries for quick payments</p>
             </div>
-            <button
-              onClick={() => setIsAddBeneficiaryModalOpen(true)}
-              className="btn-secondary py-2 px-4 rounded-lg flex items-center"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              Add Beneficiary
-            </button>
+            {beneficiariesState.length > 0 && (
+              <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(14,124,110,0.15)', color: 'var(--color-teal)' }}>
+                {beneficiariesState.length} saved
+              </span>
+            )}
           </div>
-          <div className="space-y-3">
-            {beneficiariesState.map(beneficiary => (
-              <div key={beneficiary.id} className="p-3 bg-white/5 rounded-lg border border-white/10">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="font-semibold">{beneficiary.name}</h4>
-                    <p className="text-xs text-text-secondary">{beneficiary.nickname}</p>
-                    <p className="text-xs text-text-muted">
-                      {beneficiary.destinationType}: {formatIBAN(beneficiary.destinationValue)}
-                    </p>
+          {beneficiariesState.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {beneficiariesState.map(beneficiary => (
+                <div
+                  key={beneficiary.id}
+                  className="rounded-sm-panel p-4 border transition-all duration-150"
+                  style={{ backgroundColor: 'rgba(13,15,26,0.06)', borderColor: 'var(--color-border)' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-gold)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; }}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <h4 className="text-sm font-semibold">{beneficiary.name}</h4>
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{beneficiary.nickname}</p>
+                    </div>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ backgroundColor: 'var(--color-blue-accent)', color: 'white' }}>
+                      {beneficiary.destinationType}
+                    </span>
                   </div>
+                  <p className="text-xs font-mono mb-3" style={{ color: 'var(--color-text-secondary)' }}>{formatIBAN(beneficiary.destinationValue)}</p>
                   <button
                     onClick={() => {
-                      // In a real implementation, this would open SendMoneyPanel with pre-filled data
-                      alert('Send money to beneficiary functionality would go here');
+                      showToast('Send money to beneficiary functionality would go here');
                     }}
-                    className="btn-primary py-1 px-3 rounded text-xs"
+                    className="w-full py-1.5 rounded text-xs font-medium transition-colors"
+                    style={{ backgroundColor: 'var(--color-accent, #1a1f3a)', color: 'white' }}
                   >
                     Send Money
                   </button>
                 </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3" style={{ backgroundColor: 'var(--color-interactive)' }}>
+                <svg className="w-6 h-6" style={{ color: 'var(--color-text-muted)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
+                </svg>
               </div>
-            ))}
-            {beneficiariesState.length === 0 && (
-              <p className="text-text-secondary">No beneficiaries added yet. Click "Add Beneficiary" to get started.</p>
-            )}
-          </div>
+              <p className="text-sm font-medium mb-1">No beneficiaries yet</p>
+              <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Click "Add Beneficiary" to get started</p>
+            </div>
+          )}
         </div>
       </section>
 
       {/* Modals */}
       {isAddBillerModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75" onClick={() => setIsAddBillerModalOpen(false)}>
-          <div className="relative bg-background/90 backdrop-blur-sm rounded-3xl p-6 w-full max-w-md mx-4" onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-start mb-4">
+          <div className="relative rounded-panel p-6 w-full max-w-md mx-4" style={{ backgroundColor: 'var(--color-panel)', color: 'var(--color-text-primary)' }} onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-start mb-5">
               <h3 className="text-lg font-semibold">Add Biller</h3>
               <button
                 onClick={() => setIsAddBillerModalOpen(false)}
-                className="text-xs btn-danger py-1 px-2 rounded"
+                className="w-7 h-7 rounded-full flex items-center justify-center transition-colors"
+                style={{ backgroundColor: 'rgba(214,59,59,0.15)', color: 'var(--color-red-accent)' }}
               >
                 ×
               </button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-text-primary mb-2">Biller Name</label>
+                <label className="form-label">Biller Name</label>
                 <input
                   value={billerName}
                   onChange={(e) => setBillerName(e.target.value)}
                   type="text"
                   placeholder="Enter biller name"
-                  className="w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-gray-300"
+                  className="form-input"
                 />
               </div>
               <div>
-                <label className="block text-text-primary mb-2">Category</label>
+                <label className="form-label">Category</label>
                 <select
                   value={billerCategory}
                   onChange={(e) => setBillerCategory(e.target.value)}
-                  className="w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-gray-300"
+                  className="form-input"
                 >
                   <option value="">Select category</option>
                   <option value="Utilities">Utilities</option>
@@ -305,28 +353,28 @@ function PaymentsPage({ showToast, billers, beneficiaries, history, onSendMoney,
                 </select>
               </div>
               <div>
-                <label className="block text-text-primary mb-2">Account Reference</label>
+                <label className="form-label">Account Reference</label>
                 <input
                   value={billerAccountRef}
                   onChange={(e) => setBillerAccountRef(e.target.value)}
                   type="text"
                   placeholder="Enter account reference"
-                  className="w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-gray-300"
+                  className="form-input"
                 />
               </div>
               <div>
-                <label className="block text-text-primary mb-2">Last Amount (Optional)</label>
+                <label className="form-label">Last Amount (Optional)</label>
                 <input
                   value={billerLastAmount}
                   onChange={(e) => setBillerLastAmount(e.target.value)}
                   type="number"
                   placeholder="Enter last amount paid"
-                  className="w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-gray-300"
+                  className="form-input"
                 />
               </div>
               <button
                 onClick={handleAddBiller}
-                className="w-full btn-primary py-2 px-4 rounded-lg"
+                className="w-full btn-primary py-2.5 px-4 rounded-panel font-medium"
               >
                 Add Biller
               </button>
@@ -337,43 +385,44 @@ function PaymentsPage({ showToast, billers, beneficiaries, history, onSendMoney,
 
       {isAddBeneficiaryModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75" onClick={() => setIsAddBeneficiaryModalOpen(false)}>
-          <div className="relative bg-background/90 backdrop-blur-sm rounded-3xl p-6 w-full max-w-md mx-4" onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-start mb-4">
+          <div className="relative rounded-panel p-6 w-full max-w-md mx-4" style={{ backgroundColor: 'var(--color-panel)', color: 'var(--color-text-primary)' }} onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-start mb-5">
               <h3 className="text-lg font-semibold">Add Beneficiary</h3>
               <button
                 onClick={() => setIsAddBeneficiaryModalOpen(false)}
-                className="text-xs btn-danger py-1 px-2 rounded"
+                className="w-7 h-7 rounded-full flex items-center justify-center transition-colors"
+                style={{ backgroundColor: 'rgba(214,59,59,0.15)', color: 'var(--color-red-accent)' }}
               >
                 ×
               </button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-text-primary mb-2">Beneficiary Name</label>
+                <label className="form-label">Beneficiary Name</label>
                 <input
                   value={beneficiaryName}
                   onChange={(e) => setBeneficiaryName(e.target.value)}
                   type="text"
                   placeholder="Enter beneficiary name"
-                  className="w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-gray-300"
+                  className="form-input"
                 />
               </div>
               <div>
-                <label className="block text-text-primary mb-2">Nickname</label>
+                <label className="form-label">Nickname</label>
                 <input
                   value={beneficiaryNickname}
                   onChange={(e) => setBeneficiaryNickname(e.target.value)}
                   type="text"
                   placeholder="Enter nickname"
-                  className="w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-gray-300"
+                  className="form-input"
                 />
               </div>
               <div>
-                <label className="block text-text-primary mb-2">Destination Type</label>
+                <label className="form-label">Destination Type</label>
                 <select
                   value={beneficiaryType}
                   onChange={(e) => setBeneficiaryType(e.target.value)}
-                  className="w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-gray-300"
+                  className="form-input"
                 >
                   <option value="">Select type</option>
                   <option value="IBAN">IBAN</option>
@@ -383,18 +432,18 @@ function PaymentsPage({ showToast, billers, beneficiaries, history, onSendMoney,
                 </select>
               </div>
               <div>
-                <label className="block text-text-primary mb-2">Destination Value</label>
+                <label className="form-label">Destination Value</label>
                 <input
                   value={beneficiaryValue}
                   onChange={(e) => setBeneficiaryValue(e.target.value)}
                   type="text"
                   placeholder="Enter destination value"
-                  className="w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-gray-300"
+                  className="form-input"
                 />
               </div>
               <button
                 onClick={handleAddBeneficiary}
-                className="w-full btn-primary py-2 px-4 rounded-lg"
+                className="w-full btn-primary py-2.5 px-4 rounded-panel font-medium"
               >
                 Add Beneficiary
               </button>

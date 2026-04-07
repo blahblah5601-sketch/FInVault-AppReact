@@ -2,7 +2,7 @@
 
 import axios from 'axios';
 
-const RAAS_API_KEY = process.env.RAAS_API_KEY;
+const RAAS_API_KEY = import.meta.env.VITE_RAAS_API_KEY;
 const RAAS_BASE_URL = 'https://api.raast.com/v1'; // Replace with actual Raast API base URL
 
 // Function to create a payment request

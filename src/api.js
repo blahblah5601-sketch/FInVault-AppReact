@@ -1,6 +1,6 @@
  // src/api.js
  import { db, auth } from './firebase';
- import { collection, addDoc, serverTimestamp, doc, getDoc, updateDoc, writeBatch, deleteDoc, setDoc } from 'firebase/firestore';
+ import { collection, addDoc, serverTimestamp, doc, getDoc, updateDoc, writeBatch, deleteDoc, setDoc, query, where, getDocs, orderBy } from 'firebase/firestore';
 
  // Note: This is the same logic from your old main.js file
 export const createBudget = async (name, limit) => {
@@ -72,6 +72,7 @@ export const createVault = async (name, target) => {
 };
 
 export const handleVaultTransaction = async (vault, accounts, actionType, amount) => {
+  if (!auth.currentUser) return { success: false, message: 'User not authenticated.' };
   const currentAccount = accounts.find(a => a.id === 'current');
 
   if (!vault || !currentAccount || !amount || amount <= 0) return { success: false, message: 'Invalid data provided.' };
@@ -222,10 +223,15 @@ export const updateUserPreferences = async (prefs) => {
 };
 
 export const getUserPreferences = async () => {
-  if (!auth.currentUser) return null;
-  const userDocRef = doc(db, "users", auth.currentUser.uid);
-  const docSnap = await getDoc(userDocRef);
-  return docSnap.exists() ? docSnap.data().settings : null;
+  try {
+    if (!auth.currentUser) return null;
+    const userDocRef = doc(db, "users", auth.currentUser.uid);
+    const docSnap = await getDoc(userDocRef);
+    return docSnap.exists() ? docSnap.data().settings : null;
+  } catch (error) {
+    console.error("Error fetching user preferences:", error);
+    return null;
+  }
 };
 
 export const deleteVault = async (vault) => {
@@ -385,7 +391,7 @@ export const setPrimaryBankAccount = async (accountId) => {
       where("isPrimary", "==", true)
     );
 
-    const accountsSnapshot = await getDoc(accountsQuery);
+    const accountsSnapshot = await getDocs(accountsQuery);
     // Note: In a real implementation, we'd use a batch operation here
     // For simplicity, we'll just set the new primary and let the old one be unset manually
 
@@ -740,9 +746,6 @@ export const getAccounts = async () => {
 };
 
 // ==================== BILLER FUNCTIONS ====================
-
-import { query, getDocs } from 'firebase/firestore';
-import { generateAccountNumber, generateIBAN, validateIBAN, formatIBAN, BANK_BICS } from './utils/ibanUtils';
 
 // ==================== ENVELOPE BUDGETS FUNCTIONS ====================
 

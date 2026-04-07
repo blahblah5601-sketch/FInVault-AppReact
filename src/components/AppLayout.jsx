@@ -1,20 +1,44 @@
 // src/components/AppLayout.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import MainContent from './MainContent';
-import OnboardingController from './onboarding/OnboardingController';
 import SendMoneyPanel from './panels/SendMoneyPanel';
 import AddFundsPanel from './panels/AddFundsPanel';
 import QRPaymentPanel from './panels/QRPaymentPanel';
 import NFCPaymentPanel from './panels/NFCPaymentPanel';
+import { getUserPreferences } from '../api';
 
 // The component receives props, including the onLogout function
 function AppLayout({ user, onLogout, showToast, theme, setTheme, accounts, budgets, vaults, transactions, history, billers, beneficiaries }) {
     const [activePage, setActivePage] = useState('dashboard');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [activePanelId, setActivePanelId] = useState(null); // 'send' | 'add' | 'qr' | 'nfc' | null
-    // useEffect for lucide.createIcons() was deleted as pnpm install lucide-react was done to fix lucide icons issue
+    const [preferences, setPreferences] = useState({
+      showIconTooltips: true,
+      showIBANOnHero: true,
+      showBalanceByDefault: true,
+      usePlanetIcons: true,
+      showEnvelopeItemsExpanded: false,
+      useVisualBudgetView: false,
+      budgetWarningThreshold: 80,
+      requirePaymentConfirmation: true,
+      saveCardDetailsSession: false,
+      compactMode: false,
+      showMonthlyIncome: true,
+      showMonthlySpend: true,
+    });
+
+    // Load user preferences on mount
+    useEffect(() => {
+      const loadPrefs = async () => {
+        const prefs = await getUserPreferences();
+        if (prefs && Object.keys(prefs).length > 0) {
+          setPreferences(prev => ({ ...prev, ...prefs }));
+        }
+      };
+      loadPrefs();
+    }, []);
 
     return (
     <div id="app-container" className="flex h-screen w-full bg-background text-text-secondary overflow-hidden">
@@ -50,27 +74,28 @@ function AppLayout({ user, onLogout, showToast, theme, setTheme, accounts, budge
             <Header
                 activePage={activePage}
                 onMenuClick={() => setIsMobileMenuOpen(true)}
+                history={history}
+                transactions={transactions}
             />
-            <OnboardingController activePage={activePage}>
-                <MainContent
-                    activePage={activePage}
-                    setActivePage={setActivePage}
-                    accounts={accounts}
-                    budgets={budgets}
-                    vaults={vaults}
-                    transactions={transactions}
-                    history={history}
-                    showToast={showToast}
-                    theme={theme}
-                    setTheme={setTheme}
-                    billers={billers}
-                    beneficiaries={beneficiaries}
-                    onOpenSendMoney={() => setActivePanelId('send')}
-                    onOpenAddFunds={() => setActivePanelId('add')}
-                    onOpenQRPayment={() => setActivePanelId('qr')}
-                    onOpenNFCPayment={() => setActivePanelId('nfc')}
-                />
-            </OnboardingController>
+            <MainContent
+                activePage={activePage}
+                setActivePage={setActivePage}
+                accounts={accounts}
+                budgets={budgets}
+                vaults={vaults}
+                transactions={transactions}
+                history={history}
+                showToast={showToast}
+                theme={theme}
+                setTheme={setTheme}
+                billers={billers}
+                beneficiaries={beneficiaries}
+                preferences={preferences}
+                onOpenSendMoney={() => setActivePanelId('send')}
+                onOpenAddFunds={() => setActivePanelId('add')}
+                onOpenQRPayment={() => setActivePanelId('qr')}
+                onOpenNFCPayment={() => setActivePanelId('nfc')}
+            />
         </main>
 
        {/* 5. Panels - Rendered at app level to overlay everything */}
@@ -81,6 +106,7 @@ function AppLayout({ user, onLogout, showToast, theme, setTheme, accounts, budge
            setActivePanelId(null);
            showToast('Transaction successful!');
          }}
+         showToast={showToast}
        />
        <AddFundsPanel
          isOpen={activePanelId === 'add'}
@@ -89,6 +115,7 @@ function AppLayout({ user, onLogout, showToast, theme, setTheme, accounts, budge
            setActivePanelId(null);
            showToast('Funds added successfully!');
          }}
+         showToast={showToast}
        />
        <QRPaymentPanel
          isOpen={activePanelId === 'qr'}
@@ -97,6 +124,7 @@ function AppLayout({ user, onLogout, showToast, theme, setTheme, accounts, budge
            setActivePanelId(null);
            showToast('QR payment completed!');
          }}
+         showToast={showToast}
        />
        <NFCPaymentPanel
          isOpen={activePanelId === 'nfc'}
@@ -105,6 +133,7 @@ function AppLayout({ user, onLogout, showToast, theme, setTheme, accounts, budge
            setActivePanelId(null);
            showToast('NFC payment completed!');
          }}
+         showToast={showToast}
        />
    </div>
    );

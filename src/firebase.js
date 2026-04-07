@@ -15,12 +15,7 @@ const firebaseConfig = {
     measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENTID
 };
 
-initializeApp(firebaseConfig);
-
-// Raast API Configuration
-// const RAAS_API_KEY = process.env.RAAS_API_KEY; // Use environment variable for the API key
 const app = initializeApp(firebaseConfig);
 
-// Export the services you'll need in your components
 export const auth = getAuth(app);
 export const db = getFirestore(app);

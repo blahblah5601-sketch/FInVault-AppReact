@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import ToastNotification from './components/ToastNotification';
-import PageLoading from './components/PageLoading'; // NEW - Import PageLoading
 import './App.css';
-import { auth, db } from './firebase'; // Import from your new firebase.js file
+import { auth } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { collection, query, onSnapshot, orderBy } from 'firebase/firestore';
 import AuthComponent from './components/AuthComponent';

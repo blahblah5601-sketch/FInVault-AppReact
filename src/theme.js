@@ -48,6 +48,18 @@ export const themes = {
         '--color-text-muted': '#E498CC',
         '--color-card-gradient-from': '#9d3d7a',
         '--color-card-gradient-to': '#4c1d3d',
+    },
+    'White': {
+        '--color-bg': '#f8f9fb',
+        '--color-sidebar': '#1a1f3a',
+        '--color-panel': '#ffffff',
+        '--color-interactive': '#e2e5ec',
+        '--color-primary': '#22c55e',
+        '--color-text-primary': '#1e293b',
+        '--color-text-secondary': '#64748b',
+        '--color-text-muted': '#94a3b8',
+        '--color-card-gradient-from': '#eef0f5',
+        '--color-card-gradient-to': '#f8f9fb',
     }
 };
 

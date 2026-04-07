@@ -3,10 +3,9 @@ import { useState, useEffect } from 'react';
 import { updateUserPreferences, getUserPreferences } from '../api';
 import { Snowflake, CheckCircle2, Link, LibrarySquare } from 'lucide-react';
 import CardGraphic from './CardGraphic';
-import ConfirmActionModal from './modals/ConfirmActionModal'; 
+import ConfirmActionModal from './modals/ConfirmActionModal';
 
 function CardControlPage({ accounts, budgets, showToast }) {
-  // State for this page's interactive elements
   const [isCardFrozen, setIsCardFrozen] = useState(false);
   const [activeAccountId, setActiveAccountId] = useState('current');
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
@@ -15,131 +14,217 @@ function CardControlPage({ accounts, budgets, showToast }) {
   const assignedBudgets = budgets.filter(b => b.isCardAssigned);
 
   useEffect(() => {
-      const loadPreferences = async () => {
-        const prefs = await getUserPreferences();
-        if (prefs) {
-          setIsCardFrozen(prefs.isCardFrozen || false);
-          setActiveAccountId(prefs.activeAccountId || 'current');
-        }
-      };
-      loadPreferences();
-    }, []);// The empty array [] ensures this runs only once
-  
+    const loadPreferences = async () => {
+      const prefs = await getUserPreferences();
+      if (prefs) {
+        setIsCardFrozen(prefs.isCardFrozen || false);
+        setActiveAccountId(prefs.activeAccountId || 'current');
+      }
+    };
+    loadPreferences();
+  }, []);
+
   const handleFreezeToggle = async () => {
     const newFrozenState = !isCardFrozen;
     setIsCardFrozen(newFrozenState);
-    await updateUserPreferences({ isCardFrozen: newFrozenState });
+    try {
+      await updateUserPreferences({ isCardFrozen: newFrozenState });
+    } catch (error) {
+      setIsCardFrozen(!newFrozenState);
+      if (showToast) showToast('Failed to update card freeze preference.');
+    }
   };
 
-  const handleAccountChange = (event) => {
-    setNextAccountId(event.target.value); // Store the desired account
-    setIsConfirmModalOpen(true); // Open the modal
+  const handleAccountChange = (accountId) => {
+    setNextAccountId(accountId);
+    setIsConfirmModalOpen(true);
   };
 
   const handleConfirmAccountChange = async () => {
     if (nextAccountId) {
-      setActiveAccountId(nextAccountId); // Update the UI state
-      await updateUserPreferences({ activeAccountId: nextAccountId }); // Save to database
+      setActiveAccountId(nextAccountId);
+      await updateUserPreferences({ activeAccountId: nextAccountId });
       showToast("Active card account has been changed.");
     }
-    setIsConfirmModalOpen(false); // Close the modal
-    setNextAccountId(null); // Reset for next time
+    setIsConfirmModalOpen(false);
+    setNextAccountId(null);
   };
-  
+
   const displayAccounts = mainAccount ? [
     mainAccount,
     ...assignedBudgets.map(b => ({ id: b.id, name: `${b.name} Jar`, balance: b.limit - b.spent }))
   ] : [];
 
   const activeAccount = displayAccounts.find(acc => acc.id === activeAccountId) || mainAccount;
-  
+
   return (
-    <><section id="card-control" className="page-section">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+    <section id="card-control" className="flex flex-col space-y-[22px]">
+      {/* Header / Card visual */}
+      <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-semibold mb-4">Card Control</h2>
-          <div id="smart-card-display-control" className={`card-gradient p-6 rounded-2xl shadow-lg relative h-56 ${isCardFrozen ? 'grayscale' : ''}`}>
-            <div className="flex justify-between items-start">
+          <h2 className="text-lg font-medium" style={{ fontFamily: "'Sora', sans-serif" }}>Card Control</h2>
+          <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
+            Manage cards, NFC defaults & budget links
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-[14px]">
+        {/* Left: Card Display + Freeze */}
+        <div className="space-y-[14px]">
+          <div className={`rounded-panel p-6 relative overflow-hidden ${isCardFrozen ? 'grayscale' : ''}`}
+            style={{ backgroundColor: '#1a1f3a', color: 'white' }}>
+            {/* Decorative circles */}
+            <div className="absolute rounded-full" style={{
+              width: '140px', height: '140px', top: '-70px', right: '-40px',
+              backgroundColor: 'rgba(255,255,255,0.06)'
+            }} />
+            <div className="absolute rounded-full" style={{
+              width: '90px', height: '90px', bottom: '-25px', left: '20px',
+              backgroundColor: 'rgba(255,255,255,0.06)'
+            }} />
+
+            <div className="relative z-10 flex justify-between items-start">
               <div>
-                <p className="text-sm text-text-secondary">Active Account</p>
-                <h3 className="text-xl font-semibold">{activeAccount?.name}</h3>
+                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>Active Account</p>
+                <h3 className="text-sm font-medium mt-1" style={{ fontFamily: "'Space Mono', monospace", color: 'rgba(255,255,255,0.75)' }}>
+                  {activeAccount?.name}
+                </h3>
               </div>
-              <CardGraphic className="w-10 h-10 text-white" />
+              {/* Chip */}
+              <div className="w-[26px] h-[19px] bg-[var(--color-gold)] rounded-sm flex items-center justify-center">
+                <svg viewBox="0 0 18 13" fill="none" width="18" height="13">
+                  <rect x="1" y="1" width="16" height="11" rx="1.5" stroke="#1a1f3a" strokeWidth="1.1"/>
+                  <path d="M6 1v11M12 1v11M1 4.5h16M1 8.5h16" stroke="#1a1f3a" strokeWidth=".7"/>
+                </svg>
+              </div>
             </div>
-            <div className="absolute bottom-6 left-6">
-              <p className="text-lg font-mono tracking-widest text-text-primary">**** **** **** 8021</p>
+            <div className="relative z-10 mt-[20px]">
+              <p className="text-xs tracking-[2px]" style={{ fontFamily: "'Space Mono', monospace", color: 'rgba(255,255,255,0.5)' }}>
+                **** **** **** 8021
+              </p>
+              <p className="text-[10px] mt-2" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                {activeAccount?.ibanNumber ? activeAccount.ibanNumber.substring(0, 6) + ' ****' : 'PK36 FNVT **** 8021'}
+              </p>
             </div>
+
             {isCardFrozen && (
-              <div id="card-frozen-overlay-control" className="absolute inset-0 bg-black bg-opacity-60 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-                <Snowflake className="w-16 h-16 text-blue-300" n />
-                <p className="text-2xl font-bold text-blue-200 ml-4">Card Frozen</p>
+              <div className="absolute inset-0 flex items-center justify-center backdrop-blur-sm z-20"
+                style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}>
+                <Snowflake className="w-14 h-14" style={{ color: 'rgba(136,192,255,0.7)' }} />
+                <p className="text-xl font-bold ml-3" style={{ color: 'rgba(136,192,255,0.9)' }}>Card Frozen</p>
               </div>
             )}
           </div>
-          <div className="mt-6 flex items-center justify-between bg-background/50 p-4 rounded-xl">
-            <div className="flex items-center">
-              <Snowflake className="w-6 h-6 mr-3 text-blue-400" />
-              <span className="font-medium">Freeze Card</span>
+
+          {/* Freeze Toggle */}
+          <div className="rounded-panel p-4 flex items-center justify-between" style={{
+            backgroundColor: 'var(--color-panel)',
+            border: '1px solid var(--color-border)'
+          }}>
+            <div className="flex items-center gap-3">
+              <Snowflake className="w-5 h-5" style={{ color: 'var(--color-blue-accent)' }} />
+              <span className="text-sm font-medium">Freeze Card</span>
             </div>
-            <label htmlFor="freeze-toggle" className="inline-flex relative items-center cursor-pointer">
-              <input
-                type="checkbox"
-                id="freeze-toggle"
-                className="sr-only peer"
-                checked={isCardFrozen}
-                onChange={handleFreezeToggle} />
-              <div className="w-11 h-6 bg-interactive peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+            <label htmlFor="freeze-toggle" className="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="freeze-toggle" className="sr-only peer"
+                checked={isCardFrozen} onChange={handleFreezeToggle} />
+              <div className="w-11 h-6 bg-background/10 peer-focus:outline-none rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full peer-checked:after:border-white after:border after:border-gray-300 peer-checked:bg-[var(--color-blue-accent)]" />
             </label>
           </div>
         </div>
-        <div className="bg-background/50 p-6 rounded-2xl">
-          <h3 className="text-lg font-semibold mb-4">Rotate Active Account</h3>
-          <p className="text-sm text-text-secondary mb-6">Select which account or budget jar your card should use.</p>
-          {/* The `onChange` now triggers the confirmation flow */}
-          <div className="space-y-3" id="account-selector" onChange={handleAccountChange}>
-            {/* Account list is now dynamically rendered */}
+
+        {/* Right: Account Selector */}
+        <div className="rounded-panel p-[18px]" style={{
+          backgroundColor: 'var(--color-panel)',
+          border: '1px solid var(--color-border)'
+        }}>
+          <h3 className="text-sm font-medium mb-1">Rotate Active Account</h3>
+          <p className="text-xs mb-[18px]" style={{ color: 'var(--color-text-muted)' }}>
+            Select which account or budget jar your card uses.
+          </p>
+          <div id="account-selector" className="space-y-3">
             {displayAccounts.map(account => (
-              <label key={account.id} htmlFor={`acc-${account.id}`} className={`flex items-center p-4 rounded-lg cursor-pointer transition-colors border ${activeAccountId === account.id ? 'bg-green-500/20 border-green-500' : 'bg-panel border-transparent'} hover:bg-sidebar`}>
-                <input type="radio" id={`acc-${account.id}`} name="activeAccount" value={account.id} className="hidden" defaultChecked={account.id === activeAccountId} />
+              <label key={account.id} htmlFor={`acc-${account.id}`}
+                className="flex items-center p-4 rounded-[10px] cursor-pointer transition-all border hover:bg-background/10"
+                style={{
+                  backgroundColor: activeAccountId === account.id
+                    ? 'rgba(14,124,110,0.12)'
+                    : 'var(--color-bg)',
+                  borderColor: activeAccountId === account.id
+                    ? 'rgba(14,124,110,0.4)'
+                    : 'transparent',
+                  borderStyle: 'solid'
+                }}>
+                <input type="radio" id={`acc-${account.id}`} name="activeAccount" value={account.id}
+                  className="hidden" checked={account.id === activeAccountId}
+                  onChange={() => handleAccountChange(account.id)} />
                 <div className="flex-1">
-                  <p className="font-medium">{account.name}</p>
-                  <p className="text-sm text-text-secondary">Available: Rs {account.balance.toLocaleString('en-US')}</p>
+                  <p className="text-xs font-medium">{account.name}</p>
+                  <p className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+                    Available:{' '}
+                    <span style={{ fontFamily: "'Space Mono', monospace" }}>
+                      Rs {account.balance.toLocaleString('en-US')}
+                    </span>
+                  </p>
                 </div>
-                {activeAccountId === account.id && <CheckCircle2 className="w-6 h-6 text-green-500" />}
+                {activeAccountId === account.id && (
+                  <CheckCircle2 className="w-5 h-5" style={{ color: 'var(--color-teal)' }} />
+                )}
               </label>
             ))}
           </div>
         </div>
-        {/* --- ADD THIS NEW SECTION --- */}
-        <div className="bg-background/50 p-6 rounded-2xl">
-          <h3 className="text-lg font-semibold mb-4">Advanced Features</h3>
+
+        {/* Advanced Features */}
+        <div className="rounded-panel p-[18px]" style={{
+          backgroundColor: 'var(--color-panel)',
+          border: '1px solid var(--color-border)'
+        }}>
+          <h3 className="text-sm font-medium mb-[18px]">Advanced Features</h3>
           <div className="space-y-3">
-            <button
-              onClick={() => showToast('Coming Soon!')}
-              className="w-full btn-secondary p-4 rounded-lg flex items-center text-left"
-            >
+            <button onClick={() => showToast('Coming Soon!')}
+              className="w-full flex items-center text-left py-3 px-4 transition-colors"
+              style={{
+                borderRadius: '10px',
+                border: '1px solid var(--color-border)',
+                background: 'transparent',
+                fontFamily: "'Sora', sans-serif",
+                fontSize: '13px',
+                color: 'var(--color-text-primary)'
+              }}
+              onMouseEnter={e => e.target.style.borderColor = 'var(--color-gold)'}
+              onMouseLeave={e => e.target.style.borderColor = 'var(--color-border)'}>
               <Link className="w-5 h-5 mr-3 flex-shrink-0" />
               <span>Link External Bank Account</span>
             </button>
-            <button
-              onClick={() => showToast('Coming Soon!')}
-              className="w-full btn-secondary p-4 rounded-lg flex items-center text-left"
-            >
+            <button onClick={() => showToast('Coming Soon!')}
+              className="w-full flex items-center text-left py-3 px-4 transition-colors"
+              style={{
+                borderRadius: '10px',
+                border: '1px solid var(--color-border)',
+                background: 'transparent',
+                fontFamily: "'Sora', sans-serif",
+                fontSize: '13px',
+                color: 'var(--color-text-primary)'
+              }}
+              onMouseEnter={e => e.target.style.borderColor = 'var(--color-gold)'}
+              onMouseLeave={e => e.target.style.borderColor = 'var(--color-border)'}>
               <LibrarySquare className="w-5 h-5 mr-3 flex-shrink-0" />
               <span>Generate Virtual Card</span>
             </button>
           </div>
         </div>
       </div>
-    </section>
-    <ConfirmActionModal
+
+      <ConfirmActionModal
         isOpen={isConfirmModalOpen}
         onClose={() => setIsConfirmModalOpen(false)}
         onConfirm={handleConfirmAccountChange}
         title="Confirm Account Change"
-        message="Are you sure you want to rotate your active card account?" 
-    />
-  </>
+        message="Are you sure you want to rotate your active card account?"
+      />
+    </section>
   );
 }
 

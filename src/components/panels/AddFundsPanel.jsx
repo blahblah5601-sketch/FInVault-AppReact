@@ -1,8 +1,8 @@
 // src/components/panels/AddFundsPanel.jsx
 import { useState } from 'react';
 
-const AddFundsPanel = ({ isOpen, onClose, onSuccess }) => {
-  const [activeTab, setActiveTab] = useState('from-card'); // 'from-card' or 'bank-transfer'
+const AddFundsPanel = ({ isOpen, onClose, onSuccess, showToast }) => {
+  const [activeTab, setActiveTab] = useState('from-card');
   const [cardNumber, setCardNumber] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [cvv, setCVV] = useState('');
@@ -13,12 +13,9 @@ const AddFundsPanel = ({ isOpen, onClose, onSuccess }) => {
   const [ibanError, setIbanError] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
 
-  // Mock card scanning functionality
   const handleScanCard = () => {
     setIsScanning(true);
-    // Simulate scanning delay
     setTimeout(() => {
-      // In a real app, this would come from the camera/NFC scan
       setCardNumber('4242 4242 4242 4242');
       setExpiryDate('12/25');
       setCardHolderName('JOHN DOE');
@@ -26,351 +23,213 @@ const AddFundsPanel = ({ isOpen, onClose, onSuccess }) => {
     }, 2000);
   };
 
-  // Mock NFC tap functionality
   const handleTapCard = () => {
-    // In a real Capacitor app, this would trigger NFC plugin
-    alert('NFC functionality would be implemented here in Capacitor');
-    // Simulate successful read
+    showToast('NFC functionality would be implemented here in Capacitor');
     setCardNumber('4242 4242 4242 4242');
     setExpiryDate('12/25');
     setCardHolderName('JOHN DOE');
   };
 
-  const handleAmountChange = (e) => {
-    setAmount(e.target.value);
-  };
-
-  const handleSourceIBANChange = (e) => {
-    setSourceIBAN(e.target.value);
-  };
-
-  const handleReferenceNumberChange = (e) => {
-    setReferenceNumber(e.target.value);
-  };
-
-  const handleCardNumberChange = (e) => {
-    // Format card number with spaces every 4 digits
-    let value = e.target.value.replace(/\s/g, ''); // Remove all spaces
-    if (value.length > 0) {
-      value = value.match(/.{1,4}/g).join(' ');
-    }
-    setCardNumber(value);
-  };
-
-  const handleExpiryDateChange = (e) => {
-    let value = e.target.value;
-    // Auto-add slash after 2 characters if typing numbers
-    if (value.length === 2 && /^\d{2}$/.test(value)) {
-      value = value + '/';
-    }
-    // Limit to 5 characters (MM/YY)
-    if (value.length > 5) {
-      value = value.substring(0, 5);
-    }
-    setExpiryDate(value);
-  };
-
-  const handleCVVChange = (e) => {
-    // Limit to 3 digits and only allow numbers
-    let value = e.target.value.replace(/\D/g, '');
-    if (value.length > 3) {
-      value = value.substring(0, 3);
-    }
-    setCVV(value);
-  };
-
-  const handleCardHolderNameChange = (e) => {
-    setCardHolderName(e.target.value);
-  };
-
   const validateIBAN = (iban) => {
-    // Simplified IBAN validation for demo
-    // In a real app, we would use the validateIBAN function from ibanUtils
     const cleanIban = iban.replace(/\s+/g, '').toUpperCase();
     return cleanIban.length === 24 && cleanIban.startsWith('PK');
   };
 
   const handleAddFundsFromCard = async () => {
-    // Validate card form
-    if (!cardNumber || !expiryDate || !cvv || !cardHolderName) {
-      alert('Please fill in all card details');
-      return;
-    }
-
-    if (!amount || parseFloat(amount) <= 0) {
-      alert('Please enter a valid amount');
-      return;
-    }
-
-    // Tokenization note: In a real app, we would send card details to a payment gateway
-    // and receive a token, never storing actual card details
-    alert('Tokenization note: Card details would be sent to payment gateway (e.g. Stripe, 2Checkout) for processing.');
-
-    // Simulate processing delay
+    if (!cardNumber || !expiryDate || !cvv || !cardHolderName) { showToast('Please fill in all card details'); return; }
+    if (!amount || parseFloat(amount) <= 0) { showToast('Please enter a valid amount'); return; }
+    showToast('Tokenization note: Card details would be sent to payment gateway for processing.');
     try {
-      // In a real implementation, we would call a payment gateway API here
-      // For now, we'll just simulate success
       await new Promise(resolve => setTimeout(resolve, 1500));
-
-      onClose();
-      onSuccess();
-    } catch (error) {
-      console.error('Error processing card payment:', error);
-      alert('Failed to process card payment. Please try again.');
-    }
+      onClose(); onSuccess();
+    } catch (error) { console.error('Error processing card payment:', error); showToast('Failed to process card payment.'); }
   };
 
   const handleAddFundsFromBankTransfer = async () => {
-    // Validate bank transfer form
-    if (!sourceIBAN) {
-      alert('Please enter source IBAN');
-      return;
-    }
-
-    if (!validateIBAN(sourceIBAN)) {
-      alert('Please enter a valid IBAN');
-      return;
-    }
-
-    if (!amount || parseFloat(amount) <= 0) {
-      alert('Please enter a valid amount');
-      return;
-    }
-
-    if (!referenceNumber) {
-      alert('Please enter a reference number');
-      return;
-    }
-
-    // Simulate processing delay
+    if (!sourceIBAN) { showToast('Please enter source IBAN'); return; }
+    if (!validateIBAN(sourceIBAN)) { showToast('Please enter a valid IBAN'); return; }
+    if (!amount || parseFloat(amount) <= 0) { showToast('Please enter a valid amount'); return; }
+    if (!referenceNumber) { showToast('Please enter a reference number'); return; }
     try {
-      // In a real implementation, we would initiate a bank transfer here
       await new Promise(resolve => setTimeout(resolve, 1500));
-
-      onClose();
-      onSuccess();
-    } catch (error) {
-      console.error('Error processing bank transfer:', error);
-      alert('Failed to process bank transfer. Please try again.');
-    }
+      onClose(); onSuccess();
+    } catch (error) { console.error('Error processing bank transfer:', error); showToast('Failed to process bank transfer.'); }
   };
+
+  const inputStyle = {
+    borderRadius: '10px', border: '1px solid var(--color-border)', background: 'var(--color-bg)',
+    color: 'var(--color-text-primary)', fontFamily: "'Sora', sans-serif", padding: '10px 12px',
+    fontSize: '14px', width: '100%', outline: 'none'
+  };
+
+  const labelStyle = { fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: 4, display: 'block', letterSpacing: '0.3px' };
 
   return (
     <>
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-end bg-black/50 backdrop-blur-sm">
           <div className="relative w-full max-w-lg mx-4 mb-6">
-            {/* Drag handle */}
             <div className="w-12 h-0.5 bg-white/20 rounded mb-4" />
-
-            {/* Panel content */}
-            <div className="bg-background/90 backdrop-blur-sm rounded-3xl p-6 border border-white/20">
-              <div className="flex justify-between items-start mb-4">
-                <h3 className="text-lg font-semibold">Add Funds</h3>
-                <button
-                  onClick={onClose}
-                  className="text-xs btn-danger py-1 px-2 rounded"
-                >
-                  ×
-                </button>
+            <div className="rounded-panel p-6 border" style={{
+              backgroundColor: 'var(--color-panel)', borderColor: 'var(--color-border)'
+            }}>
+              <div className="flex justify-between items-start mb-5 gap-3">
+                <button onClick={onClose} className="px-2 py-1 text-xs rounded-sm-panel transition-colors shrink-0 self-start"
+                  style={{ background: 'var(--color-red-accent)', color: 'white', border: 'none', cursor: 'pointer' }}>←</button>
+                <h3 className="text-lg font-medium flex-1 text-center" style={{ fontFamily: "'Sora', sans-serif" }}>Add Funds</h3>
+                <div className="w-10 shrink-0" />
               </div>
 
-              {/* Tabs */}
-              <div className="mb-6">
-                <div className="flex border-b border-white/10">
-                  <button
-                    onClick={() => setActiveTab('from-card')}
-                    className={`flex-1 py-3 px-4 text-center font-medium ${
-                      activeTab === 'from-card'
-                        ? 'border-b-2 border-primary text-primary'
-                        : 'text-text-secondary hover:text-white'
-                    }`}
-                  >
-                    From Card
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('bank-transfer')}
-                    className={`flex-1 py-3 px-4 text-center font-medium ${
-                      activeTab === 'bank-transfer'
-                        ? 'border-b-2 border-primary text-primary'
-                        : 'text-text-secondary hover:text-white'
-                    }`}
-                  >
-                    Bank Transfer
-                  </button>
-                </div>
-              </div>
-
-              {/* Tab Content */}
-              {activeTab === 'from-card' && (
-                <>
-                  {/* Card Scan/Tap Section */}
-                  <div className="mb-6 text-center">
-                    {/* Android Capacitor NFC */}
-                    <button
-                      onClick={handleTapCard}
-                      className="w-full mb-4 btn-secondary py-2 px-4 rounded flex items-center justify-center"
-                    >
-                      {/* In a real Capacitor Android app, this would trigger NFC */}
-                      <span className="mr-2">📱</span> Tap Card to Read
-                    </button>
-
-                    {/* Camera Scan Section */}
-                    <div className="space-y-3">
-                      <button
-                        onClick={handleScanCard}
-                        className="w-full btn-secondary py-2 px-4 rounded flex items-center justify-center"
-                        disabled={isScanning}
-                      >
-                        {(isScanning ? <><span className="mr-2">🔄</span>Scanning</> : <><span className="mr-2">📷</span>Scan Card with Camera</>)}
-                      </button>
-                      <p className="text-xs text-text-muted mt-2">
-                        Hold card to back of phone or use camera to scan card details
-                      </p>
+              {/* Quick Fund Options — reference style grid */}
+              {activeTab === 'from-card' ? (
+                <div className="space-y-5">
+                  {/* Card/NFC/QR Options Grid */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-panel p-4 cursor-pointer transition-colors border"
+                      style={{ backgroundColor: 'var(--color-bg)', borderColor: 'var(--color-border)' }}
+                      onClick={() => {}}
+                      onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-gold)'}
+                      onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--color-border)'}>
+                      <div className="w-9 h-9 rounded-sm-panel flex items-center justify-center mb-3"
+                        style={{ backgroundColor: 'var(--color-teal2)' }}>
+                        <svg viewBox="0 0 18 18" fill="none" width="18" height="18">
+                          <rect x="2" y="5" width="14" height="10" rx="1.5" stroke="#0e7c6e" strokeWidth="1.4"/>
+                          <path d="M5 5V4a3 3 0 016 0v1" stroke="#0e7c6e" strokeWidth="1.4" strokeLinecap="round"/>
+                          <path d="M2 9h14" stroke="#0e7c6e" strokeWidth="1.4"/>
+                        </svg>
+                      </div>
+                      <p className="text-xs font-medium">Debit / Credit Card</p>
+                      <p className="text-[11px] mt-1" style={{ color: 'var(--color-text-muted)' }}>Instant · Up to Rs 10,000</p>
+                    </div>
+                    <div className="rounded-panel p-4 cursor-pointer transition-colors border"
+                      style={{ backgroundColor: 'var(--color-bg)', borderColor: 'var(--color-border)' }}
+                      onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-gold)'}
+                      onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--color-border)'}>
+                      <div className="w-9 h-9 rounded-sm-panel flex items-center justify-center mb-3"
+                        style={{ backgroundColor: 'var(--color-blue2)' }}>
+                        <svg viewBox="0 0 18 18" fill="none" width="18" height="18">
+                          <path d="M3 9C3 5.69 5.69 3 9 3s6 2.69 6 6-2.69 6-6 6" stroke="#2056d4" strokeWidth="1.4" strokeLinecap="round"/>
+                          <path d="M9 6v3l2 2" stroke="#2056d4" strokeWidth="1.4" strokeLinecap="round"/>
+                        </svg>
+                      </div>
+                      <p className="text-xs font-medium">Bank Transfer</p>
+                      <p className="text-[11px] mt-1" style={{ color: 'var(--color-text-muted)' }}>1–2 days · No limit</p>
+                    </div>
+                    <div className="rounded-panel p-4 cursor-pointer transition-colors border"
+                      style={{ backgroundColor: 'var(--color-bg)', borderColor: 'var(--color-border)' }}
+                      onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-gold)'}
+                      onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--color-border)'}>
+                      <div className="w-9 h-9 rounded-sm-panel flex items-center justify-center mb-3"
+                        style={{ backgroundColor: '#fef3d8' }}>
+                        <svg viewBox="0 0 18 18" fill="none" width="18" height="18">
+                          <rect x="2" y="2" width="5" height="5" rx="1" stroke="#c9a84c" strokeWidth="1.4"/>
+                          <rect x="11" y="2" width="5" height="5" rx="1" stroke="#c9a84c" strokeWidth="1.4"/>
+                          <rect x="2" y="11" width="5" height="5" rx="1" stroke="#c9a84c" strokeWidth="1.4"/>
+                          <path d="M11 11h1.5M11 14h5M14 11v4" stroke="#c9a84c" strokeWidth="1.4" strokeLinecap="round"/>
+                        </svg>
+                      </div>
+                      <p className="text-xs font-medium">Scan QR Code</p>
+                      <p className="text-[11px] mt-1" style={{ color: 'var(--color-text-muted)' }}>Instant · Peer transfer</p>
+                    </div>
+                    <div className="rounded-panel p-4 cursor-pointer transition-colors border"
+                      style={{ backgroundColor: 'var(--color-bg)', borderColor: 'var(--color-border)' }}
+                      onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-gold)'}
+                      onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--color-border)'}>
+                      <div className="w-9 h-9 rounded-sm-panel flex items-center justify-center mb-3"
+                        style={{ backgroundColor: '#ede8fe' }}>
+                        <svg viewBox="0 0 18 18" fill="none" width="18" height="18">
+                          <path d="M4 9c0-2.76 2.24-5 5-5s5 2.24 5 5-2.24 5-5 5" stroke="#7c3aed" strokeWidth="1.4" strokeLinecap="round"/>
+                          <path d="M1.5 9C1.5 4.31 5.31.5 10 .5S18.5 4.31 18.5 9" stroke="#7c3aed" strokeWidth="1.4" strokeLinecap="round"/>
+                        </svg>
+                      </div>
+                      <p className="text-xs font-medium">NFC Tap</p>
+                      <p className="text-[11px] mt-1" style={{ color: 'var(--color-text-muted)' }}>Instant · Near field</p>
                     </div>
                   </div>
 
                   {/* Card Form */}
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <label className="block text-text-primary mb-1">Card Number</label>
-                      <input
-                        type="text"
-                        value={cardNumber}
-                        onChange={handleCardNumberChange}
-                        placeholder="4242 4242 4242 4242"
-                        className="w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-gray-300"
-                      />
+                  <div className="space-y-4" style={{ borderTop: '1px solid var(--color-border)', paddingTop: 20 }}>
+                    <div>
+                      <label style={labelStyle}>Card Number</label>
+                      <input type="text" value={cardNumber}
+                        onChange={e => {
+                          let v = e.target.value.replace(/\s/g, '');
+                          if (v.length > 0) v = v.match(/.{1,4}/g).join(' ');
+                          setCardNumber(v);
+                        }}
+                        placeholder="4242 4242 4242 4242" className="form-input" style={{ ...inputStyle, fontFamily: "'Space Mono', monospace" }} />
                     </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="block text-text-primary mb-1">Expiry Date</label>
-                        <input
-                          type="text"
-                          value={expiryDate}
-                          onChange={handleExpiryDateChange}
-                          placeholder="MM/YY"
-                          className="w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-gray-300"
-                        />
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label style={labelStyle}>Expiry Date</label>
+                        <input type="text" value={expiryDate}
+                          onChange={e => {
+                            let v = e.target.value;
+                            if (v.length === 2 && /^\d{2}$/.test(v)) v = v + '/';
+                            if (v.length > 5) v = v.substring(0, 5);
+                            setExpiryDate(v);
+                          }}
+                          placeholder="MM/YY" className="form-input" style={inputStyle} />
                       </div>
-                      <div className="space-y-2">
-                        <label className="block text-text-primary mb-1">CVV</label>
-                        <input
-                          type="text"
-                          value={cvv}
-                          onChange={handleCVVChange}
-                          placeholder="123"
-                          className="w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-gray-300"
-                        />
+                      <div>
+                        <label style={labelStyle}>CVV</label>
+                        <input type="text" value={cvv}
+                          onChange={e => setCVV(e.target.value.replace(/\D/g, '').substring(0, 3))}
+                          placeholder="123" className="form-input" style={inputStyle} />
                       </div>
                     </div>
+                    <div>
+                      <label style={labelStyle}>Name on Card</label>
+                      <input type="text" value={cardHolderName}
+                        onChange={e => setCardHolderName(e.target.value)}
+                        placeholder="JOHN DOE" className="form-input" style={inputStyle} />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Amount (PKR)</label>
+                      <input type="number" value={amount} onChange={e => setAmount(e.target.value)}
+                        placeholder="Rs 0.00" className="form-input form-mono-input" style={{ ...inputStyle, fontFamily: "'Space Mono', monospace", fontSize: 22 }} />
+                    </div>
 
-                    <div className="space-y-2">
-                      <label className="block text-text-primary mb-1">Name on Card</label>
-                      <input
-                        type="text"
-                        value={cardHolderName}
-                        onChange={handleCardHolderNameChange}
-                        placeholder="JOHN DOE"
-                        className="w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-gray-300"
-                      />
+                    <div className="flex gap-3">
+                      <button onClick={handleAddFundsFromCard}
+                        className="flex-1 py-[10px] text-sm font-medium text-white transition-colors"
+                        style={{ borderRadius: '10px', backgroundColor: '#1a1f3a', border: 'none', fontFamily: "'Sora', sans-serif" }}
+                        disabled={!cardNumber || !expiryDate || !cvv || !cardHolderName || !amount || parseFloat(amount) <= 0}
+                        onMouseEnter={e => e.target.style.backgroundColor = '#262d52'}
+                        onMouseLeave={e => e.target.style.backgroundColor = '#1a1f3a'}>
+                        Add from Card
+                      </button>
                     </div>
                   </div>
-
-                  {/* Amount Section */}
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <label className="block text-text-primary mb-1">Amount (PKR)</label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-3 text-text-secondary">Rs</span>
-                        <input
-                          type="number"
-                          value={amount}
-                          onChange={handleAmountChange}
-                          placeholder="0.00"
-                          className="w-full pl-8 pr-3 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-gray-300"
-                        />
-                      </div>
-                    </div>
+                </div>
+              ) : (
+                /* Bank Transfer Tab */
+                <div className="space-y-4" style={{ borderTop: '1px solid var(--color-border)', paddingTop: 20 }}>
+                  <div>
+                    <label style={labelStyle}>Source IBAN</label>
+                    <input type="text" value={sourceIBAN} onChange={e => setSourceIBAN(e.target.value)}
+                      placeholder="PK36 FNVT 0000 1234 5678 9012" className="form-input" style={inputStyle} />
                   </div>
-                </>
+                  <div>
+                    <label style={labelStyle}>Amount (PKR)</label>
+                    <input type="number" value={amount} onChange={e => setAmount(e.target.value)}
+                      placeholder="Rs 0.00" className="form-input form-mono-input" style={{ ...inputStyle, fontFamily: "'Space Mono', monospace", fontSize: 22 }} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Reference Number</label>
+                    <input type="text" value={referenceNumber} onChange={e => setReferenceNumber(e.target.value)}
+                      placeholder="Enter reference number" className="form-input" style={inputStyle} />
+                  </div>
+                  <button onClick={handleAddFundsFromBankTransfer}
+                    className="w-full py-[10px] text-sm font-medium text-white transition-colors"
+                    style={{ borderRadius: '10px', backgroundColor: '#1a1f3a', border: 'none', fontFamily: "'Sora', sans-serif" }}
+                    disabled={!sourceIBAN || !validateIBAN(sourceIBAN) || !amount || parseFloat(amount) <= 0 || !referenceNumber}
+                    onMouseEnter={e => e.target.style.backgroundColor = '#262d52'}
+                    onMouseLeave={e => e.target.style.backgroundColor = '#1a1f3a'}>
+                    Add from Bank Transfer
+                  </button>
+                </div>
               )}
-
-              {activeTab === 'bank-transfer' && (
-                <>
-                  {/* Bank Transfer Form */}
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <label className="block text-text-primary mb-1">Source IBAN</label>
-                      <div className="relative">
-                        <input
-                          type="text"
-                          value={sourceIBAN}
-                          onChange={handleSourceIBANChange}
-                          placeholder="PK36 FNVT 0000 1234 5678 9012"
-                          className="w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-gray-300"
-                        />
-                        {sourceIBAN && (
-                          <button
-                            onClick={() => {
-                              // In a real app, we would validate the IBAN here
-                              const isValid = validateIBAN(sourceIBAN);
-                              alert(isValid ? 'Valid IBAN format' : 'Invalid IBAN format');
-                            }}
-                            className="absolute right-3 top-3 text-xs btn-secondary py-1 px-2 rounded"
-                          >
-                            Validate
-                          </button>
-                        )}
-                      </div>
-                      {ibanError && (
-                        <p className="text-red-500 text-xs mt-1">{ibanError}</p>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="block text-text-primary mb-1">Amount (PKR)</label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-3 text-text-secondary">Rs</span>
-                        <input
-                          type="number"
-                          value={amount}
-                          onChange={handleAmountChange}
-                          placeholder="0.00"
-                          className="w-full pl-8 pr-3 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-gray-300"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="block text-text-primary mb-1">Reference Number</label>
-                      <input
-                        type="text"
-                        value={referenceNumber}
-                        onChange={handleReferenceNumberChange}
-                        placeholder="Enter reference number"
-                        className="w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-gray-300"
-                      />
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* Submit Button */}
-              <div className="mt-6">
-                <button
-                  onClick={activeTab === 'from-card' ? handleAddFundsFromCard : handleAddFundsFromBankTransfer}
-                  className="w-full btn-primary py-2 px-4 rounded-lg"
-                  disabled={
-                    activeTab === 'from-card'
-                      ? !(cardNumber && expiryDate && cvv && cardHolderName && amount && parseFloat(amount) > 0)
-                      : !(sourceIBAN && validateIBAN(sourceIBAN) && amount && parseFloat(amount) > 0 && referenceNumber)
-                  }
-                >
-                  {activeTab === 'from-card' ? 'Add Funds from Card' : 'Add Funds from Bank Transfer'}
-                </button>
-              </div>
             </div>
           </div>
         </div>

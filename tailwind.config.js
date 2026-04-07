@@ -12,7 +12,7 @@ export default {
         background: 'var(--color-bg)',
         sidebar: 'var(--color-sidebar)',
         panel: 'var(--color-panel)',
-        interactive: 'var(--color-interactive)', 
+        interactive: 'var(--color-interactive)',
         primary: {
           DEFAULT: 'var(--color-primary)',
           hover: 'var(--color-primary-hover)' // We can add hover variants later
@@ -23,7 +23,15 @@ export default {
             secondary: 'var(--color-text-secondary)',
             muted: 'var(--color-text-muted)',
           }
-        }
+        },
+      fontFamily: {
+        sora: ['Sora', 'sans-serif'],
+        mono: ['Space Mono', 'monospace'],
+      },
+      borderRadius: {
+        panel: '16px',
+        'sm-panel': '10px',
+      }
     },
   },
   plugins: [],

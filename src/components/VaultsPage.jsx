@@ -22,7 +22,7 @@ function VaultsPage({ vaults , accounts, showToast }) {
   const handleCreateVault = async (name, target) => {
     const success = await createVault(name, target);
     if (success) setIsCreateVaultModalOpen(false);
-    else alert("Failed to create vault.");
+    else showToast("Failed to create vault.");
   };
 
   const handleOpenActionModal = (vault, type) => {
@@ -70,72 +70,112 @@ function VaultsPage({ vaults , accounts, showToast }) {
 
 
   return (
-    <><section id="vaults" className="page-section">
-          <div className="flex justify-between items-center mb-6">
+    <section id="vaults" className="flex flex-col space-y-[22px]">
+          <div className="flex justify-between items-center">
               <div>
-                  <h2 className="text-2xl font-semibold">Savings Vaults</h2>
-                  <p className="text-sm text-text-secondary mt-1">
-                      Total Saved: <span className="font-bold text-base">Rs {totalSaved.toLocaleString('en-US')}</span>
+                  <h2 className="text-2xl font-medium" style={{ fontFamily: "'Sora', sans-serif" }}>Savings Vaults</h2>
+                  <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                      {goalVaults.length} goal{goalVaults.length !== 1 ? 's' : ''} &middot; Total saved:{' '}
+                      <span className="font-bold" style={{ fontFamily: "'Space Mono', monospace" }}>Rs {totalSaved.toLocaleString('en-US')}</span>
                   </p>
               </div>
           </div>
 
-          {/* Render the special Savings Account container if it exists */}
+          {/* Special Savings Account */}
           {savingsAccount && (
-              <div id="savings-account-container" className="mb-8">
-                  <div className="bg-background/50 p-6 rounded-2xl flex flex-col md:flex-row md:items-center justify-between border-2 border-green-500/50">
-                      <div className="flex items-center space-x-4 mb-4 md:mb-0">
-                          <div className={`p-3 bg-${savingsAccount.color}-500/20 rounded-lg`}>
-                              <Icon name={savingsAccount.icon} className="w-8 h-8 text-green-400" />
+              <div id="savings-account-container">
+                  <div className="rounded-panel p-5 flex flex-col md:flex-row md:items-center justify-between" style={{
+                      backgroundColor: 'var(--color-panel)',
+                      border: '1px solid var(--color-border)',
+                      borderTop: '3px solid #0e7c6e'
+                  }}>
+                      <div className="flex items-center space-x-3 mb-4 md:mb-0">
+                          <div className="p-2 rounded-lg" style={{ backgroundColor: '#0e7c6e20' }}>
+                              <Icon name={savingsAccount.icon} className="w-6 h-6" style={{ color: '#0e7c6e' }} />
                           </div>
                           <div>
-                              <h4 className="font-semibold text-lg">{savingsAccount.name}</h4>
-                              {/* <p className="text-sm text-text-secondary">Saved: Rs {Math.floor(savingsAccount.current).toLocaleString('en-US')}</p> */}
+                              <h4 className="font-medium text-sm">{savingsAccount.name}</h4>
+                              <p className="text-xs" style={{ color: '#0e7c6e' }}>
+                                  Interest Bearing ({(savingsAccount.returnRate * 100).toFixed(0)}% APR)
+                              </p>
                           </div>
                       </div>
-                      <div className="text-center md:text-right mb-4 md:mb-0 md:mx-auto">
-                          <p className="text-2xl font-bold font-mono">Rs {Math.floor(savingsAccount.current).toLocaleString('en-US')}</p>
-                          <p className="text-sm mt-1 text-green-400">Interest Bearing ({(savingsAccount.returnRate * 100).toFixed(0)}% APR)</p>
+                      <div className="text-center md:text-right mb-3 md:mb-0 md:mx-auto">
+                          <p className="font-bold font-mono text-xl" style={{ fontFamily: "'Space Mono', monospace" }}>
+                              Rs {Math.floor(savingsAccount.current).toLocaleString('en-US')}
+                          </p>
                       </div>
-                      <div className="flex gap-4 md:flex-col md:w-36">
-                          <button onClick={() => handleOpenActionModal(savingsAccount, 'withdraw')} className="flex-1 btn-secondary py-2 rounded-lg">Withdraw</button>
-                          <button onClick={() => handleOpenActionModal(savingsAccount, 'deposit')} className="flex-1 btn-primary py-2 rounded-lg">Deposit</button>
+                      <div className="flex gap-3 md:w-44">
+                          <button
+                              onClick={() => handleOpenActionModal(savingsAccount, 'withdraw')}
+                              className="flex-1 py-2 text-xs font-medium transition-colors"
+                              style={{
+                                  borderRadius: '10px', border: '1px solid var(--color-border)',
+                                  background: 'transparent', color: 'var(--color-text-primary)',
+                                  fontFamily: "'Sora', sans-serif"
+                              }}
+                          >
+                              Withdraw
+                          </button>
+                          <button
+                              onClick={() => handleOpenActionModal(savingsAccount, 'deposit')}
+                              className="flex-1 py-2 text-xs font-medium text-white transition-colors"
+                              style={{
+                                  borderRadius: '10px', background: '#0e7c6e',
+                                  border: 'none', fontFamily: "'Sora', sans-serif"
+                              }}
+                          >
+                              Deposit
+                          </button>
                       </div>
                   </div>
               </div>
           )}
 
-          <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold">Goal Vaults</h3>
+          <div className="flex justify-between items-center">
+              <h3 className="text-lg font-medium" style={{ fontFamily: "'Sora', sans-serif" }}>Goal Vaults</h3>
               <button
                   onClick={() => setIsCreateVaultModalOpen(true)}
                   id="new-vault-btn"
-                  className="btn-primary py-2 px-4 rounded-lg flex items-center"
+                  className="py-[10px] px-[18px] text-sm font-medium text-white flex items-center transition-colors"
+                  style={{
+                      borderRadius: '10px',
+                      backgroundColor: 'var(--color-accent, #1a1f3a)',
+                      fontFamily: "'Sora', sans-serif",
+                      border: 'none'
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.opacity = '0.9'; }}
+                  onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
               >
-                  <Plus className="w-5 h-5 mr-2" />
-                  New Vault
+                  <Plus className="w-4 h-4 mr-2" />
+                  New Goal
               </button>
           </div>
 
-          {/* Render the list of Goal Vaults */}
-          <div id="vaults-list" className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {goalVaults.map(vault => (
-            <VaultItem 
-              key={vault.id} 
+          {/* Vault list — 3-column grid matching reference */}
+          <div id="vaults-list" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[14px]">
+          {goalVaults.length > 0 ? goalVaults.map(vault => (
+            <VaultItem
+              key={vault.id}
               vault={vault}
               onDeposit={() => handleOpenActionModal(vault, 'deposit')}
               onWithdraw={() => handleOpenActionModal(vault, 'withdraw')}
               onDelete={() => handleOpenDeleteModal(vault)}
             />
-          ))}
+          )) : (
+            <div className="col-span-full text-center py-12 text-sm" style={{ color: 'var(--color-text-muted)' }}>
+              No vaults yet. Create your first savings goal to get started.
+            </div>
+          )}
           </div>
-      </section>
+
+      {/* Modals */}
       <CreateVaultModal
             isOpen={isCreateVaultModalOpen}
             onClose={() => setIsCreateVaultModalOpen(false)}
-            onSubmit={handleCreateVault} 
+            onSubmit={handleCreateVault}
       />
-      <VaultActionModal 
+      <VaultActionModal
         isOpen={actionModalState.isOpen}
         onClose={handleCloseActionModal}
         onSubmit={handleActionSubmit}
@@ -150,7 +190,7 @@ function VaultsPage({ vaults , accounts, showToast }) {
         itemName={itemToDelete?.name}
         isDeleting={isDeleting}
       />
-    </>
+    </section>
   );
 }
 

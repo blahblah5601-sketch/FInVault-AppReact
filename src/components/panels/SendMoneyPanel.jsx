@@ -2,10 +2,10 @@
 import { createPayment } from '../../api';
 import { useState, useEffect } from 'react';
 import { validateIBAN, formatIBAN } from '../../utils/ibanUtils';
-import { Search, Users, CreditCard, Phone, Mail } from 'lucide-react';
+import { Users } from 'lucide-react';
 
-const SendMoneyPanel = ({ isOpen, onClose, onSuccess }) => {
-  const [recipient, setRecipient] = useState(''); // Can be name, IBAN, etc.
+const SendMoneyPanel = ({ isOpen, onClose, onSuccess, showToast }) => {
+  const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [ibanError, setIbanError] = useState(null);
@@ -13,7 +13,6 @@ const SendMoneyPanel = ({ isOpen, onClose, onSuccess }) => {
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
 
-  // Mock beneficiaries data - in a real app this would come from Firestore
   const mockBeneficiaries = [
     { id: '1', name: 'Ali Hassan', iban: 'PK36FNVT0000123456789012' },
     { id: '2', name: 'Fatima Khan', iban: 'PK36HABB0000987654321098' },
@@ -23,12 +22,8 @@ const SendMoneyPanel = ({ isOpen, onClose, onSuccess }) => {
   const handleRecipientChange = (e) => {
     const value = e.target.value;
     setRecipient(value);
-
-    // Reset validation when user is typing
     setIbanError(null);
     setIsValidIBAN(false);
-
-    // Search beneficiaries if more than 2 characters
     if (value.length >= 2) {
       setIsSearching(true);
       const results = mockBeneficiaries.filter(b =>
@@ -41,15 +36,6 @@ const SendMoneyPanel = ({ isOpen, onClose, onSuccess }) => {
     }
   };
 
-  const handleAmountChange = (e) => {
-    setAmount(e.target.value);
-  };
-
-  const handleDescriptionChange = (e) => {
-    setDescription(e.target.value);
-  };
-
-  // Auto-validate IBAN when recipient looks like a full IBAN (24 chars after removing spaces)
   useEffect(() => {
     const clean = recipient.replace(/\s/g, '');
     if (clean.length === 24) {
@@ -62,84 +48,34 @@ const SendMoneyPanel = ({ isOpen, onClose, onSuccess }) => {
     }
   }, [recipient]);
 
-  const handleIBANValidation = () => {
-    if (!recipient) {
-      setIbanError('Please enter an IBAN');
-      setIsValidIBAN(false);
-      return;
-    }
-
-    const validationResult = validateIBAN(recipient);
-    if (validationResult.valid) {
-      setIsValidIBAN(true);
-      setIbanError(null);
-    } else {
-      setIsValidIBAN(false);
-      setIbanError(validationResult.error || 'Invalid IBAN');
-    }
-  };
-
   const handleSelectBeneficiary = (beneficiary) => {
     setRecipient(beneficiary.iban);
     setIsSearching(false);
     setSearchResults([]);
-    // Directly validate the selected IBAN
     const result = validateIBAN(beneficiary.iban);
     setIsValidIBAN(result.valid);
     setIbanError(result.valid ? null : result.error);
   };
 
   const handleSendMoney = async () => {
-    // Validate inputs
-    if (!recipient) {
-      alert('Please enter a recipient');
-      return;
-    }
-
-    if (!amount || parseFloat(amount) <= 0) {
-      alert('Please enter a valid amount');
-      return;
-    }
-
-    if (!description) {
-      alert('Please enter a description');
-      return;
-    }
-
-    // Validate IBAN if it looks like an IBAN
+    if (!recipient) { showToast('Please enter a recipient'); return; }
+    if (!amount || parseFloat(amount) <= 0) { showToast('Please enter a valid amount'); return; }
+    if (!description) { showToast('Please enter a description'); return; }
     if (recipient.length >= 14 && recipient.toUpperCase().startsWith('PK')) {
       const validationResult = validateIBAN(recipient);
-      if (!validationResult.valid) {
-        alert(`Invalid IBAN: ${validationResult.error}`);
-        return;
-      }
+      if (!validationResult.valid) { showToast(`Invalid IBAN: ${validationResult.error}`); return; }
     }
-
-    // In a real implementation, we would determine the source account
-    // For now, we'll use a mock source account ID
-    const sourceAccountId = 'current'; // This would come from the active account
-
+    const sourceAccountId = 'current';
     try {
       const success = await createPayment(
-        parseFloat(amount),
-        'PKR',
-        description,
-        'Transfer',
-        sourceAccountId,
-        recipient,
-        'iban', // destinationType
-        'bank-transfer' // paymentMethod
+        parseFloat(amount), 'PKR', description, 'Transfer',
+        sourceAccountId, recipient, 'iban', 'bank-transfer'
       );
-
-      if (success) {
-        onClose();
-        onSuccess();
-      } else {
-        alert('Failed to send money. Please try again.');
-      }
+      if (success) { onClose(); onSuccess(); }
+      else showToast('Failed to send money. Please try again.');
     } catch (error) {
       console.error('Error sending money:', error);
-      alert('An error occurred while sending money.');
+      showToast('An error occurred while sending money.');
     }
   };
 
@@ -148,115 +84,66 @@ const SendMoneyPanel = ({ isOpen, onClose, onSuccess }) => {
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-end bg-black/50 backdrop-blur-sm">
           <div className="relative w-full max-w-lg mx-4 mb-6">
-            {/* Drag handle */}
             <div className="w-12 h-0.5 bg-white/20 rounded mb-4" />
-
-            {/* Panel content */}
-            <div className="bg-background/90 backdrop-blur-sm rounded-3xl p-6 border border-white/20">
-              <div className="flex justify-between items-start mb-4">
-                <h3 className="text-lg font-semibold">Send Money</h3>
-                <button
-                  onClick={onClose}
-                  className="text-xs btn-danger py-1 px-2 rounded"
-                >
-                  ×
-                </button>
+            <div className="rounded-panel p-6 border" style={{
+              backgroundColor: 'var(--color-panel)',
+              borderColor: 'var(--color-border)'
+            }}>
+              <div className="flex justify-between items-start mb-5 gap-3">
+                <button onClick={onClose} className="px-2 py-1 text-xs rounded-sm-panel transition-colors shrink-0 self-start"
+                  style={{ background: 'var(--color-red-accent)', color: 'white', border: 'none', cursor: 'pointer' }}>←</button>
+                <h3 className="text-sm font-medium flex-1 text-center" style={{ fontFamily: "'Sora', sans-serif" }}>Send Money</h3>
+                <div className="w-10 shrink-0" />
               </div>
 
-              {/* Recipient field */}
-              <div className="space-y-3">
-                <label className="block text-text-primary mb-2">Recipient</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={recipient}
-                    onChange={handleRecipientChange}
-                    placeholder="Enter name, IBAN, or search beneficiaries"
-                    className="w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-gray-300"
-                  />
-                  {isSearching && (
-                    <Search className="absolute left-3 top-3 h-4 w-4 text-text-secondary" />
-                  )}
-                  {!isSearching && recipient && (
-                    <div className="absolute right-3 top-3 flex items-center space-x-2">
-                      {isValidIBAN ? (
-                        <span className="text-green-400">
-                          ✓ Valid IBAN
-                        </span>
-                      ) : (
-                        <span className="text-red-400">
-                          ✗ Invalid IBAN
-                        </span>
-                      )}
-                      <button
-                        onClick={handleIBANValidation}
-                        className="text-xs btn-secondary py-1 px-2 rounded"
-                        disabled={!recipient}
-                      >
-                        Validate
-                      </button>
+              {/* Recent recipients */}
+              <p className="text-xs mb-3" style={{ color: 'var(--color-text-muted)', fontWeight: 500 }}>Recent recipients</p>
+              <div className="flex gap-3 mb-5 overflow-x-auto pb-1">
+                {mockBeneficiaries.map(b => (
+                  <div key={b.id} className="flex flex-col items-center gap-1 cursor-pointer"
+                    onClick={() => handleSelectBeneficiary(b)}>
+                    <div className="w-[38px] h-[38px] rounded-full flex items-center justify-center text-xs font-semibold border-2 border-transparent transition-colors"
+                      style={{ background: `${recipient === b.iban ? 'var(--color-gold)' : 'rgba(255,255,255,0.06)'}`,
+                        borderColor: recipient === b.iban ? 'var(--color-gold)' : 'transparent',
+                        color: 'var(--color-text-primary)'
+                      }}>
+                      {b.name.substring(0, 2).toUpperCase()}
                     </div>
-                  )}
-                </div>
-                {ibanError && (
-                  <p className="text-red-500 text-xs mt-1">{ibanError}</p>
-                )}
-                {isSearching && searchResults.length > 0 && (
-                  <div className="mt-2 space-y-1">
-                    <p className="font-semibold text-text-primary">Select beneficiary:</p>
-                    {searchResults.map(beneficiary => (
-                      <div
-                        key={beneficiary.id}
-                        onClick={() => handleSelectBeneficiary(beneficiary)}
-                        className="p-2 bg-white/10 rounded-lg hover:bg-white/20 cursor-pointer transition-colors"
-                      >
-                        <div className="flex justify-between">
-                          <div>
-                            <p className="font-semibold">{beneficiary.name}</p>
-                            <p className="text-xs text-text-secondary">{formatIBAN(beneficiary.iban)}</p>
-                          </div>
-                          <Users className="h-4 w-4 text-text-secondary" />
-                        </div>
-                      </div>
-                    ))}
+                    <p className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>{b.name.split(' ')[0]}</p>
                   </div>
-                )}
+                ))}
               </div>
 
-              {/* Amount field */}
-              <div className="space-y-3">
-                <label className="block text-text-primary mb-2">Amount (PKR)</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-3 text-text-secondary">Rs</span>
-                  <input
-                    type="number"
-                    value={amount}
-                    onChange={handleAmountChange}
-                    placeholder="0.00"
-                    className="w-full pl-8 pr-3 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-gray-300"
-                  />
+              <div className="space-y-4" style={{ borderTop: '1px solid var(--color-border)', paddingTop: 20 }}>
+                <div>
+                  <label className="block text-[12px] mb-1 tracking-[0.3px]" style={{ color: 'var(--color-text-muted)', fontFamily: "'Sora', sans-serif" }}>
+                    Recipient name or account
+                  </label>
+                  <input type="text" value={recipient} onChange={handleRecipientChange}
+                    placeholder="Search name, phone, or account #"
+                    className="form-input w-full" style={{ borderRadius: '10px' }} />
+                  {ibanError && <p className="text-red-500 text-xs mt-1">{ibanError}</p>}
                 </div>
-              </div>
+                <div>
+                  <label className="block text-[12px] mb-1" style={{ color: 'var(--color-text-muted)' }}>Amount (PKR)</label>
+                  <input type="number" value={amount} onChange={e => setAmount(e.target.value)}
+                    placeholder="Rs 0.00" className="form-input w-full form-mono-input" style={{ borderRadius: '10px', fontSize: 22 }} />
+                </div>
+                <div>
+                  <label className="block text-[12px] mb-1" style={{ color: 'var(--color-text-muted)' }}>Note (optional)</label>
+                  <input type="text" value={description} onChange={e => setDescription(e.target.value)}
+                    placeholder="What's it for?" className="form-input w-full" style={{ borderRadius: '10px' }} />
+                </div>
 
-              {/* Description field */}
-              <div className="space-y-3">
-                <label className="block text-text-primary mb-2">Description</label>
-                <input
-                  type="text"
-                  value={description}
-                  onChange={handleDescriptionChange}
-                  placeholder="Enter payment description"
-                  className="w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-gray-300"
-                />
-              </div>
-
-              {/* Send button */}
-              <div className="mt-6">
-                <button
-                  onClick={handleSendMoney}
-                  className="w-full btn-primary py-2 px-4 rounded-lg"
-                  disabled={!recipient || !amount || parseFloat(amount) <= 0 || !description || !isValidIBAN}
-                >
+                <button onClick={handleSendMoney}
+                  className="w-full py-3 px-4 text-sm font-medium text-white flex items-center justify-center gap-2 transition-colors"
+                  style={{ borderRadius: '10px', backgroundColor: '#1a1f3a', border: 'none', fontFamily: "'Sora', sans-serif" }}
+                  disabled={!recipient || !amount || parseFloat(amount) <= 0 || !description}
+                  onMouseEnter={e => e.target.style.backgroundColor = '#262d52'}
+                  onMouseLeave={e => e.target.style.backgroundColor = '#1a1f3a'}>
+                  <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+                    <path d="M1.5 7.5H13.5M13.5 7.5L9 3M13.5 7.5L9 12" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
                   Send Money
                 </button>
               </div>

@@ -1,4 +1,5 @@
 // src/components/MainContent.jsx
+import { useEffect } from 'react';
 import DashboardPage from './DashboardPage';
 import CardControlPage from './CardControlPage';
 import BudgetsPage from './BudgetsPage';
@@ -10,15 +11,27 @@ import PaymentsPage from './PaymentsPage';
 import AccountsPage from './AccountsPage';
 
 // This component will eventually show the correct page component
-function MainContent({ activePage, accounts, budgets, vaults, transactions, showToast, theme, setTheme, history, setActivePage, billers, beneficiaries, onOpenSendMoney, onOpenAddFunds, onOpenQRPayment, onOpenNFCPayment }) {
-  
+function MainContent({ activePage, accounts, budgets, vaults, transactions, showToast, theme, setTheme, history, setActivePage, billers, beneficiaries, preferences, onOpenSendMoney, onOpenAddFunds, onOpenQRPayment, onOpenNFCPayment }) {
+
   return (
-    <div 
-      
+    <div
+
       className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8">
       {/* This is conditional rendering. It checks activePage and shows the right content. */}
       {activePage === 'dashboard' && (
-        <DashboardPage accounts={accounts} budgets={budgets} vaults={vaults} setActivePage={setActivePage} activePage={activePage}/>
+        <DashboardPage
+          accounts={accounts}
+          budgets={budgets}
+          vaults={vaults}
+          transactions={transactions}
+          setActivePage={setActivePage}
+          activePage={activePage}
+          preferences={preferences}
+          onSendMoney={onOpenSendMoney}
+          onAddFunds={onOpenAddFunds}
+          onQRPayment={onOpenQRPayment}
+          onNFCPayment={onOpenNFCPayment}
+        />
       )}
 
       {activePage === 'dashboard_simple' && (
@@ -37,16 +50,20 @@ function MainContent({ activePage, accounts, budgets, vaults, transactions, show
         <TransactionsPage transactions={transactions} />
       )}
 
+      {activePage === 'accounts' && (
+        <AccountsPage accounts={accounts} showToast={showToast} />
+      )}
+
       {activePage === 'payments' && (
         <PaymentsPage
           showToast={showToast}
           billers={billers || []}
           beneficiaries={beneficiaries || []}
           history={history}
-          onSendMoney={() => {/* open send money panel */}}
-          onAddFunds={() => {/* open add funds panel */}}
-          onQRPayment={() => {/* open QR panel */}}
-          onNFCPayment={() => {/* open NFC panel */}}
+          onSendMoney={onOpenSendMoney}
+          onAddFunds={onOpenAddFunds}
+          onQRPayment={onOpenQRPayment}
+          onNFCPayment={onOpenNFCPayment}
         />
       )}
 
@@ -58,7 +75,47 @@ function MainContent({ activePage, accounts, budgets, vaults, transactions, show
         />
       )}
       {activePage === 'card-control' && <CardControlPage accounts={accounts} budgets={budgets} showToast={showToast} />}
-    
+
+      {/* QR/NFC pay pages trigger their panels and redirect to dashboard */}
+      {activePage === 'qr-pay' && (
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <QRPayRedirect onOpen={onOpenQRPayment} setActivePage={setActivePage} />
+        </div>
+      )}
+      {activePage === 'nfc-pay' && (
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <NFCPayRedirect onOpen={onOpenNFCPayment} setActivePage={setActivePage} />
+        </div>
+      )}
+
+    </div>
+  );
+}
+
+function QRPayRedirect({ onOpen, setActivePage }) {
+  useEffect(() => {
+    onOpen();
+    const timer = setTimeout(() => setActivePage('dashboard'), 300);
+    return () => clearTimeout(timer);
+  }, [onOpen, setActivePage]);
+
+  return (
+    <div className="flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-t-[var(--color-gold)] rounded-full animate-spin"></div>
+    </div>
+  );
+}
+
+function NFCPayRedirect({ onOpen, setActivePage }) {
+  useEffect(() => {
+    onOpen();
+    const timer = setTimeout(() => setActivePage('dashboard'), 300);
+    return () => clearTimeout(timer);
+  }, [onOpen, setActivePage]);
+
+  return (
+    <div className="flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-t-[var(--color-gold)] rounded-full animate-spin"></div>
     </div>
   );
 }

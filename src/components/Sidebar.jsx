@@ -1,64 +1,131 @@
 // src/components/Sidebar.jsx
-import {   LayoutDashboard, CreditCard, PieChart, ShieldCheck, List, Settings, UserCircle, LogOut, Wallet, Landmark } from 'lucide-react';
-import Logo from './Logo';
+import { LayoutDashboard, Landmark, CreditCard, Wallet, PieChart, ShieldCheck, List, Settings } from 'lucide-react';
 
 function Sidebar({ user, onLogout, activePage, setActivePage }) {
-  const navItems = [
-    { id: 'dashboard', Icon: LayoutDashboard, label: 'Dashboard' },
-    { id: 'accounts', Icon: Landmark, label: 'Accounts' },
-    { id: 'card-control', Icon: CreditCard, label: 'Card Control' },
-    { id: 'payments', Icon: Wallet, label: 'Payments' },
-    { id: 'budgets', Icon: PieChart, label: 'Budgets' },
-    { id: 'vaults', Icon: ShieldCheck, label: 'Vaults' },
-    { id: 'transactions', Icon: List, label: 'Transactions' },
-    { id: 'settings', Icon: Settings, label: 'Settings' },
+  const navSections = [
+    {
+      title: 'Overview',
+      items: [
+        { id: 'dashboard', Icon: LayoutDashboard, label: 'Dashboard' },
+        { id: 'accounts', Icon: Landmark, label: 'Accounts' },
+        { id: 'card-control', Icon: CreditCard, label: 'Card Control' },
+      ]
+    },
+    {
+      title: 'Finance',
+      items: [
+        { id: 'budgets', Icon: PieChart, label: 'Budgets' },
+        { id: 'vaults', Icon: ShieldCheck, label: 'Vaults' },
+        { id: 'transactions', Icon: List, label: 'Transactions' },
+      ]
+    },
+    {
+      title: 'Payments',
+      items: [
+        { id: 'payments', Icon: Wallet, label: 'Payments' },
+        { id: 'settings', Icon: Settings, label: 'Settings' },
+      ]
+    }
   ];
 
+  const isActive = (itemId) => activePage === itemId;
+
+  const getInitials = () => {
+    const name = user.email.split('@')[0];
+    const parts = name.split(/[._-]/);
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return name.substring(0, 2).toUpperCase();
+  };
+
   return (
-    <aside className="flex flex-col h-full w-full bg-sidebar border-r" style={{ borderColor: 'var(--color-border)' }}>
-        {/* Header Section */}
-        <div className="flex items-center justify-center md:justify-start px-4 h-20 border-b" style={{ borderColor: 'var(--color-border)' }}>
-            <Logo className="h-8 w-8" /> {/* <-- Use Logo component */}
-            <h1 className="text-2xl font-bold ml-2 hidden md:block">FinVault</h1>
+    <aside className="flex flex-col h-full w-full" style={{
+      backgroundColor: '#1a1f3a',
+      borderRadius: '16px 0 0 16px'
+    }}>
+      {/* Logo */}
+      <div className="flex items-center gap-3 mx-4 mt-4 mb-7">
+        <div className="w-[28px] h-[28px] flex items-center justify-center shrink-0" style={{
+          backgroundColor: 'var(--color-gold)',
+          borderRadius: '8px'
+        }}>
+          <svg viewBox="0 0 16 16" fill="none" width="15" height="15">
+            <path d="M2 12V7L8 3L14 7V12" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <rect x="5" y="9" width="6" height="5" stroke="#fff" strokeWidth="1.3" strokeLinejoin="round" rx=".5"/>
+            <circle cx="8" cy="11.5" r=".8" fill="#fff"/>
+          </svg>
         </div>
-        {/* Navigation Section */}
-        <nav className="flex-1 px-2 py-4 space-y-2">
-        {navItems.map(item => (
-          <a
-            key={item.id}
-            href="#"
-            // Highlight the link if its id matches the activePage state
-            className={`nav-link flex items-center p-2 text-base font-normal rounded-lg ${
-              activePage === item.id? 'bg-primary/10 text-primary font-medium' 
-                  : 'text-text-secondary hover:bg-sidebar-hover'
-            }`}
-            // When clicked, call setActivePage to change the state in AppLayout
-            onClick={(e) => { e.preventDefault(); setActivePage(item.id);  
-            }}
+        <span className="font-mono-space text-[15px] font-bold tracking-[2px]" style={{
+          color: 'var(--color-gold2)'
+        }}>
+          FINVAULT
+        </span>
+      </div>
+
+      {/* Navigation Sections */}
+      {navSections.map((section) => (
+        <div key={section.title}>
+          <div className="text-[10px] uppercase tracking-[1.5px] mb-2 mt-[14px] mx-2" style={{
+            color: 'rgba(255,255,255,0.3)'
+          }}>
+            {section.title}
+          </div>
+          <div className="space-y-[6px]">
+            {section.items.map((item) => {
+              const active = isActive(item.id);
+              return (
+                <div
+                  key={item.id}
+                  onClick={() => setActivePage(item.id)}
+                  className={`sidebar-nav-item flex items-center gap-[10px] px-3 py-[10px] ${active ? 'active' : ''}`}
+                >
+                  <item.Icon
+                    className="w-[15px] h-[15px] shrink-0"
+                    style={{ opacity: active ? 1 : 0.8 }}
+                  />
+                  {item.label}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+
+      {/* Spacer */}
+      <div className="flex-1"></div>
+
+      {/* Footer */}
+      <div className="border-t pt-4 mx-4" style={{
+        borderColor: 'rgba(255,255,255,0.08)'
+      }}>
+        <div className="flex items-center gap-[10px]">
+          <div className="w-[34px] h-[34px] rounded-full flex items-center justify-center shrink-0" style={{
+            backgroundColor: 'var(--color-gold)',
+            color: '#1a1f3a',
+            fontSize: '12px',
+            fontWeight: 600
+          }}>
+            {getInitials()}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[12px] font-medium truncate" style={{
+              color: 'rgba(255,255,255,0.85)'
+            }}>
+              {user.email.split('@')[0]}
+            </p>
+            <span className="text-[10px] block" style={{
+              color: 'rgba(255,255,255,0.35)'
+            }}>
+              Premium Account
+            </span>
+          </div>
+          <button
+            onClick={onLogout}
+            className="logout-btn"
           >
-            <item.Icon className="w-6 h-6" />
-            <span className="ml-3">{item.label}</span>
-          </a>
-        ))}
-        </nav>
-        {/* User Profile and Logout Section */}
-        <div className="px-2 py-4 mt-auto border-t" style={{ borderColor: 'var(--color-border)' }}>
-             <div className="flex items-center p-2 text-base font-normal rounded-lg">
-                <UserCircle className="w-8 h-8 rounded-full text-text-secondary" />
-                <span className="ml-3 hidden md:block text-sm text-text-secondary truncate" title={user.email}>{user.email}</span>
-            </div>
-            <a 
-              href="#" 
-              onClick={(e) => {
-                e.preventDefault();
-                onLogout();
-              }} 
-              className="flex items-center p-2 text-base font-normal rounded-lg hover:bg-red-500/10 text-red-400 hover:text-red-300 transition-colors"
-            >
-              <LogOut className="w-6 h-6" />
-              <span className="ml-3 hidden md:block">Logout</span>
-            </a>
+            Logout
+          </button>
         </div>
+      </div>
     </aside>
   );
 }

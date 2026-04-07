@@ -1,5 +1,5 @@
 // src/components/BudgetsPage.jsx
-import { createBudget, updateBudget, deleteBudget, toggleBudgetCardAssignment, getUserPreferences, updateUserPreferences } from '../api';
+import { createBudget, updateBudget, deleteBudget, toggleBudgetCardAssignment, getUserPreferences, updateUserPreferences, addBudgetItem as addBudgetItemApi, removeBudgetItem as removeBudgetItemApi } from '../api';
 import { useState, useEffect } from 'react';
 import BudgetItem from './BudgetItem';
 import { Plus } from 'lucide-react';
@@ -51,14 +51,21 @@ function BudgetsPage({ budgets, showToast }) {
     }
   };
 
+  const addBudgetItem = async (budgetId, item) => {
+    return await addBudgetItemApi(budgetId, item);
+  };
+
+  const removeBudgetItem = async (budgetId, itemId) => {
+    return await removeBudgetItemApi(budgetId, itemId);
+  };
+
   const handleCreateBudget = async (name, limit) => {
     const success = await createBudget(name, limit);
     if (success) setIsModalOpen(false);
-    else alert("Failed to create budget.");
+    else showToast("Failed to create budget.");
   };
 
   const handleOpenUpdateModal = (budget) => {
-    console.log('2. handleOpenUpdateModal called in BudgetsPage with:', budget);
     setBudgetToEdit(budget);
     setIsUpdateModalOpen(true);
   };
@@ -69,7 +76,7 @@ function BudgetsPage({ budgets, showToast }) {
       setIsUpdateModalOpen(false);
       setBudgetToEdit(null);
     } else {
-      alert("Failed to update budget.");
+      showToast("Failed to update budget.");
     }
   };
 
@@ -89,7 +96,7 @@ function BudgetsPage({ budgets, showToast }) {
         setItemToDelete(null);
         showToast(`Budget '${itemToDelete.name}' was deleted.`);
       } else {
-        alert("Failed to delete budget.");
+        showToast("Failed to delete budget.");
       }
     }
   };
@@ -133,26 +140,27 @@ function BudgetsPage({ budgets, showToast }) {
   return (
     <>
       <section id="budgets" className="page-section space-y-8">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center" style={{ fontFamily: 'Sora' }}>
           <div>
-            <h2 className="text-2xl font-semibold">My Budgets</h2>
-            <p className="text-sm text-text-secondary mt-1">
+            <h2 style={{ fontSize: 18, fontWeight: 500 }}>My Budgets</h2>
+            <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 2 }}>
               {budgets.length} of {MAX_BUDGETS} budgets created.
             </p>
           </div>
           <div className="flex space-x-3">
             <button
               onClick={toggleVisualView}
-              className={`btn-secondary py-2 px-4 rounded-lg flex items-center ${useVisualBudgetView ? 'bg-primary/20 text-primary' : ''}`}
+              className={`${useVisualBudgetView ? 'bg-primary/20 text-primary' : ''}`}
+              style={{ fontFamily: 'Sora', padding: '10px 18px', fontSize: 13, background: 'rgba(255,255,255,0.08)', color: 'var(--color-text-primary)', border: '1px solid var(--color-border-soft)', borderRadius: 10, cursor: 'pointer' }}
             >
               {useVisualBudgetView ? 'List View' : 'Visual View'}
             </button>
             <button
               onClick={() => setIsModalOpen(true)}
               id="new-budget-btn"
-              className="btn-primary py-2 px-4 rounded-lg flex items-center"
+              style={{ fontFamily: 'Sora', padding: '10px 18px', fontSize: 13, background: 'var(--color-accent, #1a1f3a)', color: 'white', border: 'none', borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center' }}
             >
-              <Plus className="w-5 h-5 mr-2" />
+              <Plus className="w-4 h-4" style={{ marginRight: 6 }} />
               New Budget
             </button>
           </div>
@@ -160,19 +168,19 @@ function BudgetsPage({ budgets, showToast }) {
 
         {useVisualBudgetView ? (
           // Visual View (Donut Chart)
-          <div className="bg-background/50 p-6 rounded-2xl">
+          <div style={{ borderRadius: 16, border: '1px solid var(--color-border-soft)', padding: 18, background: 'var(--color-panel)', textAlign: 'center' }}>
             {totalBudgeted > 0 ? (
               <>
-                <div className="text-center mb-6">
-                  <svg className="w-24 h-24 mx-auto mb-4" viewBox="0 0 100 100">
+                <div style={{ marginBottom: 6 }}>
+                  <svg style={{ width: 96, height: 96, margin: '0 auto 16px' }} viewBox="0 0 100 100">
                     {/* Donut chart background (circle) */}
                     <circle
                       cx="50"
                       cy="50"
                       r="40"
                       fill="none"
-                      stroke="bg-sidebar"
-                      stroke-width="10"
+                      stroke="#1e293b"
+                      strokeWidth="10"
                     />
                     {/* Budget segments */}
                     {budgets.map((budget, index) => {
@@ -185,8 +193,8 @@ function BudgetsPage({ budgets, showToast }) {
                           key={budget.id}
                           d={describeArc(50, 50, 40, startAngleDeg, endAngleDeg)}
                           fill={budget.color}
-                          stroke="bg-background"
-                          stroke-width="2"
+                          stroke="var(--color-bg)"
+                          strokeWidth="2"
                           cursor="pointer"
                           onClick={() => handleOpenUpdateModal(budget)}
                         />
@@ -197,27 +205,27 @@ function BudgetsPage({ budgets, showToast }) {
                       cx="50"
                       cy="50"
                       r="20"
-                      fill="bg-background"
+                      fill="var(--color-bg)"
                     />
                     {/* Total budgeted amount in the center */}
                     <text
                       x="50"
                       y="55"
                       textAnchor="middle"
-                      className="font-bold text-text-primary"
+                      fill="var(--color-text-primary)"
+                      fontWeight="700"
+                      fontSize="8"
                     >
                       Rs {totalBudgeted.toLocaleString('en-US')}
                     </text>
                   </svg>
-                  <p className="text-sm text-text-secondary mt-2">
+                  <p style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
                     Total Budgeted
                   </p>
                 </div>
-                {/* Budget details on click (we'll show the update modal when a segment is clicked) */}
-                {/* The update modal is handled by the state and the UpdateBudgetModal component */}
               </>
             ) : (
-              <p className="text-text-secondary text-center py-8">
+              <p style={{ color: 'var(--color-text-muted)', textAlign: 'center', padding: 32 }}>
                 No budgets to display. Create a budget to get started.
               </p>
             )}
@@ -226,26 +234,26 @@ function BudgetsPage({ budgets, showToast }) {
           // List View (existing functionality)
           <>
             {/* Budget Summary - now with live data */}
-            <div className="bg-background/50 p-6 rounded-2xl">
-              <h3 className="font-semibold text-lg mb-4">Monthly Summary</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-                <div>
-                  <p className="text-sm text-text-secondary">Total Budgeted</p>
-                  <p className="text-2xl font-bold font-mono">Rs {totalBudgeted.toLocaleString('en-US')}</p>
+            <div style={{ borderRadius: 16, border: '1px solid var(--color-border-soft)', padding: 18, background: 'var(--color-panel)' }}>
+              <h3 style={{ fontSize: 14, fontWeight: 500, marginBottom: 16 }}>Monthly Summary</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4" style={{ textAlign: 'center' }}>
+                <div style={{ padding: 14, background: 'var(--color-bg)', borderRadius: 12 }}>
+                  <p style={{ fontSize: 11, color: 'var(--color-text-muted)', marginBottom: 6 }}>Total Budgeted</p>
+                  <p style={{ fontFamily: 'Space Mono', fontSize: 20, fontWeight: 700 }}>Rs {totalBudgeted.toLocaleString('en-US')}</p>
                 </div>
-                <div>
-                  <p className="text-sm text-text-secondary">Total Spent</p>
-                  <p className="text-2xl font-bold font-mono">Rs {totalSpent.toLocaleString('en-US')}</p>
+                <div style={{ padding: 14, background: 'var(--color-bg)', borderRadius: 12 }}>
+                  <p style={{ fontSize: 11, color: 'var(--color-text-muted)', marginBottom: 6 }}>Total Spent</p>
+                  <p style={{ fontFamily: 'Space Mono', fontSize: 20, fontWeight: 700 }}>Rs {totalSpent.toLocaleString('en-US')}</p>
                 </div>
-                <div>
-                  <p className="text-sm text-text-secondary">Remaining</p>
-                  <p className="text-2xl font-bold font-mono">Rs {totalRemaining.toLocaleString('en-US')}</p>
+                <div style={{ padding: 14, background: 'var(--color-bg)', borderRadius: 12 }}>
+                  <p style={{ fontSize: 11, color: 'var(--color-text-muted)', marginBottom: 6 }}>Remaining</p>
+                  <p style={{ fontFamily: 'Space Mono', fontSize: 20, fontWeight: 700 }}>Rs {totalRemaining.toLocaleString('en-US')}</p>
                 </div>
               </div>
             </div>
 
             {/* Budget List - now dynamically rendered */}
-            <div id="budgets-list" className="bg-background/50 p-6 rounded-2xl">
+            <div id="budgets-list" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
               {budgets.map(budget => (
                 <BudgetItem
                   key={budget.id}
@@ -254,6 +262,9 @@ function BudgetsPage({ budgets, showToast }) {
                   onDelete={() => handleOpenDeleteModal(budget)}
                   onAssign={handleAssignBudget}
                   canAssignMore={canAssignMore}
+                  addBudgetItem={addBudgetItem}
+                  removeBudgetItem={removeBudgetItem}
+                  showToast={showToast}
                 />
               ))}
             </div>
