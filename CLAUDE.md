@@ -2,6 +2,14 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Test User Credentials (for development/testing)
+
+When testing the application manually, you can use these credentials:
+- Email: test@finvault.app
+- Password: TestPassword123!
+
+Note: These are for development/testing only. In production, users should register their own accounts.
+
 ## Development Commands
 
 - **Start development server**: `pnpm dev`
