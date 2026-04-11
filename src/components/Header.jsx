@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Bell } from 'lucide-react';
 
-function Header({ activePage, onMenuClick, history = [], transactions = [] }) {
+function Header({ activePage, onMenuClick, history = [], transactions = [], compactMode = false }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const notifRef = useRef(null);
 
@@ -47,7 +47,7 @@ function Header({ activePage, onMenuClick, history = [], transactions = [] }) {
   return (
     <header
       ref={notifRef}
-      className="flex items-center justify-between h-20 px-6 border-b bg-panel"
+      className={`flex items-center justify-between h-${compactMode ? '16' : '20'} px-${compactMode ? '4' : '6'} border-b bg-panel`}
       style={{ borderColor: 'var(--color-border)' }}
     >
       <div className="flex items-center gap-4">

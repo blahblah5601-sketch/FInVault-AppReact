@@ -65,6 +65,7 @@ function AppLayout({ user, onLogout, showToast, theme, setTheme, accounts, budge
                     setActivePage(page);
                     setIsMobileMenuOpen(false); // Close menu after clicking a link
                 }}
+                compactMode={preferences.compactMode}
             />
         </div>
 

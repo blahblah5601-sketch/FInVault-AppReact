@@ -45,20 +45,20 @@ function SettingRow({ label, hint, checked, onChange }) {
   );
 }
 
-export default function SettingsPage({ currentTheme, setCurrentTheme }) {
-  const [userPreferences, setUserPreferences] = useState({});
-  const [showIconTooltips, setShowIconTooltips] = useState(true);
-  const [usePlanetIcons, setUsePlanetIcons] = useState(true);
-  const [showIBANOnHero, setShowIBANOnHero] = useState(true);
-  const [showBalanceByDefault, setShowBalanceByDefault] = useState(true);
-  const [showEnvelopeItemsExpanded, setShowEnvelopeItemsExpanded] = useState(false);
-  const [useVisualBudgetView, setUseVisualBudgetView] = useState(false);
-  const [budgetWarningThreshold, setBudgetWarningThreshold] = useState('80');
-  const [requirePaymentConfirmation, setRequirePaymentConfirmation] = useState(true);
-  const [saveCardDetailsSession, setSaveCardDetailsSession] = useState(false);
-  const [compactMode, setCompactMode] = useState(false);
-  const [showMonthlyIncome, setShowMonthlyIncome] = useState(true);
-  const [showMonthlySpend, setShowMonthlySpend] = useState(true);
+export default function SettingsPage({ currentTheme, setCurrentTheme, preferences }) {
+  const [userPreferences, setUserPreferences] = useState(preferences || {});
+  const [showIconTooltips, setShowIconTooltips] = useState(preferences?.showIconTooltips ?? true);
+  const [usePlanetIcons, setUsePlanetIcons] = useState(preferences?.usePlanetIcons ?? true);
+  const [showIBANOnHero, setShowIBANOnHero] = useState(preferences?.showIBANOnHero ?? true);
+  const [showBalanceByDefault, setShowBalanceByDefault] = useState(preferences?.showBalanceByDefault ?? true);
+  const [showEnvelopeItemsExpanded, setShowEnvelopeItemsExpanded] = useState(preferences?.showEnvelopeItemsExpanded ?? false);
+  const [useVisualBudgetView, setUseVisualBudgetView] = useState(preferences?.useVisualBudgetView ?? false);
+  const [budgetWarningThreshold, setBudgetWarningThreshold] = useState(preferences?.budgetWarningThreshold?.toString() ?? '80');
+  const [requirePaymentConfirmation, setRequirePaymentConfirmation] = useState(preferences?.requirePaymentConfirmation ?? true);
+  const [saveCardDetailsSession, setSaveCardDetailsSession] = useState(preferences?.saveCardDetailsSession ?? false);
+  const [compactMode, setCompactMode] = useState(preferences?.compactMode ?? false);
+  const [showMonthlyIncome, setShowMonthlyIncome] = useState(preferences?.showMonthlyIncome ?? true);
+  const [showMonthlySpend, setShowMonthlySpend] = useState(preferences?.showMonthlySpend ?? true);
 
   useEffect(() => {
     const loadPreferences = async () => {

@@ -8,7 +8,7 @@ import { createVault, handleVaultTransaction, deleteVault } from '../api'; // <-
 import { Plus } from 'lucide-react'; // <-- 1. Import STATIC icons directly
 import Icon from './Icon';
 
-function VaultsPage({ vaults , accounts, showToast }) {
+function VaultsPage({ vaults , accounts, showToast, preferences }) {
   // Separate the main savings account from the other goal vaults
   const savingsAccount = vaults.find(v => v.isSavingsAccount);
   const goalVaults = vaults.filter(v => !v.isSavingsAccount);

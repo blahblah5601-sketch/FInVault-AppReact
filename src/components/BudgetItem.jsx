@@ -3,9 +3,9 @@ import { useState } from 'react';
 import Icon from './Icon';
 import { CreditCard } from 'lucide-react'; // Importing CreditCard icon for assigned budgets
 
-function BudgetItem({ budget, onUpdate, onDelete, onAssign, canAssignMore, addBudgetItem, removeBudgetItem, showToast }) {
+function BudgetItem({ budget, onUpdate, onDelete, onAssign, canAssignMore, addBudgetItem, removeBudgetItem, showToast, preferences }) {
   const percentage = budget.limit > 0 ? Math.round((budget.spent / budget.limit) * 100) : 0;
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(preferences?.showEnvelopeItemsExpanded ?? false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newItemName, setNewItemName] = useState('');
   const [newItemAmount, setNewItemAmount] = useState('');

@@ -12,11 +12,12 @@ import AccountsPage from './AccountsPage';
 
 // This component will eventually show the correct page component
 function MainContent({ activePage, accounts, budgets, vaults, transactions, showToast, theme, setTheme, history, setActivePage, billers, beneficiaries, preferences, onOpenSendMoney, onOpenAddFunds, onOpenQRPayment, onOpenNFCPayment }) {
+  const compactMode = preferences?.compactMode ?? false;
 
   return (
     <div
 
-      className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8">
+      className={`flex-1 overflow-y-auto ${compactMode ? 'p-2 md:p-4' : 'p-4 md:p-8'} space-y-${compactMode ? '4' : '8'}`}>
       {/* This is conditional rendering. It checks activePage and shows the right content. */}
       {activePage === 'dashboard' && (
         <DashboardPage
@@ -39,11 +40,11 @@ function MainContent({ activePage, accounts, budgets, vaults, transactions, show
       )}
 
       {activePage === 'budgets' && (
-        <BudgetsPage budgets={budgets} showToast={showToast}/>
+        <BudgetsPage budgets={budgets} showToast={showToast} preferences={preferences}/>
       )}
       
       {activePage === 'vaults' && (
-        <VaultsPage vaults={vaults} accounts={accounts} showToast={showToast}/>
+        <VaultsPage vaults={vaults} accounts={accounts} showToast={showToast} preferences={preferences}/>
       )}
 
       {activePage === 'transactions' && (
@@ -72,6 +73,7 @@ function MainContent({ activePage, accounts, budgets, vaults, transactions, show
         <SettingsPage
           currentTheme={theme}
           setCurrentTheme={setTheme}
+          preferences={preferences}
         />
       )}
       {activePage === 'card-control' && <CardControlPage accounts={accounts} budgets={budgets} showToast={showToast} />}

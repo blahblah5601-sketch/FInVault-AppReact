@@ -1,7 +1,7 @@
 // src/components/Sidebar.jsx
 import { LayoutDashboard, Landmark, CreditCard, Wallet, PieChart, ShieldCheck, List, Settings } from 'lucide-react';
 
-function Sidebar({ user, onLogout, activePage, setActivePage }) {
+function Sidebar({ user, onLogout, activePage, setActivePage, compactMode = false }) {
   const navSections = [
     {
       title: 'Overview',
@@ -40,7 +40,7 @@ function Sidebar({ user, onLogout, activePage, setActivePage }) {
   return (
     <aside className="flex flex-col h-full w-full" style={{
       backgroundColor: '#1a1f3a',
-      borderRadius: '16px 0 0 16px'
+      borderRadius: `${compactMode ? '8px' : '16px'} 0 0 ${compactMode ? '8px' : '16px'}`
     }}>
       {/* Logo */}
       <div className="flex items-center gap-3 mx-4 mt-4 mb-7">

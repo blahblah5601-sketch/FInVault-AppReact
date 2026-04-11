@@ -7,7 +7,7 @@ import CreateBudgetModal from './modals/CreateBudgetModal';
 import UpdateBudgetModal from './modals/UpdateBudgetModal';
 import ConfirmDeleteModal from './modals/ConfirmDeleteModal';
 
-function BudgetsPage({ budgets, showToast }) {
+function BudgetsPage({ budgets, showToast, preferences }) {
   // Calculate summary totals from the budgets prop
   const MAX_CARD_ASSIGNMENTS = 3;
   const MAX_BUDGETS = 5;
@@ -25,24 +25,12 @@ function BudgetsPage({ budgets, showToast }) {
   const [itemToDelete, setItemToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false); // 1. Add isDeleting state
 
-  // State for visual view preference (loaded from user preferences)
-  const [useVisualBudgetView, setUseVisualBudgetView] = useState(false);
-
-  // Load user preference for visual view on mount
-  useEffect(() => {
-    const loadPreference = async () => {
-      const prefs = await getUserPreferences();
-      if (prefs && prefs.useVisualBudgetView !== undefined) {
-        setUseVisualBudgetView(prefs.useVisualBudgetView);
-      }
-    };
-    loadPreference();
-  }, []);
+  // Use preferences prop instead of local state for visual view
+  const useVisualBudgetView = preferences?.useVisualBudgetView ?? false;
 
   // Toggle visual view preference and update user preferences
   const toggleVisualView = async () => {
     const newView = !useVisualBudgetView;
-    setUseVisualBudgetView(newView);
     try {
       await updateUserPreferences({ useVisualBudgetView: newView });
     } catch (error) {
