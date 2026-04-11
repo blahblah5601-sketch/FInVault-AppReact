@@ -1,5 +1,6 @@
 // src/components/panels/SendMoneyPanel.jsx
 import { createPayment } from '../../api';
+import { createRtpNowPayment, validateBeneficiary } from '../../services/raastService';
 import { useState, useEffect } from 'react';
 import { validateIBAN, formatIBAN } from '../../utils/ibanUtils';
 import { Users } from 'lucide-react';
@@ -61,21 +62,91 @@ const SendMoneyPanel = ({ isOpen, onClose, onSuccess, showToast }) => {
     if (!recipient) { showToast('Please enter a recipient'); return; }
     if (!amount || parseFloat(amount) <= 0) { showToast('Please enter a valid amount'); return; }
     if (!description) { showToast('Please enter a description'); return; }
+
+    // Validate IBAN if it looks like one
     if (recipient.length >= 14 && recipient.toUpperCase().startsWith('PK')) {
       const validationResult = validateIBAN(recipient);
       if (!validationResult.valid) { showToast(`Invalid IBAN: ${validationResult.error}`); return; }
     }
-    const sourceAccountId = 'current';
+
     try {
-      const success = await createPayment(
-        parseFloat(amount), 'PKR', description, 'Transfer',
-        sourceAccountId, recipient, 'iban', 'bank-transfer'
-      );
-      if (success) { onClose(); onSuccess(); }
-      else showToast('Failed to send money. Please try again.');
+      // For now, we'll use the existing createPayment function for local transfers
+      // In a full implementation, we would use RAAS APIs for interbank transfers
+      // and local API for intrabank transfers
+
+      // Check if this is likely an interbank transfer (different bank prefix)
+      // For demo purposes, we'll treat all IBAN transfers as potentially interbank
+      if (recipient.length >= 14 && recipient.toUpperCase().startsWith('PK')) {
+        // Use RAAS API for interbank transfers
+        const paymentDetails = {
+          merchantDetails: {
+            merchantId: 'MERCHANT001', // Placeholder
+            subDept: '0001',
+            dbaName: 'FinVault User',
+            merchantName: 'FinVault User',
+            iban: recipient, // The recipient's IBAN
+            bankBic: 'UNKNOWN', // Would extract from IBAN
+            merchantCategoryCode: '0000',
+            postalAddress: {
+              townName: 'Unknown',
+              subDept: '0001',
+              addressLine: 'Unknown'
+            },
+            contactDetails: {
+              phoneNo: '00000000000',
+              mobileNo: '00000000000',
+              email: 'user@finvault.pk',
+              dept: 'Personal',
+              website: 'www.finvault.pk',
+              merchantChannelId: 'WEB'
+            },
+            geoLocation: {
+              lat: '0.000000',
+              long: '0.000000'
+            }
+          },
+          payerDetails: {
+            additionalRequiredDetails: 'NON',
+            identificationDetails: {
+              loyaltyNo: '',
+              customerLabel: 'FinVault Customer'
+            }
+          },
+          paymentDetails: {
+            executionDateTime: new Date().toISOString().replace('T', ' ').substring(0, 19),
+            expiryDateTime: new Date(Date.now() + 3600000).toISOString().replace('T', ' ').substring(0, 19), // 1 hour expiry
+            rtpId: Math.random().toString(36).substring(2, 15),
+            billNo: `FV${Date.now()}`,
+            instructedAmount: parseFloat(amount),
+            transactionType: '0002' // Interbank transfer
+          },
+          info: {
+            stan: Math.floor(Math.random() * 900000) + 100000,
+            rrn: Math.random().toString(36).substring(2, 14)
+          }
+        };
+
+        const result = await createRtpNowPayment(paymentDetails);
+
+        if (result && result.responseCode === '00') {
+          onClose();
+          onSuccess();
+        } else {
+          showToast('Failed to send money: ' + (result?.responseDescription || 'Unknown error'));
+        }
+      } else {
+        // For non-IBAN transfers (phone numbers, etc.), use local API
+        const sourceAccountId = 'current';
+        const success = await createPayment(
+          parseFloat(amount), 'PKR', description, 'Transfer',
+          sourceAccountId, recipient, 'iban-or-other', 'bank-transfer'
+        );
+        if (success) { onClose(); onSuccess(); }
+        else showToast('Failed to send money. Please try again.');
+      }
     } catch (error) {
       console.error('Error sending money:', error);
-      showToast('An error occurred while sending money.');
+      showToast('An error occurred while sending money: ' + (error.message || 'Unknown error'));
     }
   };
 

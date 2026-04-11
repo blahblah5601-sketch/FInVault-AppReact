@@ -1,6 +1,7 @@
  // src/api.js
  import { db, auth } from './firebase';
  import { collection, addDoc, serverTimestamp, doc, getDoc, updateDoc, writeBatch, deleteDoc, setDoc, query, where, getDocs, orderBy } from 'firebase/firestore';
+ import { generateAccountNumber, generateIBAN, BANK_BICS } from './utils/ibanUtils';
 
  // Note: This is the same logic from your old main.js file
 export const createBudget = async (name, limit) => {

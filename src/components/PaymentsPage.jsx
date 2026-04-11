@@ -1,5 +1,6 @@
 // src/components/PaymentsPage.jsx
 import { createPayment, createBiller, deleteBiller, createBeneficiary } from '../api';
+import { validateBeneficiary, getAccountTitle, createRtpNowPayment, checkPaymentStatus } from '../services/raastService';
 import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import HintTooltip from './HintTooltip.jsx';
@@ -42,18 +43,26 @@ function PaymentsPage({ showToast, billers, beneficiaries, history, onSendMoney,
   // For now, we'll use mock data to demonstrate the structure
 
   const handleAddBiller = async () => {
-    const success = await createBiller(billerName, billerCategory, billerAccountRef);
-    if (success) {
-      setIsAddBillerModalOpen(false);
-      // In a real app, we would refetch the billers list
-      showToast(`Biller '${billerName}' added successfully.`);
-      // Reset form
-      setBillerName('');
-      setBillerCategory('');
-      setBillerAccountRef('');
-      setBillerLastAmount('');
-    } else {
-      showToast("Failed to add biller.");
+    try {
+      // Optional: Validate the account reference using RAAS API if it's an IBAN
+      // For now, we'll just create the biller locally since biller validation might need different API endpoints
+      const success = await createBiller(billerName, billerCategory, billerAccountRef);
+
+      if (success) {
+        setIsAddBillerModalOpen(false);
+        // In a real app, we would refetch the billers list
+        showToast(`Biller '${billerName}' added successfully.`);
+        // Reset form
+        setBillerName('');
+        setBillerCategory('');
+        setBillerAccountRef('');
+        setBillerLastAmount('');
+      } else {
+        showToast("Failed to add biller.");
+      }
+    } catch (error) {
+      console.error('Error adding biller:', error);
+      showToast(`Failed to add biller: ${error.message || 'Unknown error'}`);
     }
   };
 
@@ -68,18 +77,28 @@ function PaymentsPage({ showToast, billers, beneficiaries, history, onSendMoney,
   };
 
   const handleAddBeneficiary = async () => {
-    const success = await createBeneficiary(beneficiaryName, beneficiaryNickname, beneficiaryType, beneficiaryValue);
-    if (success) {
-      setIsAddBeneficiaryModalOpen(false);
-      // In a real app, we would refetch the beneficiaries list
-      showToast(`Beneficiary '${beneficiaryName}' added successfully.`);
-      // Reset form
-      setBeneficiaryName('');
-      setBeneficiaryNickname('');
-      setBeneficiaryType('');
-      setBeneficiaryValue('');
-    } else {
-      showToast("Failed to add beneficiary.");
+    try {
+      // First validate the beneficiary details using RAAS API
+      const validationResult = await validateBeneficiary(beneficiaryType, beneficiaryValue);
+
+      // If validation successful, create the beneficiary in our local Firestore
+      const success = await createBeneficiary(beneficiaryName, beneficiaryNickname, beneficiaryType, beneficiaryValue);
+
+      if (success) {
+        setIsAddBeneficiaryModalOpen(false);
+        // In a real app, we would refetch the beneficiaries list
+        showToast(`Beneficiary '${beneficiaryName}' added and validated successfully.`);
+        // Reset form
+        setBeneficiaryName('');
+        setBeneficiaryNickname('');
+        setBeneficiaryType('');
+        setBeneficiaryValue('');
+      } else {
+        showToast("Failed to add beneficiary to local database.");
+      }
+    } catch (error) {
+      console.error('Error adding beneficiary:', error);
+      showToast(`Validation failed: ${error.message || 'Invalid beneficiary details'}`);
     }
   };
 

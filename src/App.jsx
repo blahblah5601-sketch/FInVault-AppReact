@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import ToastNotification from './components/ToastNotification';
 import './App.css';
-import { auth } from './firebase';
+import { auth, db } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { collection, query, onSnapshot, orderBy } from 'firebase/firestore';
 import AuthComponent from './components/AuthComponent';

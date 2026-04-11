@@ -27,12 +27,19 @@ const NFCPaymentPanel = ({ isOpen, onClose, onSuccess, showToast }) => {
       showToast('Please enter a description');
       return;
     }
+    if (!activeCard) {
+      showToast('Please select a card');
+      return;
+    }
+
     setNfcState('listening');
     // Simulate NFC tap detection
     setTimeout(() => {
       setNfcState('processing');
       setTimeout(async () => {
         try {
+          // For card payments, we'll use the existing createPayment function for now
+          // TODO: Replace with actual card payment API integration (e.g., SafePay sandbox)
           const success = await createPayment(
             parseFloat(amount), 'PKR', description, 'NFC Payment',
             activeCard?.id || 'default', 'nfc-tap'

@@ -1,8 +1,10 @@
 // src/components/panels/AddFundsPanel.jsx
 import { useState } from 'react';
+import { createRtpNowPayment, validateBeneficiary } from '../../services/raastService';
+import { processPayPakPurchase } from '../../services/paypakService';
 
 const AddFundsPanel = ({ isOpen, onClose, onSuccess, showToast }) => {
-  const [activeTab, setActiveTab] = useState('from-card');
+  const [paymentMethodType, setPaymentMethodType] = useState('card'); // 'card' or 'bank-transfer'
   const [cardNumber, setCardNumber] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [cvv, setCVV] = useState('');
@@ -38,11 +40,78 @@ const AddFundsPanel = ({ isOpen, onClose, onSuccess, showToast }) => {
   const handleAddFundsFromCard = async () => {
     if (!cardNumber || !expiryDate || !cvv || !cardHolderName) { showToast('Please fill in all card details'); return; }
     if (!amount || parseFloat(amount) <= 0) { showToast('Please enter a valid amount'); return; }
-    showToast('Tokenization note: Card details would be sent to payment gateway for processing.');
+
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      onClose(); onSuccess();
-    } catch (error) { console.error('Error processing card payment:', error); showToast('Failed to process card payment.'); }
+      // Prepare payment data for PayPak API
+      // Remove spaces from card number and format as required
+      const cleanCardNumber = cardNumber.replace(/\s/g, '');
+
+      const paymentData = {
+        // Based on PayPak ECommerce Purchase API specification
+        TransactionAmount: amount.padStart(12, '0'), // 12 digits with leading zeros
+        PersonalIdentificationNumber: '000000000000', // PIN - for now using placeholder as this is add funds
+        PosConditionCode: '000000000000', // Position condition code
+        ReservedforNationalUse6: '000000000000', // Reserved for national use
+        TrackData2: cleanCardNumber, // Track data 2 (card number)
+        TransactionDescription: 'FinVault Add Funds', // Transaction description
+        TransmissionDateAndTime: new Date().toISOString().replace(/[-T:.Z]/g, '').slice(0, 10), // MMDDhhmmss format
+        STAN: Math.floor(Math.random() * 900000) + 100000, // System Trace Audit Number (6 digits)
+        Time: new Date().toTimeString().slice(0, 6).replace(/:/g, ''), // hhmmss format
+        Date: new Date().toISOString().slice(5, 7) + new Date().toISOString().slice(8, 10), // MMDD format
+        MerchantType: '0000', // Merchant type (to be configured)
+        AdditionalEMVInformation: '', // Additional EMV information
+        RRN: Math.random().toString(36).substring(2, 10).toUpperCase(), // Retrieval Reference Number
+        AuthorizationIdentificationResponse: '000000', // Authorization identification response
+        CardAcceptorTerminalId: 'TERMINAL01', // Terminal ID
+        CardAcceptorIdCode: 'MERCHANT001', // Merchant ID
+        CardAcceptorNameLocation: {
+          // Card acceptor name and location
+          Location: 'FinVault Wallet',
+          City: 'Islamabad',
+          State: 'ICT',
+          ZipCode: '44000',
+          AgentName: 'FinVault',
+          ADCLiteral: 'Internet',
+          AgentCity: 'Islamabad',
+          BankName: 'FinVault Bank',
+          Country: 'PK'
+        },
+        AdditionalResponseData: '',
+        AmountTransactionFee: '0', // Transaction fee
+        CurrencyCodeTransaction: '586', // PKR currency code
+        AccountIdentification1: '', // Account number from
+        AcquiringInstitutionIDCode: '00000000000', // Acquiring institution ID
+        PANSequenceNumber: '00000000000', // PAN sequence number
+        PAN: cleanCardNumber, // Primary Account Number
+        AdditionalDataNational: '', // Additional national data
+        PosEntryMode: '000', // Point of service entry mode
+        AdditionalAmounts: '', // Additional amounts
+        DateExpiration: expiryDate.replace('/', ''), // Date expiration (YYMM format from MM/YY)
+        DateSettlement: '', // Date settlement
+        EMVData: '', // EMV data
+        ForwardingInstitutionIdentificationCode: '', // Forwarding institution ID
+        CardholderAuthenticationInformation: '', // Cardholder authentication info
+        SenderName: cardHolderName, // Sender name
+        NetworkInstitutionIdentifier: '', // Network institution ID
+        RecordData: {
+          CAVVData: '', // CAVV data
+          ECI: '' // ECI indicator
+        }
+      };
+
+      // Process the payment via PayPak API
+      const result = await processPayPakPurchase(paymentData);
+
+      if (result && result.ResponseCode === '00') {
+        showToast('Funds added successfully!');
+        onClose(); onSuccess();
+      } else {
+        showToast('Failed to add funds: ' + (result?.ResponseDetail || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error processing card payment:', error);
+      showToast('Failed to process card payment: ' + (error.message || 'Unknown error'));
+    }
   };
 
   const handleAddFundsFromBankTransfer = async () => {
@@ -50,10 +119,78 @@ const AddFundsPanel = ({ isOpen, onClose, onSuccess, showToast }) => {
     if (!validateIBAN(sourceIBAN)) { showToast('Please enter a valid IBAN'); return; }
     if (!amount || parseFloat(amount) <= 0) { showToast('Please enter a valid amount'); return; }
     if (!referenceNumber) { showToast('Please enter a reference number'); return; }
+
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      onClose(); onSuccess();
-    } catch (error) { console.error('Error processing bank transfer:', error); showToast('Failed to process bank transfer.'); }
+      // For adding funds via bank transfer, we would typically:
+      // 1. Validate the source IBAN (already done)
+      // 2. Initiate a transfer from the external bank to the user's FinVault account
+      // 3. This would usually involve the external bank's API, not RAAS directly
+      // 4. For demo purposes, we'll simulate using RAAS as if we're receiving money
+
+      // In a real implementation, adding funds would involve:
+      // - User initiating transfer from their external bank app to their FinVault IBAN
+      // - Or using a payment gateway/API to pull funds from external account
+
+      // For this simulation, we'll treat it as receiving a payment via RAAS
+      const paymentDetails = {
+        merchantDetails: {
+          merchantId: 'MERCHANT001', // FinVault merchant ID
+          subDept: '0001',
+          dbaName: 'FinVault Wallet',
+          merchantName: 'FinVault Wallet',
+          iban: sourceIBAN, // The source IBAN (where money is coming FROM)
+          bankBic: 'UNKNOWN', // Would extract from IBAN
+          merchantCategoryCode: '0000',
+          postalAddress: {
+            townName: 'Unknown',
+            subDept: '0001',
+            addressLine: 'Unknown'
+          },
+          contactDetails: {
+            phoneNo: '00000000000',
+            mobileNo: '00000000000',
+            email: 'user@finvault.pk',
+            dept: 'Personal',
+            website: 'www.finvault.pk',
+            merchantChannelId: 'WEB'
+          },
+          geoLocation: {
+            lat: '0.000000',
+            long: '0.000000'
+          }
+        },
+        payerDetails: {
+          additionalRequiredDetails: 'NON',
+          identificationDetails: {
+            loyaltyNo: '',
+            customerLabel: 'FinVault Customer'
+          }
+        },
+        paymentDetails: {
+          executionDateTime: new Date().toISOString().replace('T', ' ').substring(0, 19),
+          expiryDateTime: new Date(Date.now() + 3600000).toISOString().replace('T', ' ').substring(0, 19), // 1 hour expiry
+          rtpId: Math.random().toString(36).substring(2, 15),
+          billNo: `FV-ADD${Date.now()}`,
+          instructedAmount: parseFloat(amount),
+          transactionType: '0003' // Funds addition / wallet load
+        },
+        info: {
+          stan: Math.floor(Math.random() * 900000) + 100000,
+          rrn: Math.random().toString(36).substring(2, 14)
+        }
+      };
+
+      const result = await createRtpNowPayment(paymentDetails);
+
+      if (result && result.responseCode === '00') {
+        onClose(); onSuccess();
+      } else {
+        showToast('Failed to add funds: ' + (result?.responseDescription || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error processing bank transfer:', error);
+      showToast('Failed to process bank transfer: ' + (error.message || 'Unknown error'));
+    }
   };
 
   const inputStyle = {
@@ -80,8 +217,30 @@ const AddFundsPanel = ({ isOpen, onClose, onSuccess, showToast }) => {
                 <div className="w-10 shrink-0" />
               </div>
 
+              {/* Payment Method Selection */}
+              <div className="mb-6">
+                <div className="flex gap-4">
+                  <label className="flex items-center cursor-pointer">
+                    <input type="radio"
+                      checked={paymentMethodType === 'card'}
+                      onChange={() => setPaymentMethodType('card')}
+                      className="h-4 w-4 text-primary-600"
+                    />
+                    <span className="ml-2 text-sm font-medium">Card Payment</span>
+                  </label>
+                  <label className="flex items-center cursor-pointer">
+                    <input type="radio"
+                      checked={paymentMethodType === 'bank-transfer'}
+                      onChange={() => setPaymentMethodType('bank-transfer')}
+                      className="h-4 w-4 text-primary-600"
+                    />
+                    <span className="ml-2 text-sm font-medium">Bank Transfer</span>
+                  </label>
+                </div>
+              </div>
+
               {/* Quick Fund Options — reference style grid */}
-              {activeTab === 'from-card' ? (
+              {paymentMethodType === 'card' ? (
                 <div className="space-y-5">
                   {/* Card/NFC/QR Options Grid */}
                   <div className="grid grid-cols-2 gap-3">
