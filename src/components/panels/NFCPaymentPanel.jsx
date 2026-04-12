@@ -116,7 +116,7 @@ const NFCPaymentPanel = ({ isOpen, onClose, onSuccess, showToast }) => {
             <div className="w-12 h-0.5 bg-white/20 rounded mb-4" />
 
             {/* Panel content matching reference design */}
-            <div className="rounded-panel p-6 border" style={{
+            <div className="rounded-panel p-6 border max-h-[80vh] overflow-y-auto" style={{
               backgroundColor: 'var(--color-panel)',
               borderColor: 'var(--color-border)'
             }}>

@@ -156,7 +156,7 @@ const SendMoneyPanel = ({ isOpen, onClose, onSuccess, showToast }) => {
         <div className="fixed inset-0 z-50 flex items-end bg-black/50 backdrop-blur-sm">
           <div className="relative w-full max-w-lg mx-4 mb-6">
             <div className="w-12 h-0.5 bg-white/20 rounded mb-4" />
-            <div className="rounded-panel p-6 border" style={{
+            <div className="rounded-panel p-6 border max-h-[80vh] overflow-y-auto" style={{
               backgroundColor: 'var(--color-panel)',
               borderColor: 'var(--color-border)'
             }}>

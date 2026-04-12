@@ -90,6 +90,22 @@ export default function SettingsPage({ currentTheme, setCurrentTheme, preference
 
   const handleToggleChange = async (field, value) => {
     await updateUserPreferences({ [field]: value });
+    // Update local state immediately for better UX
+    setUserPreferences(prev => ({ ...prev, [field]: value }));
+
+    // Also update specific state variables for immediate UI feedback
+    if (field === 'compactMode') setCompactMode(value);
+    if (field === 'showIconTooltips') setShowIconTooltips(value);
+    if (field === 'usePlanetIcons') setUsePlanetIcons(value);
+    if (field === 'showIBANOnHero') setShowIBANOnHero(value);
+    if (field === 'showBalanceByDefault') setShowBalanceByDefault(value);
+    if (field === 'showEnvelopeItemsExpanded') setShowEnvelopeItemsExpanded(value);
+    if (field === 'useVisualBudgetView') setUseVisualBudgetView(value);
+    if (field === 'budgetWarningThreshold') setBudgetWarningThreshold(value.toString());
+    if (field === 'requirePaymentConfirmation') setRequirePaymentConfirmation(value);
+    if (field === 'saveCardDetailsSession') setSaveCardDetailsSession(value);
+    if (field === 'showMonthlyIncome') setShowMonthlyIncome(value);
+    if (field === 'showMonthlySpend') setShowMonthlySpend(value);
   };
 
   const handleSelectChange = async (field, value) => {

@@ -23,6 +23,7 @@ function App( ) {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [theme, setTheme] = useState('Slate');
+  const [preferences, setPreferences] = useState({}); // User preferences
   const [isDataLoading, setIsDataLoading] = useState(true); // NEW - Track data loading
 
   // Toast Notification State
@@ -58,10 +59,15 @@ function App( ) {
         setUser(currentUser);
         setIsDataLoading(true); // NEW - Start data loading
 
-        const settings = await getUserPreferences();
-        if (settings && settings.theme) {
-          setTheme(settings.theme);
-          applyTheme(settings.theme);
+        const prefs = await getUserPreferences();
+        if (prefs) {
+          setPreferences(prefs);
+          if (prefs.theme) {
+            setTheme(prefs.theme);
+            applyTheme(prefs.theme);
+          } else {
+            applyTheme('Slate'); // Apply default
+          }
         } else {
           applyTheme('Slate'); // Apply default
         }
@@ -142,6 +148,7 @@ function App( ) {
         setTheme={setTheme}
         billers={billersData}
         beneficiaries={beneficiariesData}
+        preferences={preferences}
         isDataLoading={isDataLoading} // NEW - Pass loading state
 
       />
