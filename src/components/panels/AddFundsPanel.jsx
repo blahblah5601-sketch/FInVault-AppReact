@@ -246,7 +246,7 @@ const AddFundsPanel = ({ isOpen, onClose, onSuccess, showToast }) => {
                   <div className="grid grid-cols-2 gap-3">
                     <div className="rounded-panel p-4 cursor-pointer transition-colors border"
                       style={{ backgroundColor: 'var(--color-bg)', borderColor: 'var(--color-border)' }}
-                      onClick={() => {}}
+                      onClick={() => setPaymentMethodType('card')}
                       onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-gold)'}
                       onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--color-border)'}>
                       <div className="w-9 h-9 rounded-sm-panel flex items-center justify-center mb-3"
@@ -262,6 +262,7 @@ const AddFundsPanel = ({ isOpen, onClose, onSuccess, showToast }) => {
                     </div>
                     <div className="rounded-panel p-4 cursor-pointer transition-colors border"
                       style={{ backgroundColor: 'var(--color-bg)', borderColor: 'var(--color-border)' }}
+                      onClick={() => setPaymentMethodType('bank-transfer')}
                       onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-gold)'}
                       onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--color-border)'}>
                       <div className="w-9 h-9 rounded-sm-panel flex items-center justify-center mb-3"
@@ -276,6 +277,7 @@ const AddFundsPanel = ({ isOpen, onClose, onSuccess, showToast }) => {
                     </div>
                     <div className="rounded-panel p-4 cursor-pointer transition-colors border"
                       style={{ backgroundColor: 'var(--color-bg)', borderColor: 'var(--color-border)' }}
+                      onClick={() => setPaymentMethodType('qr')}
                       onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-gold)'}
                       onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--color-border)'}>
                       <div className="w-9 h-9 rounded-sm-panel flex items-center justify-center mb-3"
@@ -292,6 +294,7 @@ const AddFundsPanel = ({ isOpen, onClose, onSuccess, showToast }) => {
                     </div>
                     <div className="rounded-panel p-4 cursor-pointer transition-colors border"
                       style={{ backgroundColor: 'var(--color-bg)', borderColor: 'var(--color-border)' }}
+                      onClick={() => setPaymentMethodType('nfc')}
                       onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-gold)'}
                       onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--color-border)'}>
                       <div className="w-9 h-9 rounded-sm-panel flex items-center justify-center mb-3"
