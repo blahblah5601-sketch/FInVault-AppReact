@@ -1,0 +1,28 @@
+{
+  "name": "finvault-sync-scheduler",
+  "version": "1.0.0",
+  "description": "Firebase → PostgreSQL sync scheduler for FinVault banking app",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./scripts/sync-scheduler.js start",
+    "status": "node ./scripts/sync-scheduler.js status",
+    "manual-sync": "node ./scripts/sync-scheduler.js manual-sync",
+    "help": "node ./scripts/sync-scheduler.js help"
+  },
+  "keywords": [
+    "firebase",
+    "postgresql",
+    "sync",
+    "scheduler",
+    "finvault"
+  ],
+  "author": "FinVault Team",
+  "license": "MIT",
+  "dependencies": {
+    "firebase": "^12.2.1",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0"
+  }
+}

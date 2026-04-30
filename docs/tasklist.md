@@ -1,189 +1,117 @@
-# FinVault App Task List
+# Database Migration Task List
 
-## Completed Tasks - Payment Integration
-- [X] #7 Prepare NFC Payments for card payment API linkage
-- [X] #8 Add card payment branch to QR Payment Panel  
-- [X] #9 Create PayPak service for card payments
-- [X] #10 Add card payment branch to Add Funds Panel
+## Phase 1: Database Schema Rebuild
 
-## Summary of Work Completed (Payment Integration)
-1. **PayPak Service Integration**: Created PayPak service with OAuth 2.0 authentication for card payments
-2. **QR Payment Panel**: Updated to support both bank transfers (RAAS) and card payments (PayPak) with method selection
-3. **Add Funds Panel**: 
-   - Added payment method selection (card vs bank transfer)
-   - Implemented card payment processing using PayPak API with proper ISO 8583 formatting
-   - Maintained bank transfer functionality using RAAS API
-   - Added proper validation and error handling for both methods
-4. **Documentation**: Updated PLAN.md with current status of payment integrations
-5. **NFC Payments**: Prepared for future card payment API linkage (placeholder ready)
+### 1.1 Design Comprehensive Schema
+- [ ] Analyze current Firebase Firestore structure
+- [ ] Design PostgreSQL schema with UUID primary keys
+- [ ] Define foreign key relationships and constraints
+- [ ] Plan data migration strategy from simplified to comprehensive schema
 
-## Settings & Preferences - Feature Completion (MOSTLY COMPLETE)
-Based on SettingsPage.jsx review, the following settings are ALREADY IMPLEMENTED and FUNCTIONAL:
-- [X] Implement theme selection and persistence 
-- [X] Compact Mode 
-- [X] Show IBAN on Dashboard Hero
-- [X] Show balance by default
-- [X] Use Planet Icons on Dashboard
-- [X] Show Monthly Income Card
-- [X] Show Monthly Spend Card
-- [X] Show Envelope Items by default (expanded)
-- [X] Use Visual (Donut) View by default
-- [X] Budget warning threshold (70%, 80%, 90%)
-- [X] Require confirmation before sending money
-- [X] Save card details for session
-- [X] Show tooltips on icon buttons
-- [ ] Add notification preferences 
-- [ ] Create profile management (name, email, etc.)
-- [ ] Add security settings (password change, 2FA setup)
-- [ ] Implement data export options
-- [ ] Add app version and build information
+### 1.2 Update Database Initialization
+- [ ] Modify database/init.sql with comprehensive schema
+- [ ] Add all required tables: users, budgets, vaults, accounts, transactions, history, settings
+- [ ] Implement proper UUID generation (uuid_generate_v4())
+- [ ] Add appropriate indexes for performance
+- [ ] Update docker-compose.yml for new initialization
 
-## Current Focus: Completing Remaining Features & Backend Development
+### 1.3 Migration Strategy
+- [ ] Create migration scripts for data transformation
+- [ ] Plan user data migration with UUID conversion
+- [ ] Preserve existing account and transaction data
+- [ ] Test migration on sample data
 
-### Authentication & Core Setup
-- [ ] Implement Firebase authentication state persistence
-- [ ] Set up protected routes for authenticated users
-- [ ] Create logout functionality with proper cleanup
-- [ ] Implement user session timeout handling
+## Phase 2: Firebase Data Structure Analysis
 
-### Data Management & Real-time Sync
-- [ ] Optimize Firestore listeners for performance
-- [ ] Implement data loading states and skeletons
-- [ ] Add error handling for Firestore operations
-- [ ] Create utility functions for data transformation
+### 2.1 Examine Firebase Schema
+- [ ] Analyze current Firebase Firestore structure in src/firebase.js
+- [ ] Document collection/subcollection relationships
+- [ ] Identify data types and field structures
+- [ ] Map Firebase collections to PostgreSQL tables
 
-### Dashboard & Overview
-- [ ] Enhance DashboardPage with account summary cards
-- [ ] Implement budget progress visualization
-- [ ] Add vault goal tracking visualizations
-- [ ] Create recent transactions feed on dashboard
-- [ ] Implement dashboard loading states
+### 2.2 Data Mapping
+- [ ] Create mapping between Firebase and PostgreSQL data models
+- [ ] Define data transformation rules
+- [ ] Identify synchronization requirements
+- [ ] Document field type conversions
 
-### Accounts Management
-- [ ] Complete bank account creation flow
-- [ ] Implement sub-account management (max 3 limit)
-- [ ] Add IBAN generation and validation
-- [ ] Create account detail view with transaction history
-- [ ] Implement primary account selection
-- [ ] Add account activation/deactivation
+## Phase 3: Synchronization Implementation
 
-### Budgeting System
-- [ ] Enhance budget creation with category icons
-- [ ] Implement envelope budgeting (items within budgets)
-- [ ] Add budget-to-card assignment (max 3)
-- [ ] Create budget edit/update functionality
-- [ ] Implement budget deletion with confirmation
-- [ ] Add budget progress tracking (% spent)
-- [ ] Create envelope budget item management (add/remove)
+### 3.1 Real-time Sync Service
+- [ ] Create background service to monitor Firebase changes
+- [ ] Implement change detection and propagation to PostgreSQL
+- [ ] Handle conflict resolution strategies
+- [ ] Add error handling and retry mechanisms
 
-### Vaults/Savings
-- [ ] Enhance vault creation with target amounts
-- [ ] Implement deposit/withdrawal functionality
-- [ ] Add goal completion detection and celebration
-- [ ] Create vault edit/update functionality
-- [ ] Implement vault deletion with confirmation
-- [ ] Add savings account vs regular vault differentiation
-- [ ] Implement interest calculation (if applicable)
+### 3.2 Two-way Sync
+- [ ] Implement sync from Firebase to PostgreSQL
+- [ ] Implement sync from PostgreSQL to Firebase
+- [ ] Add conflict detection and resolution
+- [ ] Test bidirectional synchronization
 
-### Transactions & Payments
-- [ ] Complete payment creation flow
-- [ ] Implement payment status tracking (pending/completed/failed)
-- [ ] Add transaction categorization and tagging
-- [ ] Create transaction filtering and search
-- [ ] Implement RAAST payment integration
-- [ ] Add QR/NFC payment panels
-- [ ] Create payment method management (Google Pay, Apple Pay, etc.)
+### 3.3 Data Validation
+- [ ] Add data consistency checks
+- [ ] Implement validation rules matching Firebase security rules
+- [ ] Create data integrity monitoring
+- [ ] Add validation for data transformations
 
-### Cards Management
-- [ ] Implement card linking to bank accounts
-- [ ] Add card status (active/inactive) toggling
-- [ ] Implement primary card selection
-- [ ] Add spending limits and controls
-- [ ] Create card detail view with transaction history
+## Phase 4: API Layer Updates
 
-### Billers & Beneficiaries
-- [ ] Complete biller creation and management
-- [ ] Implement beneficiary creation and management
-- [ ] Add recurring payment setup for billers
-- [ ] Create beneficiary nickname and destination management
-- [ ] Implement beneficiary/biller search functionality
+### 4.1 Dual API Support
+- [ ] Modify src/api.js to support both Firebase and PostgreSQL backends
+- [ ] Add feature flag for backend selection
+- [ ] Implement fallback mechanisms
+- [ ] Update API functions for dual support
 
-### Onboarding & User Experience
-- [ ] Complete onboarding wizard flow
-- [ ] Implement spotlight tooltips for feature discovery
-- [ ] Add user tour for first-time users
-- [ ] Create empty states for data collections
-- [ ] Implement help/documentation section
+### 4.2 Performance Optimization
+- [ ] Add connection pooling for PostgreSQL
+- [ ] Implement query optimization
+- [ ] Create caching layer where appropriate
+- [ ] Add performance monitoring
 
-### Bank Connections
-- [ ] Implement external bank linking (sandbox mode)
-- [ ] Add bank connection status monitoring
-- [ ] Create automatic sync scheduling
-- [ ] Add manual sync trigger
-- [ ] Implement connection error handling and retry
+## Phase 5: Testing and Validation
 
-### UI/UX Enhancements
-- [ ] Implement toast notification system improvements
-- [ ] Add loading skeletons for all data-heavy components
-- [ ] Create responsive design adjustments
-- [ ] Add animation enhancements with Framer Motion
-- [ ] Implement keyboard shortcuts for power users
-- [ ] Add dark/light theme toggle (beyond predefined themes)
+### 5.1 Data Integrity Tests
+- [ ] Verify data consistency between Firebase and PostgreSQL
+- [ ] Test synchronization reliability
+- [ ] Validate error handling and recovery
+- [ ] Test data migration integrity
 
-### Testing & Quality Assurance
-- [ ] Create unit tests for utility functions
-- [ ] Implement integration tests for key user flows
-- [ ] Add end-to-end testing for critical paths
-- [ ] Create performance benchmarks for data loading
-- [ ] Implement error boundary components
-- [ ] Add form validation improvements
+### 5.2 Performance Testing
+- [ ] Benchmark read/write operations
+- [ ] Test synchronization latency
+- [ ] Validate scalability limits
+- [ ] Optimize performance bottlenecks
 
-### Deployment & DevOps
-- [ ] Set up CI/CD pipeline for automated builds
-- [ ] Implement environment variable management
-- [ ] Create deployment scripts for different environments
-- [ ] Add monitoring and error tracking
-- [ ] Implement feature flags for gradual rollout
-- [ ] Create backup and recovery procedures
+### 5.3 User Experience Testing
+- [ ] Ensure seamless transition for users
+- [ ] Validate real-time sync behavior
+- [ ] Test error scenarios and recovery
+- [ ] Verify all user flows work correctly
 
-### Documentation
-- [ ] Create API documentation for frontend components
-- [ ] Add code comments and JSDoc where needed
-- [ ] Create developer onboarding guide
-- [ ] Add troubleshooting FAQ
-- [ ] Create release notes template
+## Critical Dependencies
+- [ ] Complete Phase 1 before Phase 2
+- [ ] Complete Phase 2 before Phase 3
+- [ ] Complete Phase 3 before Phase 4
+- [ ] Complete Phase 4 before Phase 5
 
-## Future Backend Development: A.C.I.D. Compliant Docker SQL Backend
+## Success Criteria
+- [ ] PostgreSQL database mirrors Firebase Firestore structure
+- [ ] Real-time synchronization works reliably
+- [ ] App functions seamlessly with both backends
+- [ ] Performance meets or exceeds current Firebase implementation
+- [ ] Data integrity is maintained throughout migration
 
-### Database Design
-- [ ] Design normalized SQL schema for FinVault data model
-- [ ] Create tables for users, accounts, transactions, budgets, vaults, cards
-- [ ] Define relationships and constraints (foreign keys, unique constraints)
-- [ ] Implement proper indexing strategy for performance
+## Risk Mitigation
+- [ ] Implement gradual migration with feature flags
+- [ ] Maintain Firebase as primary backend during transition
+- [ ] Add comprehensive error handling and logging
+- [ ] Create rollback procedures for each phase
+- [ ] Test thoroughly before production deployment
 
-### Docker Setup
-- [ ] Create Dockerfile for PostgreSQL/MySQL database service
-- [ ] Configure docker-compose.yml for development environment
-- [ ] Set up environment variables and secrets management
-- [ ] Implement health checks and restart policies
-
-### A.C.I.D. Compliance
-- [ ] **Atomicity**: Implement transaction rollback mechanisms
-- [ ] **Consistency**: Define and enforce data constraints and validation rules
-- [ ] **Isolation**: Configure appropriate transaction isolation levels
-- [ ] **Durability**: Implement proper backup and recovery procedures
-- [ ] Add connection pooling and resource management
-- [ ] Implement query optimization and performance monitoring
-
-### API Layer
-- [ ] Create RESTful API endpoints for all frontend operations
-- [ ] Implement authentication and authorization (JWT/OAuth)
-- [ ] Add input validation and sanitization
-- [ ] Create API documentation (OpenAPI/Swagger)
-- [ ] Implement rate limiting and abuse prevention
-
-### Migration Strategy
-- [ ] Design data migration path from Firestore to SQL
-- [ ] Create ETL scripts for data transformation
-- [ ] Implement dual-write mechanism during transition
-- [ ] Add feature flag for backend selection (Firestore/SQL)
+## Post-Migration Tasks
+- [ ] Monitor system performance after migration
+- [ ] Gather user feedback on new system
+- [ ] Optimize based on real-world usage patterns
+- [ ] Plan eventual full migration to PostgreSQL backend
+- [ ] Document migration process for future reference

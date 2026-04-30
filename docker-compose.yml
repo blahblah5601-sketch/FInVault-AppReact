@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  postgres:
+    build:
+      context: .
+      dockerfile: ./docker/postgres.Dockerfile
+    container_name: finvault-app-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=finvault
+      - POSTGRES_USER=finvault
+      - POSTGRES_PASSWORD=finvault
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U finvault -d finvault"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - finvault-network
+
+  dev:
+    build:
+      context: .
+      dockerfile: ./docker/dev.Dockerfile
+    container_name: finvault-app-dev
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - VITE_FIREBASE_APIKEY=${VITE_FIREBASE_APIKEY}
+      - VITE_FIREBASE_AUTHDOMAIN=${VITE_FIREBASE_AUTHDOMAIN}
+      - VITE_FIREBASE_PROJECTID=${VITE_FIREBASE_PROJECTID}
+      - VITE_FIREBASE_STORAGEBUCKET=${VITE_FIREBASE_STORAGEBUCKET}
+      - VITE_FIREBASE_MESSAGINGSENDERID=${VITE_FIREBASE_MESSAGINGSENDERID}
+      - VITE_FIREBASE_APPID=${VITE_FIREBASE_APPID}
+      - VITE_FIREBASE_MEASUREMENTID=${VITE_FIREBASE_MEASUREMENTID}
+      - VITE_POSTGRES_USER=${VITE_POSTGRES_USER}
+      - VITE_POSTGRES_HOST=${VITE_POSTGRES_HOST}
+      - VITE_POSTGRES_DB=${VITE_POSTGRES_DB}
+      - VITE_POSTGRES_PASSWORD=${VITE_POSTGRES_PASSWORD}
+      - VITE_POSTGRES_PORT=${VITE_POSTGRES_PORT}
+      - VITE_RAAST_CLIENT_ID=${VITE_RAAST_CLIENT_ID}
+      - VITE_RAAST_CLIENT_SECRET=${VITE_RAAST_CLIENT_SECRET}
+      - VITE_PAYPAK_CLIENT_ID=${VITE_PAYPAK_CLIENT_ID}
+      - VITE_PAYPAK_CLIENT_SECRET=${VITE_PAYPAK_CLIENT_SECRET}
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - finvault-network
+    stdin_open: true
+    tty: true
+
+volumes:
+  postgres_data:
+
+networks:
+  finvault-network:
+    driver: bridge

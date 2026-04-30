@@ -20,6 +20,21 @@ service cloud.firestore {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
     }
 
+    // ==================== SYNC METADATA ====================
+
+    // Sync metadata validation
+    function isValidSyncMetadata() {
+      let data = request.resource.data;
+      return (
+        // Sync fields are optional but if present must be correct types
+        (!('syncVersion' in data) || data.syncVersion is integer) &&
+        (!('lastSyncedAt' in data) || data.lastSyncedAt is timestamp) &&
+        (!('syncStatus' in data) || data.syncStatus is string) &&
+        (!('syncAttempts' in data) || data.syncAttempts is integer) &&
+        (!('syncErrors' in data) || data.syncErrors is string)
+      );
+    }
+
     // ==================== VALIDATION FUNCTIONS ====================
 
     // Existing validations (keeping for backward compatibility)
@@ -55,7 +70,10 @@ service cloud.firestore {
         data.color is string &&
 
         // Timestamp validation
-        data.createdAt == request.time
+        data.createdAt == request.time &&
+
+        // Sync metadata validation
+        isValidSyncMetadata()
       );
     }
 

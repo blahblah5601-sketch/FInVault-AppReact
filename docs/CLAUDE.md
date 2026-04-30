@@ -25,10 +25,11 @@ Note: These are for development/testing only. In production, users should regist
 - **Frontend**: React 19 with Vite bundler
 - **Styling**: Tailwind CSS
 - **State Management**: React Context & useState/useEffect hooks (no external state library)
-- **Backend**: Firebase Authentication & Firestore Database
+- **Backend**: Local Firebase (parent) + PostgreSQL (child mirror)
 - **Routing**: React Router DOM v7
 - **Animations**: Framer Motion
 - **Icons**: Lucide React
+- **Database**: PostgreSQL 15 with UUID primary keys
 
 ### Data Model
 The app uses Firestore with a users subcollection structure:
@@ -89,6 +90,46 @@ The app uses Firestore with a users subcollection structure:
   - Firebase Functions (for dataconnect)
 - Environment variables in .env.local (not committed)
 - Firebase configuration in src/firebase.js
+
+## Docker Development Environment
+- **Docker Setup**: The project includes Docker support for PostgreSQL database
+- **Database Schema**: Uses UUID-based schema with proper foreign key relationships
+- **Sample Data**: Pre-populated with test user (test@finvault.app) and sample accounts/vaults
+- **Scripts**: `database/init.sql` contains comprehensive schema and sample data for all tables
+- **Quick Start**: `docker-compose up -d` starts PostgreSQL with health checks and volume persistence
+- **Environment**: Use `.env.docker` for Docker-specific configuration
+- **Database Container**: Running PostgreSQL 15 Alpine with user `finvault` and database `finvault`
+- **Sample Data Includes**: Test user with checking ($5000) and savings ($15000) accounts, sample vaults, budgets, beneficiaries, billers, cards, and transaction history
+
+## Database Architecture
+
+### Parent-Child Sync System
+- **Parent (Master)**: Local Firebase - all writes go here
+- **Child (Mirror)**: PostgreSQL - read-only mirror with data inheritance
+- **Sync Direction**: Local Firebase → PostgreSQL (unidirectional)
+- **Data Residency**: All sensitive data stays in PostgreSQL
+- **Compliance**: PostgreSQL handles regulatory requirements
+
+### PostgreSQL Structure (Read-Only Mirror)
+- **Primary Keys**: UUID (uuid_generate_v4()) not SERIAL
+- **Tables**: users, accounts, transactions, vaults, budgets, settings, history, cards, beneficiaries, billers
+- **Foreign Keys**: All reference UUIDs from users(id)
+- **Sample Data**: Test user: test@finvault.app, Accounts: checking ($5000), savings ($15000)
+- **Indexes**: Optimized for performance on frequently queried columns
+- **Docker Setup**: PostgreSQL container with user `finvault` and database `finvault`
+- **Sample Data Includes**: Test user with checking ($5000) and savings ($15000) accounts, sample vaults, budgets, beneficiaries, billers, cards, and transaction history
+
+## SQL Scripts
+- `database/init.sql`: Comprehensive schema and sample data for all tables
+- **Important**: Scripts expect existing test user and accounts/vaults
+- **Docker Integration**: `database/init.sql` is automatically executed by PostgreSQL container on first run
+
+## Error Handling Guidelines
+- **When a command returns an error, read the error into account for the next step, instead of repeating the command again and again.**
+- Always analyze error messages before retrying operations
+- Check for common issues like missing dependencies, incorrect paths, or permission problems
+- Use error context to adjust approach rather than blindly retrying
+- When troubleshooting, read relevant files and logs to understand the root cause
 
 ## Documentation
 - **Iteration Log**: `docs/iteration-log.md` - Detailed changelog and development history tracking all changes, bug fixes, and improvements

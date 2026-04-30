@@ -146,6 +146,34 @@ const AccountsPage = ({ accounts: accountsProp, showToast }) => {
           <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>Manage your main account and sub-accounts</p>
         </div>
 
+        {/* Total Balance Card */}
+        <div className="rounded-panel p-6 border mb-6" style={{ backgroundColor: 'var(--color-panel)', borderColor: 'var(--color-border)' }}>
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{
+              backgroundColor: 'rgba(201,168,76,0.15)',
+              color: 'var(--color-gold)',
+            }}>
+              <Building2 className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold">Total Balance</h3>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>Combined balance across all accounts</p>
+            </div>
+          </div>
+
+          <div className="rounded-sm-panel p-4 mb-4" style={{
+            background: 'linear-gradient(135deg, var(--color-accent, #1a1f3a), #2a3060)',
+            color: 'white',
+          }}>
+            <div className="text-[10px] tracking-[1px] mb-1" style={{ color: 'rgba(255,255,255,0.45)' }}>
+              TOTAL BALANCE
+            </div>
+            <div className="font-mono text-[26px] font-bold tracking-[-0.5px]">
+              Rs {accounts?.reduce((sum, account) => sum + (account.balance || 0), 0).toLocaleString('en-US') || '0.00'}
+            </div>
+          </div>
+        </div>
+
         {/* Main Account Card */}
         {mainAccount && (
           <div className="rounded-panel p-6 border mb-6" style={{ backgroundColor: 'var(--color-panel)', borderColor: 'var(--color-border)' }}>

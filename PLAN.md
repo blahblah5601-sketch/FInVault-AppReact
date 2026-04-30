@@ -1,107 +1,194 @@
-# FinVault App Development Plan
+# FinVault Development Plan
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## Project Overview
+FinVault is a comprehensive banking application built with modern web technologies. This plan outlines the development approach, architecture decisions, and implementation roadmap.
 
-## Development Commands
+## Technology Stack
 
-- **Start development server**: `pnpm dev`
-- **Build for production**: `pnpm build`
-- **Preview production build**: `pnpm preview`
-- **Deploy to GitHub Pages**: `pnpm deploy` (runs build then deploys)
-- **Lint code**: `pnpm lint`
-- **Run tests**: Currently no test runner configured in package.json (only validation.test.js exists)
+### Frontend
+- **React 19** - Latest React with modern features
+- **Vite** - Fast build tool and development server
+- **Tailwind CSS** - Utility-first CSS framework
+- **React Router** - Client-side routing
+- **Framer Motion** - Animations and micro-interactions
 
-## Code Architecture & Structure
+### Backend & Database
+- **Firebase Authentication** - User authentication and security
+- **Firebase Firestore** - NoSQL database for real-time data
+- **PostgreSQL** (Docker) - Relational database for complex queries
+- **Node.js** - JavaScript runtime environment
 
-### Technology Stack
-- **Frontend**: React 19 with Vite bundler
-- **Styling**: Tailwind CSS
-- **State Management**: React Context & useState/useEffect hooks (no external state library)
-- **Backend**: Firebase Authentication & Firestore Database
-- **Routing**: React Router DOM v7
-- **Animations**: Framer Motion
-- **Icons**: Lucide React
+### Payment Integration
+- **RaaS Payment Gateway** - Payment processing
+- **PayPak Payment Gateway** - Alternative payment method
 
-### Data Model
-The app uses Firestore with a users subcollection structure:
-```
-/users/{userId}/
-  ├── budgets/[budgetId]
-  ├── vaults/[vaultId]
-  ├── accounts/[accountId]
-  ├── transactions/[transactionId]
-  ├── history/[historyId]
-  └── settings (single document)
-```
+### Development Tools
+- **Docker** - Containerization for consistent environments
+- **Docker Compose** - Multi-container orchestration
+- **Nginx** - Production web server
+- **ESLint** - Code quality and linting
 
-### Key Directories
-- `src/components` - Reusable UI components organized by feature:
-  - Dashboard components (CardCarousel, DashboardVaultItem, etc.)
-  - Page components (BudgetsPage, VaultsPage, TransactionsPage, SettingsPage)
-  - Modal components (CreateBudgetModal, VaultActionModal, etc.)
-  - Layout components (AppLayout, Sidebar, Header)
-- `src/firebase.js` - Firebase initialization and exports
-- `src/api.js` - Firestore CRUD operations for budgets, vaults, transactions
-- `src/theme.js` - Theme management functions
-- `src/utils/` - Utility functions (validation)
-- `dataconnect-generated/` - Firebase Data Connect generated client code
-- `functions/` - Firebase Functions (Node.js)
-- `firestore.rules` - Firestore security rules
-- `firestore.indexes.json` - Firestore composite indexes
+## Architecture Decisions
 
-### Authentication Flow
-1. App.jsx uses `onAuthStateChanged` to monitor auth state
-2. On login: loads user preferences, sets up real-time listeners for all data collections
-3. On logout: clears all data and resets theme
-4. AuthComponent.jsx handles login/register UI
+### Database Strategy
+- **Hybrid Approach**: Firebase for authentication + PostgreSQL for complex data
+- **Real-time Sync**: Firebase for live updates across devices
+- **Complex Queries**: PostgreSQL for reporting and analytics
+- **Data Migration**: Plan to migrate from Firebase to PostgreSQL gradually
 
-### Real-time Data Synchronization
-- Uses Firestore `onSnapshot` listeners in App.jsx useEffect
-- Collections synced: accounts, budgets, vaults, transactions, history
-- Listeners are cleaned up on auth changes to prevent memory leaks
+### Containerization
+- **Development**: Node.js container with hot reload
+- **Database**: PostgreSQL container with initialization scripts
+- **Production**: Nginx for static serving + Node.js for API
+- **Isolation**: Each service runs in separate container
 
-### Theme System
-- User preferences stored in Firestore settings document
-- Theme applied via `applyTheme()` function from theme.js
-- Default theme: 'Slate'
-- Theme changes persist across sessions via Firestore
+### Security Model
+- **Environment Variables**: All secrets stored in environment
+- **Network Isolation**: Docker internal networking
+- **Input Validation**: Client and server-side validation
+- **Authentication**: Firebase Auth with role-based access
 
-### Common Development Patterns
-1. **Component Structure**: Most components are functional components using hooks
-2. **Styling**: Tailwind utility-first CSS with custom colors in theme.js
-3. **Firebase Operations**: All Firestore operations go through api.js functions
-4. **Error Handling**: API functions return boolean success/failure or objects with {success, message}
-5. **Toast Notifications**: Centralized showToast function in App.jsx passed down as prop
-6. **Modal Pattern**: Modals are state-controlled components that receive data via props
+## Implementation Phases
+
+### Phase 1: Core Infrastructure (Completed)
+- [x] Project initialization with React 19 and Vite
+- [x] Firebase integration setup
+- [x] Docker containerization
+- [x] PostgreSQL database schema
+- [x] Development environment configuration
+
+### Phase 2: User Authentication (In Progress)
+- [ ] Firebase Authentication UI
+- [ ] User registration and login flows
+- [ ] Password reset functionality
+- [ ] Session management
+- [ ] Role-based access control
+
+### Phase 3: Core Banking Features
+- [ ] Account management (checking, savings)
+- [ ] Transaction processing
+- [ ] Balance tracking
+- [ ] Transaction history
+- [ ] Account statements
+
+### Phase 4: Advanced Features
+- [ ] Vaults (savings goals)
+- [ ] Budgeting system
+- [ ] Financial analytics
+- [ ] Notifications and alerts
+- [ ] Export functionality
+
+### Phase 5: Payment Integration
+- [ ] RaaS payment gateway integration
+- [ ] PayPak payment gateway integration
+- [ ] Payment history tracking
+- [ ] Refund processing
+- [ ] Payment notifications
+
+### Phase 6: Production Deployment
+- [ ] Nginx production configuration
+- [ ] SSL certificate setup
+- [ ] Performance optimization
+- [ ] Monitoring and logging
+- [ ] Backup and recovery procedures
+
+## Database Schema
+
+### Users Collection
+- User authentication data
+- Profile information
+- Preferences and settings
+- Account associations
+
+### Accounts Collection
+- Account types (checking, savings, credit)
+- Balance tracking
+- Account numbers
+- Transaction associations
+
+### Transactions Collection
+- Transaction types (deposit, withdrawal, transfer)
+- Amounts and currencies
+- Status tracking
+- Category associations
+
+### Vaults Collection
+- Savings goals
+- Target amounts
+- Progress tracking
+- Contribution history
+
+### Budgets Collection
+- Monthly budget limits
+- Category tracking
+- Spending analysis
+- Alert thresholds
+
+## Development Workflow
 
 ### Environment Setup
-- Requires Firebase project with:
-  - Authentication (Email/Password enabled)
-  - Firestore Database
-  - Firebase Functions (for dataconnect)
-- Environment variables in .env.local (not committed)
-- Firebase configuration in src/firebase.js
+1. Clone repository
+2. Install dependencies: `npm install`
+3. Set up environment variables
+4. Start development server: `npm run dev`
 
-## Firebase Data Connect
-This project uses Firebase Data Connect (PostgreSQL via Firebase):
-- Schema defined in dataconnect/ directory
-- Generated client code in src/dataconnect-generated/
-- Currently appears to be in transition/experimental use alongside direct Firestore access
+### Code Quality
+- ESLint for code linting
+- Pre-commit hooks for validation
+- Code review process
+- Automated testing
 
-## Current Status (Updated: 2026-04-10)
-Based on code review and recent work:
-- Basic authentication flow implemented
-- Firebase initialization and Firestore setup
-- Core components for budgets, vaults, transactions
-- Theme system with user preferences
-- Real-time data listeners in App.jsx
-- API functions for CRUD operations
-- Modals and panels for user interactions
-- Onboarding system
-- Payment processing capabilities with RAAS (bank transfers) and PayPak (card payments) integration
-- QR Panel supports both bank transfers and card payments
-- Add Funds Panel supports both bank transfers and card payments
-- NFC Payments prepared for future card payment API linkage
-- RAAS service created for bank transfer payments (RTP Now)
-- PayPak service created for card payments (OAuth 2.0 implemented)
-- All payment panel integrations completed
+### Deployment Process
+1. Build application: `npm run build`
+2. Test in staging environment
+3. Deploy to production
+4. Monitor application health
+
+## Risk Management
+
+### Technical Risks
+- **Database Migration**: Firebase to PostgreSQL transition
+- **Payment Integration**: Gateway API changes
+- **Performance**: Scaling with user growth
+- **Security**: Authentication and data protection
+
+### Mitigation Strategies
+- **Incremental Migration**: Gradual database transition
+- **API Abstraction**: Payment gateway abstraction layer
+- **Caching**: Implement caching strategies
+- **Security Audits**: Regular security assessments
+
+## Success Metrics
+
+### User Metrics
+- Active user count
+- Transaction volume
+- Feature adoption rates
+- User retention
+
+### Technical Metrics
+- Application performance
+- Database query efficiency
+- Container resource usage
+- Deployment frequency
+
+### Business Metrics
+- Revenue generation
+- User acquisition cost
+- Customer satisfaction
+- Market penetration
+
+## Next Steps
+
+1. Complete user authentication implementation
+2. Implement core banking features
+3. Integrate payment gateways
+4. Set up production deployment
+5. Conduct security audit
+6. Performance optimization
+
+---
+
+**Last Updated**: 2026-04-15  
+**Version**: 1.0  
+**Author**: Development Team

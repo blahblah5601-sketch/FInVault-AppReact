@@ -17,10 +17,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Frontend**: React 19 with Vite bundler
 - **Styling**: Tailwind CSS
 - **State Management**: React Context & useState/useEffect hooks (no external state library)
-- **Backend**: Firebase Authentication & Firestore Database
+- **Backend**: Local Firebase (parent) + PostgreSQL (child mirror)
 - **Routing**: React Router DOM v7
 - **Animations**: Framer Motion
 - **Icons**: Lucide React
+- **Database**: PostgreSQL 15 with UUID primary keys
 
 ### Data Model
 The app uses Firestore with a users subcollection structure:

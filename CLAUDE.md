@@ -1,97 +1,131 @@
-# CLAUDE.md
+# FinVault Development Documentation
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## Project Overview
+FinVault is a banking application built with React 19, Vite, Tailwind CSS, Firebase Authentication & Firestore Database. The app uses a parent-child sync system for batch operations from Firebase to PostgreSQL.
 
-## Test User Credentials (for development/testing)
+## Development Process Lessons Learned
 
-When testing the application manually, you can use these credentials:
-- Email: test@finvault.app
-- Password: TestPassword123!
+### 1. Module System Management
+**Issue:** Inconsistent use of CommonJS vs ES modules led to multiple errors during development.
 
-Note: These are for development/testing only. In production, users should register their own accounts.
+**What happened:**
+- Initially used `require()` statements in ES module files
+- Created circular dependency issues between files
+- Required multiple conversions between CommonJS and ES modules
+- Caused runtime errors and debugging delays
 
-## Development Commands
+**Better approach:**
+- Always use ES module syntax (`import`/`export`) when `"type": "module"` is set in package.json
+- Be consistent with module system across all files
+- Test imports early in the development process
+- Use `import * as` for libraries that don't export default
 
-- **Start development server**: `pnpm dev`
-- **Build for production**: `pnpm build`
-- **Preview production build**: `pnpm preview`
-- **Deploy to GitHub Pages**: `pnpm deploy` (runs build then deploys)
-- **Lint code**: `pnpm lint`
-- **Run tests**: Currently no test runner configured in package.json (only validation.test.js exists)
+### 2. Error Handling and Debugging
+**Issue:** Insufficient error handling in CLI scripts caused repeated failures.
 
-## Code Architecture & Structure
+**What happened:**
+- CLI scripts failed due to missing dependencies
+- Environment variable issues weren't caught early
+- Error messages weren't clear enough for debugging
 
-### Technology Stack
-- **Frontend**: React 19 with Vite bundler
-- **Styling**: Tailwind CSS
-- **State Management**: React Context & useState/useEffect hooks (no external state library)
-- **Backend**: Firebase Authentication & Firestore Database
-- **Routing**: React Router DOM v7
-- **Animations**: Framer Motion
-- **Icons**: Lucide React
+**Better approach:**
+- Implement comprehensive environment variable validation
+- Add try-catch blocks with meaningful error messages
+- Use proper error logging and reporting
+- Test CLI scripts with different scenarios
 
-### Data Model
-The app uses Firestore with a users subcollection structure:
-```
-/users/{userId}/
-  ├── budgets/[budgetId]
-  ├── vaults/[vaultId]
-  ├── accounts/[accountId]
-  ├── transactions/[transactionId]
-  ├── history/[historyId]
-  └── settings (single document)
-```
+### 3. Code Organization and Structure
+**Issue:** Mixed responsibilities in files led to complexity.
 
-### Key Directories
-- `src/components` - Reusable UI components organized by feature:
-  - Dashboard components (CardCarousel, DashboardVaultItem, etc.)
-  - Page components (BudgetsPage, VaultsPage, TransactionsPage, SettingsPage)
-  - Modal components (CreateBudgetModal, VaultActionModal, etc.)
-  - Layout components (AppLayout, Sidebar, Header)
-- `src/firebase.js` - Firebase initialization and exports
-- `src/api.js` - Firestore CRUD operations for budgets, vaults, transactions
-- `src/theme.js` - Theme management functions
-- `src/utils/` - Utility functions (validation)
-- `dataconnect-generated/` - Firebase Data Connect generated client code
-- `functions/` - Firebase Functions (Node.js)
-- `firestore.rules` - Firestore security rules
-- `firestore.indexes.json` - Firestore composite indexes
+**What happened:**
+- Sync scheduler had too many responsibilities
+- Monitoring code was intertwined with business logic
+- Made the code harder to test and maintain
 
-### Authentication Flow
-1. App.jsx uses `onAuthStateChanged` to monitor auth state
-2. On login: loads user preferences, sets up real-time listeners for all data collections
-3. On logout: clears all data and resets theme
-4. AuthComponent.jsx handles login/register UI
+**Better approach:**
+- Separate concerns (business logic, monitoring, error handling)
+- Create dedicated modules for specific functionality
+- Use clear naming conventions
+- Follow single responsibility principle
 
-### Real-time Data Synchronization
-- Uses Firestore `onSnapshot` listeners in App.jsx useEffect
-- Collections synced: accounts, budgets, vaults, transactions, history
-- Listeners are cleaned up on auth changes to prevent memory leaks
+### 4. Testing and Validation
+**Issue:** Insufficient testing before deployment caused multiple issues.
 
-### Theme System
-- User preferences stored in Firestore settings document
-- Theme applied via `applyTheme()` function from theme.js
-- Default theme: 'Slate'
-- Theme changes persist across sessions via Firestore
+**What happened:**
+- Didn't test module imports early enough
+- Missed dependency issues until runtime
+- CLI scripts failed in production scenarios
 
-### Common Development Patterns
-1. **Component Structure**: Most components are functional components using hooks
-2. **Styling**: Tailwind utility-first CSS with custom colors in theme.js
-3. **Firebase Operations**: All Firestore operations go through api.js functions
-4. **Error Handling**: API functions return boolean success/failure or objects with {success, message}
-5. **Toast Notifications**: Centralized showToast function in App.jsx passed down as prop
-6. **Modal Pattern**: Modals are state-controlled components that receive data via props
+**Better approach:**
+- Test all imports and dependencies early
+- Validate environment variables before starting services
+- Create test cases for different scenarios
+- Use automated testing where possible
 
-### Environment Setup
-- Requires Firebase project with:
-  - Authentication (Email/Password enabled)
-  - Firestore Database
-  - Firebase Functions (for dataconnect)
-- Environment variables in .env.local (not committed)
-- Firebase configuration in src/firebase.js
+### 5. Documentation and Comments
+**Issue:** Lack of proper documentation made debugging harder.
 
-## Firebase Data Connect
-This project uses Firebase Data Connect (PostgreSQL via Firebase):
-- Schema defined in dataconnect/ directory
-- Generated client code in src/dataconnect-generated/
-- Currently appears to be in transition/experimental use alongside direct Firestore access
+**What happened:**
+- Complex logic wasn't well documented
+- Error messages weren't descriptive
+- Made it harder for others (and future self) to understand the code
+
+**Better approach:**
+- Add clear comments for complex logic
+- Document error handling strategies
+- Include usage examples in CLI scripts
+- Maintain up-to-date documentation
+
+## Best Practices for Future Development
+
+### 1. Module System
+- Always use ES modules when `"type": "module"` is set
+- Use `import * as` for libraries without default exports
+- Test imports early in development
+- Be consistent across all files
+
+### 2. Error Handling
+- Validate all environment variables at startup
+- Use try-catch blocks with meaningful error messages
+- Implement proper logging and monitoring
+- Test error scenarios
+
+### 3. Code Organization
+- Separate concerns into different modules
+- Follow single responsibility principle
+- Use clear naming conventions
+- Keep functions focused and testable
+
+### 4. Testing
+- Test imports and dependencies early
+- Validate all scenarios
+- Use automated testing where possible
+- Test CLI scripts thoroughly
+
+### 5. Documentation
+- Add clear comments for complex logic
+- Document error handling strategies
+- Include usage examples
+- Maintain up-to-date documentation
+
+## Key Learnings
+
+1. **Consistency is crucial** - Be consistent with module systems and coding patterns
+2. **Test early and often** - Catch issues before they become problems
+3. **Separate concerns** - Keep code modular and focused
+4. **Error handling matters** - Good error handling saves debugging time
+5. **Documentation helps** - Clear documentation makes maintenance easier
+
+## Next Steps
+
+1. Review all existing code for module system consistency
+2. Implement comprehensive error handling
+3. Add proper documentation and comments
+4. Create automated tests for critical functionality
+5. Set up proper logging and monitoring
+
+---
+
+*Document last updated: 2026-04-21*
+*Version: 1.0*
+*Author: Development Team*

@@ -116,6 +116,13 @@ const SpendArrow = () => (
   </svg>
 );
 
+// Transfer arrow icon
+const TransferIcon = () => (
+  <svg viewBox="0 0 18 18" fill="none" width="18" height="18">
+    <path d="M9 4l5 5M9 4l-5 5M9 14l5-5M9 14l-5-5" stroke="#ff9f0a" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
 export default function DashboardPage({
   accounts,
   budgets,
@@ -127,6 +134,7 @@ export default function DashboardPage({
   onAddFunds,
   onQRPayment,
   onNFCPayment,
+  onTransferBetweenAccounts,
   preferences
 }) {
   const prefs = preferences || {
@@ -138,7 +146,8 @@ export default function DashboardPage({
   };
   const showIBANOnHero = prefs.showIBANOnHero;
   const showBalanceByDefault = prefs.showBalanceByDefault;
-  const mainAccount = accounts?.[0];
+  // Find the main account (accountLevel: 'main') or fallback to first account
+  const mainAccount = accounts?.find(acc => acc.accountLevel === 'main') || accounts?.[0];
 
   const activeBudgetsCount = budgets?.filter(b => b.spent > 0).length || 0;
   const activeVaultsCount = vaults?.filter(v => v.current > 0).length || 0;
@@ -158,7 +167,7 @@ export default function DashboardPage({
   };
 
   // Compute monthly income vs spend from transactions history (if available)
-  const totalBalance = mainAccount?.balance || 0;
+  const totalBalance = accounts?.reduce((sum, account) => sum + (account.balance || 0), 0) || 0;
 
   // Get color for progress bar based on percentage
   const getBudgetBarColor = (pct) => {
@@ -175,6 +184,7 @@ export default function DashboardPage({
     { label: 'Pay Bill', icon: PayBillIcon, bgClass: 'gold', onClick: () => setActivePage('payments') },
     { label: 'QR Pay', icon: QRIcon, bgClass: 'blue', onClick: onQRPayment },
     { label: 'NFC Pay', icon: NFCIcon, bgClass: 'purple', onClick: onNFCPayment },
+    { label: 'Transfer', icon: TransferIcon, bgClass: 'orange', onClick: onTransferBetweenAccounts },
     { label: 'Savings', icon: SavingsIcon, bgClass: 'red', onClick: () => setActivePage('vaults') },
   ];
 
@@ -185,6 +195,7 @@ export default function DashboardPage({
     blue: { bg: 'var(--color-blue2, #dde8ff)', color: '#2056d4' },
     red: { bg: '#fde8e8', color: '#d63b3b' },
     purple: { bg: '#ede8fe', color: '#7c3aed' },
+    orange: { bg: '#fff7ed', color: '#ff9f0a' },
   };
 
   return (
@@ -228,11 +239,11 @@ export default function DashboardPage({
           </div>
 
           <div className="text-[10px] tracking-[1px] mb-1" style={{ color: 'rgba(255,255,255,0.45)' }}>
-            {mainAccount ? mainAccount.name.toUpperCase() : 'TOTAL BALANCE'}
+            ACTIVE ACCOUNT BALANCE
           </div>
           <div className="flex items-center gap-2 mb-1">
             <span className="font-mono text-[26px] font-bold tracking-[-0.5px]">
-              {formatBalance(totalBalance)}
+              {formatBalance(mainAccount?.balance)}
             </span>
             <motion.button
               whileHover={{ scale: 1.1 }}
