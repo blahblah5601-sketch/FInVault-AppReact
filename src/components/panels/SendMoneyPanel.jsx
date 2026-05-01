@@ -1,550 +1,545 @@
 // src/components/panels/SendMoneyPanel.jsx
-import { createPayment, getAccounts, transferBetweenAccounts, transferToUser, findUserByEmail, findUserByIBAN } from '../../api';
-import { createRtpNowPayment, validateBeneficiary } from '../../services/raastService';
-import { useState, useEffect } from 'react';
+// ─────────────────────────────────────────────────────────────────────────────
+// Wired to the new transferEngine.js:
+//   • Generates a stable idempotency key per submission (re-submitting is safe)
+//   • Shows PENDING → COMPLETE / FAILED lifecycle in the UI
+//   • All transfer paths (IBAN, Email, User-IBAN, Internal) unified
+// ─────────────────────────────────────────────────────────────────────────────
+
+import { useState, useEffect, useCallback } from 'react';
+import { getAccounts }           from '../../api';
+import {
+  transferBetweenAccounts,
+  transferToUser,
+  findUserByEmail,
+  findUserByIBAN,
+}                                from '../../utils/transferEngine';
 import { validateIBAN, formatIBAN } from '../../utils/ibanUtils';
-import { Users, Search, Mail, Phone } from 'lucide-react';
-import { auth } from '../../firebase';
+import { auth }                  from '../../firebase';
 
-const SendMoneyPanel = ({ isOpen, onClose, onSuccess, showToast }) => {
-  const [recipient, setRecipient] = useState('');
-  const [amount, setAmount] = useState('');
-  const [description, setDescription] = useState('');
-  const [ibanError, setIbanError] = useState(null);
-  const [isValidIBAN, setIsValidIBAN] = useState(false);
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState([]);
-  const [accounts, setAccounts] = useState([]);
-  const [isLoadingAccounts, setIsLoadingAccounts] = useState(false);
-  const [transferType, setTransferType] = useState('iban'); // 'iban', 'account', 'email', or 'user-iban'
-  const [fromAccountId, setFromAccountId] = useState('');
-  const [toAccountId, setToAccountId] = useState('');
-  const [fromAccountError, setFromAccountError] = useState(null);
-  const [toAccountError, setToAccountError] = useState(null);
+// ── Transfer-type options ────────────────────────────────────────────────────
+const TRANSFER_TYPES = [
+  { value: 'iban',      label: 'External IBAN'        },
+  { value: 'account',   label: 'My Accounts'           },
+  { value: 'email',     label: 'FinVault User (Email)' },
+  { value: 'user-iban', label: 'FinVault User (IBAN)'  },
+];
 
-  const mockBeneficiaries = [
-    { id: '1', name: 'Ali Hassan', iban: 'PK36FNVT0000123456789012' },
-    { id: '2', name: 'Fatima Khan', iban: 'PK36HABB0000987654321098' },
-    { id: '3', name: 'Ahmed Malik', iban: 'PK36MUCB0000555555555555' }
-  ];
-
-  const handleRecipientChange = async (e) => {
-    const value = e.target.value;
-    setRecipient(value);
-    setIbanError(null);
-    setIsValidIBAN(false);
-
-    // Reset search results for user lookup modes
-    if (transferType === 'email' || transferType === 'user-iban') {
-      setIsSearching(false);
-      setSearchResults([]);
-      return;
-    }
-
-    if (value.length >= 2) {
-      setIsSearching(true);
-      // Search both mock beneficiaries and user accounts
-      const ibanMatches = mockBeneficiaries.filter(b =>
-        b.name.toLowerCase().includes(value.toLowerCase()) ||
-        b.iban.includes(value.replace(/\s/g, '').toUpperCase())
-      );
-
-      const accountMatches = accounts.filter(acc =>
-        acc.name.toLowerCase().includes(value.toLowerCase()) ||
-        acc.ibanNumber?.includes(value.replace(/\s/g, '').toUpperCase()) ||
-        acc.accountNumber?.includes(value.replace(/\s/g, ''))
-      ).map(acc => ({
-        id: acc.id,
-        name: acc.name,
-        iban: acc.ibanNumber
-      }));
-
-      setSearchResults([...ibanMatches, ...accountMatches]);
-    } else {
-      setIsSearching(false);
-      setSearchResults([]);
-    }
+// ── Status badge helper ──────────────────────────────────────────────────────
+const StatusBadge = ({ status }) => {
+  const map = {
+    idle:       null,
+    loading:    { bg: 'rgba(201,168,76,0.12)', color: '#c9a84c', label: 'Processing…'  },
+    success:    { bg: 'rgba(14,124,110,0.15)', color: '#0e7c6e', label: '✓ Sent'        },
+    error:      { bg: 'rgba(214,59,59,0.12)',  color: '#d63b3b', label: 'Failed'        },
+    duplicate:  { bg: 'rgba(32,86,212,0.12)',  color: '#2056d4', label: '✓ Already sent' },
   };
-
-  useEffect(() => {
-    // Only validate IBAN for IBAN transfer type
-    if (transferType !== 'iban' && transferType !== 'user-iban') {
-      setIsValidIBAN(false);
-      setIbanError(null);
-      return;
-    }
-
-    const clean = recipient.replace(/\s/g, '');
-    if (clean.length === 24) {
-      const result = validateIBAN(clean);
-      setIsValidIBAN(result.valid);
-      setIbanError(result.valid ? null : result.error);
-    } else {
-      setIsValidIBAN(false);
-      setIbanError(null);
-    }
-  }, [recipient, transferType]);
-
-  const handleSelectBeneficiary = (beneficiary) => {
-    setRecipient(beneficiary.iban);
-    setIsSearching(false);
-    setSearchResults([]);
-    const result = validateIBAN(beneficiary.iban);
-    setIsValidIBAN(result.valid);
-    setIbanError(result.valid ? null : result.error);
-  };
-
-  const loadAccounts = async () => {
-    if (!auth.currentUser) return;
-    setIsLoadingAccounts(true);
-    try {
-      const accountsData = await getAccounts();
-      setAccounts(accountsData);
-    } catch (error) {
-      console.error('Error loading accounts:', error);
-      showToast('Failed to load accounts');
-    } finally {
-      setIsLoadingAccounts(false);
-    }
-  };
-
-  const handleFromAccountChange = (e) => {
-    setFromAccountId(e.target.value);
-    // Reset destination account when source changes
-    setToAccountId('');
-    setToAccountError(null);
-    setFromAccountError(null);
-  };
-
-  const handleToAccountChange = (e) => {
-    setToAccountId(e.target.value);
-    setToAccountError(null);
-  };
-
-  useEffect(() => {
-    loadAccounts();
-  }, [auth.currentUser]); // Reload accounts when auth state changes
-
-  const handleSendMoney = async () => {
-    if (!amount || parseFloat(amount) <= 0) { showToast('Please enter a valid amount'); return; }
-    if (!description) { showToast('Please enter a description'); return; }
-
-    // Check if this is an internal account transfer (by account selection)
-    if (transferType === 'account') {
-      // Handle transfer between user's own accounts
-      if (!fromAccountId) {
-        showToast('Please select a source account');
-        return;
-      }
-      if (!toAccountId) {
-        showToast('Please select a destination account');
-        return;
-      }
-      if (fromAccountId === toAccountId) {
-        showToast('Source and destination accounts must be different');
-        return;
-      }
-
-      try {
-        const fromAccount = accounts.find(acc => acc.ibanNumber === fromAccountId);
-        const toAccount = accounts.find(acc => acc.ibanNumber === toAccountId);
-
-        if (!fromAccount) {
-          showToast('Source account not found');
-          return;
-        }
-        if (!toAccount) {
-          showToast('Destination account not found');
-          return;
-        }
-
-        // Use the transferBetweenAccounts function from api
-        const transferResult = await transferBetweenAccounts(
-          fromAccount.id,
-          toAccount.id,
-          parseFloat(amount),
-          description || `Transfer from ${fromAccount.name} to ${toAccount.name}`
-        );
-
-        if (transferResult.success) {
-          onClose();
-          onSuccess();
-          showToast(transferResult.message);
-        } else {
-          showToast(transferResult.message || 'Internal transfer failed');
-        }
-        return;
-      } catch (error) {
-        console.error('Error in internal transfer:', error);
-        showToast('Internal transfer failed');
-        return;
-      }
-    }
-
-    // Handle different transfer types
-    if (transferType === 'email' || transferType === 'user-iban') {
-      // Handle user-to-user transfers
-      if (!recipient) { showToast('Please enter recipient identifier'); return; }
-
-      try {
-        const identifierType = transferType === 'email' ? 'email' : 'iban';
-        const transferResult = await transferToUser(
-          recipient,
-          parseFloat(amount),
-          description || `Transfer to ${recipient}`,
-          identifierType
-        );
-
-        if (transferResult.success) {
-          onClose();
-          onSuccess();
-          showToast(transferResult.message);
-        } else {
-          showToast(transferResult.message || 'Transfer failed');
-        }
-        return;
-      } catch (error) {
-        console.error('Error in user-to-user transfer:', error);
-        showToast('Transfer failed. Please try again.');
-        return;
-      }
-    }
-
-    // For IBAN or other transfers, we need a recipient
-    if (!recipient) { showToast('Please enter a recipient'); return; }
-
-    // Validate IBAN if it looks like one
-    if (recipient.length >= 14 && recipient.toUpperCase().startsWith('PK')) {
-      const validationResult = validateIBAN(recipient);
-      if (!validationResult.valid) { showToast(`Invalid IBAN: ${validationResult.error}`); return; }
-    }
-
-    try {
-      // Handle transfer between user's own accounts
-      if (!fromAccountId) {
-        showToast('Please select a source account');
-        return;
-      }
-      if (!toAccountId) {
-        showToast('Please select a destination account');
-        return;
-      }
-      if (fromAccountId === toAccountId) {
-        showToast('Source and destination accounts must be different');
-        return;
-      }
-
-      try {
-        const fromAccount = accounts.find(acc => acc.ibanNumber === fromAccountId);
-        const toAccount = accounts.find(acc => acc.ibanNumber === toAccountId);
-
-        if (!fromAccount) {
-          showToast('Source account not found');
-          return;
-        }
-        if (!toAccount) {
-          showToast('Destination account not found');
-          return;
-        }
-
-        // Use the transferBetweenAccounts function from api
-        const transferResult = await transferBetweenAccounts(
-          fromAccount.id,
-          toAccount.id,
-          parseFloat(amount),
-          description || `Transfer from ${fromAccount.name} to ${toAccount.name}`
-        );
-
-        if (transferResult.success) {
-          onClose();
-          onSuccess();
-          showToast(transferResult.message);
-        } else {
-          showToast(transferResult.message || 'Internal transfer failed');
-        }
-        return;
-      } catch (error) {
-        console.error('Error in internal transfer:', error);
-        showToast('Internal transfer failed');
-        return;
-      }
-    } catch (error) {
-      console.error('Error in account transfer handling:', error);
-      showToast('An error occurred during transfer processing');
-      return;
-    }
-
-    // Validate IBAN if it looks like one
-    if (recipient.length >= 14 && recipient.toUpperCase().startsWith('PK')) {
-      const validationResult = validateIBAN(recipient);
-      if (!validationResult.valid) { showToast(`Invalid IBAN: ${validationResult.error}`); return; }
-    }
-
-    try {
-      // For now, we'll use the existing createPayment function for local transfers
-      // In a full implementation, we would use RAAS APIs for interbank transfers
-      // and local API for intrabank transfers
-
-      // Check if this is likely an interbank transfer (different bank prefix)
-      // For demo purposes, we'll treat all IBAN transfers as potentially interbank
-      if (recipient.length >= 14 && recipient.toUpperCase().startsWith('PK')) {
-        // Use RAAS API for interbank transfers
-        const paymentDetails = {
-          merchantDetails: {
-            merchantId: 'MERCHANT001', // Placeholder
-            subDept: '0001',
-            dbaName: 'FinVault User',
-            merchantName: 'FinVault User',
-            iban: recipient, // The recipient's IBAN
-            bankBic: 'UNKNOWN', // Would extract from IBAN
-            merchantCategoryCode: '0000',
-            postalAddress: {
-              townName: 'Unknown',
-              subDept: '0001',
-              addressLine: 'Unknown'
-            },
-            contactDetails: {
-              phoneNo: '00000000000',
-              mobileNo: '00000000000',
-              email: 'user@finvault.pk',
-              dept: 'Personal',
-              website: 'www.finvault.pk',
-              merchantChannelId: 'WEB'
-            },
-            geoLocation: {
-              lat: '0.000000',
-              long: '0.000000'
-            }
-          },
-          payerDetails: {
-            additionalRequiredDetails: 'NON',
-            identificationDetails: {
-              loyaltyNo: '',
-              customerLabel: 'FinVault Customer'
-            }
-          },
-          paymentDetails: {
-            executionDateTime: new Date().toISOString().replace('T', ' ').substring(0, 19),
-            expiryDateTime: new Date(Date.now() + 3600000).toISOString().replace('T', ' ').substring(0, 19), // 1 hour expiry
-            rtpId: Math.random().toString(36).substring(2, 15),
-            billNo: `FV${Date.now()}`,
-            instructedAmount: parseFloat(amount),
-            transactionType: '0002' // Interbank transfer
-          },
-          info: {
-            stan: Math.floor(Math.random() * 900000) + 100000,
-            rrn: Math.random().toString(36).substring(2, 14)
-          }
-        };
-
-        const result = await createRtpNowPayment(paymentDetails);
-
-        if (result && result.responseCode === '00') {
-          onClose();
-          onSuccess();
-        } else {
-          showToast('Failed to send money: ' + (result?.responseDescription || 'Unknown error'));
-        }
-      } else {
-        // For non-IBAN transfers (phone numbers, etc.), use local API
-        const sourceAccountId = 'current';
-        const success = await createPayment(
-          parseFloat(amount), 'PKR', description, 'Transfer',
-          sourceAccountId, recipient, 'iban-or-other', 'bank-transfer'
-        );
-        if (success) { onClose(); onSuccess(); }
-        else showToast('Failed to send money. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error sending money:', error);
-      showToast('An error occurred while sending money: ' + (error.message || 'Unknown error'));
-    }
-  };
-
+  const cfg = map[status];
+  if (!cfg) return null;
   return (
-    <>
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end bg-black/50 backdrop-blur-sm">
-          <div className="relative w-full max-w-lg mx-4 mb-6">
-            <div className="w-12 h-0.5 bg-white/20 rounded mb-4" />
-            <div className="rounded-panel p-6 border max-h-[80vh] overflow-y-auto" style={{
-              backgroundColor: 'var(--color-panel)',
-              borderColor: 'var(--color-border)'
-            }}>
-              <div className="flex justify-between items-start mb-5 gap-3">
-                <button onClick={onClose} className="px-2 py-1 text-xs rounded-sm-panel transition-colors shrink-0 self-start"
-                  style={{ background: 'var(--color-red-accent)', color: 'white', border: 'none', cursor: 'pointer' }}>←</button>
-                <h3 className="text-sm font-medium flex-1 text-center" style={{ fontFamily: "'Sora', sans-serif" }}>Send Money</h3>
-                <div className="w-10 shrink-0" />
-              </div>
-
-              {/* Transfer Type Selector */}
-              <div className="flex gap-3 mb-5">
-                <label className="flex items-center cursor-pointer text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
-                  <input type="radio"
-                    checked={transferType === 'iban'}
-                    onChange={() => setTransferType('iban')}
-                    className="h-4 w-4 text-primary-600"
-                  />
-                  <span className="ml-2">To External Account (IBAN)</span>
-                </label>
-                <label className="flex items-center cursor-pointer text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
-                  <input type="radio"
-                    checked={transferType === 'account'}
-                    onChange={() => setTransferType('account')}
-                    className="h-4 w-4 text-primary-600"
-                  />
-                  <span className="ml-2">To My Accounts</span>
-                </label>
-                <label className="flex items-center cursor-pointer text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
-                  <input type="radio"
-                    checked={transferType === 'email'}
-                    onChange={() => setTransferType('email')}
-                    className="h-4 w-4 text-primary-600"
-                  />
-                  <span className="ml-2">To FinVault User (Email)</span>
-                </label>
-                <label className="flex items-center cursor-pointer text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
-                  <input type="radio"
-                    checked={transferType === 'user-iban'}
-                    onChange={() => setTransferType('user-iban')}
-                    className="h-4 w-4 text-primary-600"
-                  />
-                  <span className="ml-2">To FinVault User (IBAN)</span>
-                </label>
-              </div>
-
-              {/* Account Selection (when transferring to my accounts) */}
-              {transferType === 'account' && (
-                <>
-                  <p className="text-xs mb-3" style={{ color: 'var(--color-text-muted)', fontWeight: 500 }}>From Account</p>
-                  <select
-                    value={fromAccountId}
-                    onChange={handleFromAccountChange}
-                    className="form-input w-full"
-                    style={{ borderRadius: '10px', marginBottom: 16 }}
-                    disabled={isLoadingAccounts}
-                  >
-                    <option value="">Select source account</option>
-                    {accounts.map(account => {
-                      const accountType = account.accountLevel === 'main' ? 'Main' : 'Sub';
-                      let optionText = `${account.name} (${accountType} Account)`;
-
-                      if (account.ibanNumber) {
-                        optionText += ` (PK ${account.ibanNumber.substring(0, 4)} ${formatIBAN(account.ibanNumber)})`;
-                      }
-
-                      if (account.balance !== undefined) {
-                        optionText += ` - Balance: Rs ${account.balance.toLocaleString()}`;
-                      }
-
-                      return (
-                        <option key={account.id} value={account.ibanNumber}>
-                          {optionText}
-                        </option>
-                      );
-                    })}
-                  </select>
-                  {fromAccountError && <p className="text-red-500 text-xs mt-1">{fromAccountError}</p>}
-
-                  <p className="text-xs mb-3" style={{ color: 'var(--color-text-muted)', fontWeight: 500 }}>To Account</p>
-                  <select
-                    value={toAccountId}
-                    onChange={handleToAccountChange}
-                    className="form-input w-full"
-                    style={{ borderRadius: '10px', marginBottom: 16 }}
-                    disabled={isLoadingAccounts || !fromAccountId}
-                  >
-                    <option value="">Select destination account</option>
-                    {accounts.map(account => {
-                      if (account.ibanNumber === fromAccountId) {
-                        return null; // Skip the source account
-                      }
-
-                      const accountType = account.accountLevel === 'main' ? 'Main' : 'Sub';
-                      const ibanInfo = account.ibanNumber
-                        ? ` (PK ${account.ibanNumber.substring(0, 4)} ${formatIBAN(account.ibanNumber)})`
-                        : '';
-                      const balanceInfo = account.balance !== undefined
-                        ? ` - Balance: Rs ${account.balance.toLocaleString()}`
-                        : '';
-
-                      return (
-                        <option key={account.id} value={account.ibanNumber}>
-                          {account.name} ({accountType} Account){ibanInfo}{balanceInfo}
-                        </option>
-                      );
-                    }).filter(Boolean)} {/* Filter out null values */}
-                  </select>
-                  {toAccountError && <p className="text-red-500 text-xs mt-1">{toAccountError}</p>}
-                </>
-              )}
-
-              {transferType !== 'account' && (
-                <>
-                  {/* Recent recipients */}
-                  <p className="text-xs mb-3" style={{ color: 'var(--color-text-muted)', fontWeight: 500 }}>Recent recipients</p>
-                  <div className="flex gap-3 mb-5 overflow-x-auto pb-1">
-                    {mockBeneficiaries.map(b => (
-                      <div key={b.id} className="flex flex-col items-center gap-1 cursor-pointer"
-                        onClick={() => handleSelectBeneficiary(b)}>
-                        <div className="w-[38px] h-[38px] rounded-full flex items-center justify-center text-xs font-semibold border-2 border-transparent transition-colors"
-                          style={{ background: `${recipient === b.iban ? 'var(--color-gold)' : 'rgba(255,255,255,0.06)'}`,
-                            borderColor: recipient === b.iban ? 'var(--color-gold)' : 'transparent',
-                            color: 'var(--color-text-primary)'
-                          }}>
-                        {b.name.substring(0, 2).toUpperCase()}
-                        </div>
-                        <p className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>{b.name.split(' ')[0]}</p>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-
-              <div className="space-y-4" style={{ borderTop: '1px solid var(--color-border)', paddingTop: 20 }}>
-                <div>
-                  <label className="block text-[12px] mb-1 tracking-[0.3px]" style={{ color: 'var(--color-text-muted)', fontFamily: "'Sora', sans-serif" }}>
-                    Recipient name or account
-                  </label>
-                  <input type="text" value={recipient} onChange={handleRecipientChange}
-                    placeholder="Search name, phone, or account #"
-                    className="form-input w-full" style={{ borderRadius: '10px' }} />
-                  {ibanError && <p className="text-red-500 text-xs mt-1">{ibanError}</p>}
-                </div>
-                <div>
-                  <label className="block text-[12px] mb-1" style={{ color: 'var(--color-text-muted)' }}>Amount (PKR)</label>
-                  <input type="number" value={amount} onChange={e => setAmount(e.target.value)}
-                    placeholder="Rs 0.00" className="form-input w-full form-mono-input" style={{ borderRadius: '10px', fontSize: 22 }} />
-                </div>
-                <div>
-                  <label className="block text-[12px] mb-1" style={{ color: 'var(--color-text-muted)' }}>Note (optional)</label>
-                  <input type="text" value={description} onChange={e => setDescription(e.target.value)}
-                    placeholder="What's it for?" className="form-input w-full" style={{ borderRadius: '10px' }} />
-                </div>
-
-                <button onClick={handleSendMoney}
-                  className="w-full py-3 px-4 text-sm font-medium text-white flex items-center justify-center gap-2 transition-colors"
-                  style={{ borderRadius: '10px', backgroundColor: '#1a1f3a', border: 'none', fontFamily: "'Sora', sans-serif" }}
-                  disabled={
-                    transferType === 'account'
-                      ? (!fromAccountId || !toAccountId || !amount || parseFloat(amount) <= 0 || !description)
-                      : (!recipient || !amount || parseFloat(amount) <= 0 || !description)
-                  }
-                  onMouseEnter={e => e.target.style.backgroundColor = '#262d52'}
-                  onMouseLeave={e => e.target.style.backgroundColor = '#1a1f3a'}>
-                  <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-                    <path d="M1.5 7.5H13.5M13.5 7.5L9 3M13.5 7.5L9 12" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  Send Money
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+    <div
+      style={{
+        borderRadius: 10, padding: '8px 14px', fontSize: 13,
+        backgroundColor: cfg.bg, color: cfg.color, fontWeight: 500,
+        textAlign: 'center', marginBottom: 8,
+      }}
+    >
+      {cfg.label}
+    </div>
   );
 };
 
-export default SendMoneyPanel;
+// ── Mock beneficiaries (shown as quick-select avatars) ───────────────────────
+const MOCK_BENEFICIARIES = [
+  { id: '1', name: 'Ali Hassan',   iban: 'PK36FNVT0000123456789012' },
+  { id: '2', name: 'Fatima Khan',  iban: 'PK36HABB0000987654321098' },
+  { id: '3', name: 'Ahmed Malik',  iban: 'PK36MUCB0000555555555555' },
+];
+
+// ── Idempotency key generator ────────────────────────────────────────────────
+const makeIdempotencyKey = () =>
+  `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+
+export default function SendMoneyPanel({ isOpen, onClose, onSuccess, showToast }) {
+  // ── Form state ─────────────────────────────────────────────────────────────
+  const [transferType,   setTransferType]   = useState('iban');
+  const [recipient,      setRecipient]      = useState('');
+  const [amount,         setAmount]         = useState('');
+  const [description,    setDescription]    = useState('');
+  const [fromAccountId,  setFromAccountId]  = useState('');
+  const [toAccountId,    setToAccountId]    = useState('');
+
+  // ── UI state ───────────────────────────────────────────────────────────────
+  const [accounts,       setAccounts]       = useState([]);
+  const [status,         setStatus]         = useState('idle'); // idle | loading | success | error | duplicate
+  const [errorMsg,       setErrorMsg]       = useState('');
+  const [ibanError,      setIbanError]      = useState('');
+  const [txId,           setTxId]           = useState(null);
+  const [idempotencyKey, setIdempotencyKey] = useState(makeIdempotencyKey);
+
+  // ── Load user accounts ─────────────────────────────────────────────────────
+  const loadAccounts = useCallback(async () => {
+    if (!auth.currentUser) return;
+    try {
+      const data = await getAccounts();
+      setAccounts(data);
+    } catch (e) {
+      console.error('loadAccounts:', e);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadAccounts();
+      // Fresh idempotency key each time the panel opens
+      setIdempotencyKey(makeIdempotencyKey());
+      resetForm();
+    }
+  }, [isOpen, loadAccounts]);
+
+  // ── IBAN live-validation (for external IBAN + user-iban modes) ────────────
+  useEffect(() => {
+    if (transferType !== 'iban' && transferType !== 'user-iban') {
+      setIbanError('');
+      return;
+    }
+    const clean = recipient.replace(/\s/g, '');
+    if (clean.length === 24) {
+      const result = validateIBAN(clean);
+      setIbanError(result.valid ? '' : result.error);
+    } else {
+      setIbanError('');
+    }
+  }, [recipient, transferType]);
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  const resetForm = () => {
+    setRecipient('');
+    setAmount('');
+    setDescription('');
+    setFromAccountId('');
+    setToAccountId('');
+    setStatus('idle');
+    setErrorMsg('');
+    setIbanError('');
+    setTxId(null);
+  };
+
+  const handleClose = () => {
+    resetForm();
+    onClose();
+  };
+
+  const handleSelectBeneficiary = (b) => {
+    setRecipient(b.iban);
+    const result = validateIBAN(b.iban);
+    setIbanError(result.valid ? '' : result.error);
+  };
+
+  const parsedAmount = parseFloat(amount);
+  const amountValid  = !isNaN(parsedAmount) && parsedAmount > 0;
+
+  // ── Submit ─────────────────────────────────────────────────────────────────
+  const handleSend = async () => {
+    setErrorMsg('');
+    setStatus('loading');
+
+    try {
+      let result;
+
+      // ── Internal: between own accounts ───────────────────────────────────
+      if (transferType === 'account') {
+        if (!fromAccountId || !toAccountId) {
+          setErrorMsg('Please select both source and destination accounts.');
+          setStatus('error');
+          return;
+        }
+        if (fromAccountId === toAccountId) {
+          setErrorMsg('Source and destination accounts must be different.');
+          setStatus('error');
+          return;
+        }
+
+        const fromAccObj = accounts.find(a => a.id === fromAccountId);
+        const toAccObj   = accounts.find(a => a.id === toAccountId);
+
+        result = await transferBetweenAccounts(
+          fromAccObj?.id || fromAccountId,
+          toAccObj?.id   || toAccountId,
+          parsedAmount,
+          description || `Transfer to ${toAccObj?.name || 'Account'}`,
+          idempotencyKey,
+        );
+      }
+
+      // ── P2P: email ────────────────────────────────────────────────────────
+      else if (transferType === 'email') {
+        if (!recipient.trim()) {
+          setErrorMsg('Please enter the recipient email.');
+          setStatus('error');
+          return;
+        }
+        result = await transferToUser(
+          recipient.trim().toLowerCase(),
+          parsedAmount,
+          description,
+          'email',
+          idempotencyKey,
+        );
+      }
+
+      // ── P2P: IBAN lookup inside FinVault ──────────────────────────────────
+      else if (transferType === 'user-iban') {
+        if (!recipient.trim()) {
+          setErrorMsg('Please enter the recipient IBAN.');
+          setStatus('error');
+          return;
+        }
+        result = await transferToUser(
+          recipient.replace(/\s/g, '').toUpperCase(),
+          parsedAmount,
+          description,
+          'iban',
+          idempotencyKey,
+        );
+      }
+
+      // ── External IBAN (same as user-iban lookup — FinVault network) ───────
+      else {
+        if (!recipient.trim() || ibanError) {
+          setErrorMsg(ibanError || 'Please enter a valid IBAN.');
+          setStatus('error');
+          return;
+        }
+        result = await transferToUser(
+          recipient.replace(/\s/g, '').toUpperCase(),
+          parsedAmount,
+          description,
+          'iban',
+          idempotencyKey,
+        );
+      }
+
+      // ── Handle result ─────────────────────────────────────────────────────
+      if (result.success) {
+        const isDuplicate = result.message?.includes('already');
+        setTxId(result.txId);
+        setStatus(isDuplicate ? 'duplicate' : 'success');
+        showToast(result.message);
+
+        setTimeout(() => {
+          onSuccess();
+          handleClose();
+        }, 1800);
+
+      } else {
+        setErrorMsg(result.message);
+        setStatus('error');
+        // Rotate idempotency key so the user can retry cleanly
+        setIdempotencyKey(makeIdempotencyKey());
+      }
+
+    } catch (err) {
+      setErrorMsg('An unexpected error occurred. Please try again.');
+      setStatus('error');
+      setIdempotencyKey(makeIdempotencyKey());
+    }
+  };
+
+  // ── Disabled-state guard ───────────────────────────────────────────────────
+  const isSubmitting = status === 'loading' || status === 'success' || status === 'duplicate';
+
+  const canSubmit = (() => {
+    if (!amountValid || isSubmitting) return false;
+    if (transferType === 'account') return !!fromAccountId && !!toAccountId && fromAccountId !== toAccountId;
+    if (transferType === 'email')   return !!recipient.trim();
+    return !!recipient.trim() && !ibanError; // iban / user-iban
+  })();
+
+  // ── Styles ─────────────────────────────────────────────────────────────────
+  const inputStyle = {
+    borderRadius: '10px',
+    border:       '1px solid var(--color-border)',
+    background:   'var(--color-bg)',
+    color:        'var(--color-text-primary)',
+    fontFamily:   "'Sora', sans-serif",
+    padding:      '10px 12px',
+    fontSize:     '14px',
+    width:        '100%',
+    outline:      'none',
+  };
+
+  const labelStyle = {
+    fontSize:     '12px',
+    color:        'var(--color-text-muted)',
+    marginBottom: 4,
+    display:      'block',
+    letterSpacing: '0.3px',
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end bg-black/50 backdrop-blur-sm">
+      <div className="relative w-full max-w-lg mx-4 mb-6">
+        {/* Drag handle */}
+        <div className="w-12 h-0.5 bg-white/20 rounded mb-4" />
+
+        <div
+          className="rounded-panel p-6 border max-h-[85vh] overflow-y-auto"
+          style={{ backgroundColor: 'var(--color-panel)', borderColor: 'var(--color-border)' }}
+        >
+          {/* ── Header ──────────────────────────────────────────────────────── */}
+          <div className="flex justify-between items-start mb-5 gap-3">
+            <button
+              onClick={handleClose}
+              className="px-2 py-1 text-xs rounded-sm-panel shrink-0 self-start"
+              style={{ background: 'var(--color-red-accent)', color: 'white', border: 'none', cursor: 'pointer' }}
+            >
+              ←
+            </button>
+            <h3 className="text-sm font-medium flex-1 text-center" style={{ fontFamily: "'Sora', sans-serif" }}>
+              Send Money
+            </h3>
+            <div className="w-10 shrink-0" />
+          </div>
+
+          {/* ── Transfer type selector ───────────────────────────────────── */}
+          <div className="flex flex-wrap gap-2 mb-5">
+            {TRANSFER_TYPES.map(t => (
+              <button
+                key={t.value}
+                onClick={() => { setTransferType(t.value); setRecipient(''); setIbanError(''); }}
+                disabled={isSubmitting}
+                style={{
+                  padding:         '5px 12px',
+                  borderRadius:    '99px',
+                  fontSize:        '11px',
+                  fontWeight:      500,
+                  border:          '1px solid var(--color-border)',
+                  backgroundColor:  transferType === t.value ? 'var(--color-accent, #1a1f3a)' : 'transparent',
+                  color:            transferType === t.value ? 'white' : 'var(--color-text-muted)',
+                  cursor:          'pointer',
+                  transition:      'all 0.15s',
+                }}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {/* ── Status badge ────────────────────────────────────────────────── */}
+          <StatusBadge status={status} />
+          {status === 'error' && errorMsg && (
+            <div style={{
+              borderRadius: 10, padding: '8px 14px', fontSize: 12, marginBottom: 10,
+              backgroundColor: 'rgba(214,59,59,0.08)', color: 'var(--color-red-accent)',
+            }}>
+              {errorMsg}
+            </div>
+          )}
+          {txId && (status === 'success' || status === 'duplicate') && (
+            <div style={{
+              borderRadius: 10, padding: '6px 12px', fontSize: 11, marginBottom: 10,
+              backgroundColor: 'rgba(14,124,110,0.06)', color: 'var(--color-text-muted)',
+              fontFamily: "'Space Mono', monospace",
+            }}>
+              Ref: {txId}
+            </div>
+          )}
+
+          {/* ── Internal account selectors ──────────────────────────────────── */}
+          {transferType === 'account' && (
+            <>
+              <div style={{ marginBottom: 12 }}>
+                <label style={labelStyle}>From Account</label>
+                <select
+                  value={fromAccountId}
+                  onChange={e => { setFromAccountId(e.target.value); setToAccountId(''); }}
+                  disabled={isSubmitting}
+                  className="form-input"
+                  style={{ ...inputStyle }}
+                >
+                  <option value="">Select source account…</option>
+                  {accounts.map(a => (
+                    <option key={a.id} value={a.id}>
+                      {a.name} — Rs {(a.balance ?? 0).toLocaleString()}
+                      {a.ibanNumber ? ` (${formatIBAN(a.ibanNumber).slice(-9)})` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ marginBottom: 16 }}>
+                <label style={labelStyle}>To Account</label>
+                <select
+                  value={toAccountId}
+                  onChange={e => setToAccountId(e.target.value)}
+                  disabled={isSubmitting || !fromAccountId}
+                  className="form-input"
+                  style={{ ...inputStyle }}
+                >
+                  <option value="">Select destination account…</option>
+                  {accounts
+                    .filter(a => a.id !== fromAccountId)
+                    .map(a => (
+                      <option key={a.id} value={a.id}>
+                        {a.name} — Rs {(a.balance ?? 0).toLocaleString()}
+                        {a.ibanNumber ? ` (${formatIBAN(a.ibanNumber).slice(-9)})` : ''}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            </>
+          )}
+
+          {/* ── Recent beneficiaries (shown for all non-internal modes) ──────── */}
+          {transferType !== 'account' && (
+            <>
+              <p style={{ fontSize: 12, color: 'var(--color-text-muted)', fontWeight: 500, marginBottom: 8 }}>
+                Recent recipients
+              </p>
+              <div className="flex gap-3 mb-5 overflow-x-auto pb-1">
+                {MOCK_BENEFICIARIES.map(b => (
+                  <button
+                    key={b.id}
+                    onClick={() => handleSelectBeneficiary(b)}
+                    disabled={isSubmitting}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0 }}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                      <div
+                        style={{
+                          width: 38, height: 38, borderRadius: '50%',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: 12, fontWeight: 600,
+                          background:   recipient === b.iban ? 'var(--color-gold)' : 'rgba(255,255,255,0.06)',
+                          color:        'var(--color-text-primary)',
+                          border:       recipient === b.iban ? '2px solid var(--color-gold)' : '2px solid transparent',
+                          transition:   'all 0.15s',
+                        }}
+                      >
+                        {b.name.substring(0, 2).toUpperCase()}
+                      </div>
+                      <span style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>
+                        {b.name.split(' ')[0]}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* ── Recipient field ─────────────────────────────────────────────── */}
+          {transferType !== 'account' && (
+            <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: 16, marginBottom: 12 }}>
+              <label style={labelStyle}>
+                {transferType === 'email'
+                  ? 'Recipient Email'
+                  : 'Recipient IBAN'}
+              </label>
+              <input
+                type={transferType === 'email' ? 'email' : 'text'}
+                value={recipient}
+                onChange={e => setRecipient(e.target.value)}
+                placeholder={
+                  transferType === 'email'
+                    ? 'user@example.com'
+                    : 'PK36 FNVT 0000 1234 5678 9012'
+                }
+                disabled={isSubmitting}
+                style={inputStyle}
+              />
+              {ibanError && (
+                <p style={{ fontSize: 11, color: 'var(--color-red-accent)', marginTop: 4 }}>
+                  {ibanError}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* ── Amount + Note ────────────────────────────────────────────────── */}
+          <div style={{ marginBottom: 12 }}>
+            <label style={labelStyle}>Amount (PKR)</label>
+            <input
+              type="number"
+              value={amount}
+              onChange={e => setAmount(e.target.value)}
+              placeholder="Rs 0.00"
+              disabled={isSubmitting}
+              className="form-mono-input"
+              style={{ ...inputStyle, fontFamily: "'Space Mono', monospace", fontSize: 22 }}
+            />
+          </div>
+
+          <div style={{ marginBottom: 20 }}>
+            <label style={labelStyle}>Note (optional)</label>
+            <input
+              type="text"
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              placeholder="What's it for?"
+              disabled={isSubmitting}
+              style={inputStyle}
+            />
+          </div>
+
+          {/* ── Send button ──────────────────────────────────────────────────── */}
+          <button
+            onClick={handleSend}
+            disabled={!canSubmit}
+            style={{
+              width:           '100%',
+              padding:         '12px 16px',
+              borderRadius:    '10px',
+              border:          'none',
+              fontFamily:      "'Sora', sans-serif",
+              fontSize:        14,
+              fontWeight:      500,
+              color:           'white',
+              cursor:          canSubmit ? 'pointer' : 'not-allowed',
+              opacity:         canSubmit ? 1 : 0.5,
+              backgroundColor: status === 'success' || status === 'duplicate'
+                ? 'var(--color-teal, #0e7c6e)'
+                : '#1a1f3a',
+              display:         'flex',
+              alignItems:      'center',
+              justifyContent:  'center',
+              gap:             8,
+              transition:      'background-color 0.2s',
+            }}
+            onMouseEnter={e => { if (canSubmit && status === 'idle') e.currentTarget.style.backgroundColor = '#262d52'; }}
+            onMouseLeave={e => { if (status === 'idle') e.currentTarget.style.backgroundColor = '#1a1f3a'; }}
+          >
+            {status === 'loading' && (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83">
+                  <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/>
+                </path>
+              </svg>
+            )}
+            {status === 'loading'   && 'Sending…'}
+            {status === 'success'   && '✓ Sent'}
+            {status === 'duplicate' && '✓ Already sent'}
+            {(status === 'idle' || status === 'error') && (
+              <>
+                <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+                  <path d="M1.5 7.5H13.5M13.5 7.5L9 3M13.5 7.5L9 12"
+                    stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Send Money
+              </>
+            )}
+          </button>
+
+          {/* ── Small print ──────────────────────────────────────────────────── */}
+          <p style={{ fontSize: 10, color: 'var(--color-text-muted)', textAlign: 'center', marginTop: 10 }}>
+            Transfers are final. FinVault uses ACID transactions — re-submitting is safe.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
