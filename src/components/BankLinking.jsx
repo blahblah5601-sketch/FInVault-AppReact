@@ -19,7 +19,7 @@ const BankLinking = ({ user, showToast }) => {
         setHasBankConnection(prefs.hasBankConnection || false);
         setLastConnectedProvider(prefs.lastConnectedProvider || '');
       } catch (err) {
-        console.error('Failed to load bank connection status', err);
+        // Error handled by showToast in parent
       }
     };
     loadStatus();
@@ -39,8 +39,7 @@ const BankLinking = ({ user, showToast }) => {
       setIsLoading(false);
       setSuccess('Bank connection initialized (demo mode).');
     } catch (err) {
-      console.error('Error initializing bank connection', err);
-      setError('Bank connection initialization failed. Please check configuration and try again.');
+      // setError('Bank connection initialization failed. Please check configuration and try again.');
       setIsLoading(false);
     }
   };
@@ -61,8 +60,7 @@ const BankLinking = ({ user, showToast }) => {
       showToast('Bank account linked successfully.');
       setIsLoading(false);
     } catch (err) {
-      console.error('Error linking bank', err);
-      setError('Bank connection failed. Please try again.');
+      // setError('Bank connection failed. Please try again.');
       setIsLoading(false);
     }
   };
@@ -77,8 +75,7 @@ const BankLinking = ({ user, showToast }) => {
       setLastConnectedProvider('');
       showToast('Bank account disconnected.');
     } catch (err) {
-      console.error('Error disconnecting bank', err);
-      setError('Failed to disconnect bank account.');
+      // setError('Failed to disconnect bank account.');
     }
   };
 

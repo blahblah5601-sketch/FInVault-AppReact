@@ -85,7 +85,7 @@ export default function SendMoneyPanel({ isOpen, onClose, onSuccess, showToast }
       const data = await getAccounts();
       setAccounts(data);
     } catch (e) {
-      console.error('loadAccounts:', e);
+      
     }
   }, []);
 

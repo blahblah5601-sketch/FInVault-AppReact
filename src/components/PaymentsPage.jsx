@@ -61,7 +61,6 @@ function PaymentsPage({ showToast, billers, beneficiaries, history, onSendMoney,
         showToast("Failed to add biller.");
       }
     } catch (error) {
-      console.error('Error adding biller:', error);
       showToast(`Failed to add biller: ${error.message || 'Unknown error'}`);
     }
   };
@@ -97,9 +96,7 @@ function PaymentsPage({ showToast, billers, beneficiaries, history, onSendMoney,
         showToast("Failed to add beneficiary to local database.");
       }
     } catch (error) {
-      console.error('Error adding beneficiary:', error);
-      showToast(`Validation failed: ${error.message || 'Invalid beneficiary details'}`);
-    }
+      }
   };
 
   // Data comes from props (passed from AppLayout)

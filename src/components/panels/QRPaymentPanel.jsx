@@ -222,7 +222,6 @@ const QRPaymentPanel = ({ isOpen, onClose, onSuccess, showToast }) => {
         }
       }
     } catch (error) {
-      console.error('Error processing QR payment:', error);
       showToast('Failed to process QR payment: ' + (error.message || 'Network error'));
       setPaymentSent(false);
     }

@@ -9,14 +9,38 @@ import SettingsPage from './SettingsPage';
 import Dashboard_simple from './Dashboard_simple';
 import PaymentsPage from './PaymentsPage';
 import AccountsPage from './AccountsPage';
+import PageLoading from './PageLoading';
 
 // This component will eventually show the correct page component
-function MainContent({ activePage, accounts, budgets, vaults, transactions, showToast, theme, setTheme, history, setActivePage, billers, beneficiaries, preferences, onOpenSendMoney, onOpenAddFunds, onOpenQRPayment, onOpenNFCPayment }) {
+function MainContent({
+  activePage,
+  accounts,
+  budgets,
+  vaults,
+  transactions,
+  history,
+  billers,
+  beneficiaries,
+  showToast,
+  theme,
+  setTheme,
+  setActivePage,
+  preferences,
+  onOpenSendMoney,
+  onOpenAddFunds,
+  onOpenQRPayment,
+  onOpenNFCPayment,
+  isDataLoading
+}) {
   const compactMode = preferences?.compactMode ?? false;
+
+  // Show loading skeletons while initial data is loading
+  if (isDataLoading && activePage !== 'settings') {
+    return <PageLoading page={activePage} />;
+  }
 
   return (
     <div
-
       className={`flex-1 overflow-y-auto ${compactMode ? 'p-2 md:p-4' : 'p-4 md:p-8'} space-y-${compactMode ? '4' : '8'}`}>
       {/* This is conditional rendering. It checks activePage and shows the right content. */}
       {activePage === 'dashboard' && (
@@ -42,13 +66,13 @@ function MainContent({ activePage, accounts, budgets, vaults, transactions, show
       {activePage === 'budgets' && (
         <BudgetsPage budgets={budgets} showToast={showToast} preferences={preferences}/>
       )}
-      
+
       {activePage === 'vaults' && (
         <VaultsPage vaults={vaults} accounts={accounts} showToast={showToast} preferences={preferences}/>
       )}
 
       {activePage === 'transactions' && (
-        <TransactionsPage transactions={transactions} />
+        <TransactionsPage transactions={transactions} isLoading={isDataLoading} />
       )}
 
       {activePage === 'accounts' && (

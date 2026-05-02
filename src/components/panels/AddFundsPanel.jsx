@@ -109,7 +109,6 @@ const AddFundsPanel = ({ isOpen, onClose, onSuccess, showToast }) => {
         showToast('Failed to add funds: ' + (result?.ResponseDetail || 'Unknown error'));
       }
     } catch (error) {
-      console.error('Error processing card payment:', error);
       showToast('Failed to process card payment: ' + (error.message || 'Unknown error'));
     }
   };
@@ -188,7 +187,6 @@ const AddFundsPanel = ({ isOpen, onClose, onSuccess, showToast }) => {
         showToast('Failed to add funds: ' + (result?.responseDescription || 'Unknown error'));
       }
     } catch (error) {
-      console.error('Error processing bank transfer:', error);
       showToast('Failed to process bank transfer: ' + (error.message || 'Unknown error'));
     }
   };

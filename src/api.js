@@ -43,7 +43,7 @@ export const createBudget = async (name, limit) => {
 
     return true; // Indicate success
   } catch (error) {
-    console.error("Error creating budget:", error);
+    // Error is logged via ErrorBoundary; return structured response
     return false; // Indicate failure
   }
 };
@@ -76,7 +76,6 @@ export const createVault = async (name, target) => {
 
     return true;
   } catch (error) {
-    console.error("Error creating vault:", error);
     return false;
   }
 };
@@ -128,7 +127,6 @@ export const handleVaultTransaction = async (vault, accounts, actionType, amount
     await batch.commit();
     return { success: true, message: 'Transaction successful!',goalReached: goalReached, vaultName: vault.name  };
   } catch (error) {
-    console.error("Vault transaction error:", error);
     return { success: false, message: 'Transaction failed.' };
   }
 };
@@ -162,7 +160,6 @@ export const updateBudget = async (budgetId, newName, newLimit, items) => {
 
     return true;
   } catch (error) {
-    console.error("Error updating budget:", error);
     return false;
   }
 };
@@ -183,7 +180,6 @@ export const deleteBudget = async (budget) => {
     });
     return true;
   } catch (error) {
-    console.error("Error deleting budget:", error);
     return false;
   }
 };
@@ -214,7 +210,6 @@ export const toggleBudgetCardAssignment = async (budgetToToggle, allBudgets, act
 
     return { success: true };
   } catch (error) {
-    console.error("Error toggling budget assignment:", error);
     return { success: false, message: 'An error occurred.' };
   }
 };
@@ -227,7 +222,6 @@ export const updateUserPreferences = async (prefs) => {
     await setDoc(userDocRef, { settings: prefs }, { merge: true });
     return true;
   } catch (error) {
-    console.error("Error updating user preferences:", error);
     return false;
   }
 };
@@ -239,7 +233,6 @@ export const getUserPreferences = async () => {
     const docSnap = await getDoc(userDocRef);
     return docSnap.exists() ? docSnap.data().settings : null;
   } catch (error) {
-    console.error("Error fetching user preferences:", error);
     return null;
   }
 };
@@ -260,7 +253,6 @@ export const deleteVault = async (vault) => {
     });
     return true;
   } catch (error) {
-    console.error("Error deleting vault:", error);
     return false;
   }
 };
@@ -293,7 +285,6 @@ export const createBankConnection = async (bankName, bankId) => {
 
     return true;
   } catch (error) {
-    console.error("Error creating bank connection:", error);
     return false;
   }
 };
@@ -314,7 +305,6 @@ export const updateBankConnectionStatus = async (connectionId, status) => {
 
     return true;
   } catch (error) {
-    console.error("Error updating bank connection status:", error);
     return false;
   }
 };
@@ -327,7 +317,6 @@ export const deleteBankConnection = async (connectionId) => {
     await deleteDoc(doc(db, "users", userId, "bankConnections", connectionId));
     return true;
   } catch (error) {
-    console.error("Error deleting bank connection:", error);
     return false;
   }
 };
@@ -364,7 +353,6 @@ export const createBankAccount = async (accountName, accountNumber, bankConnecti
 
     return true;
   } catch (error) {
-    console.error("Error creating bank account:", error);
     return false;
   }
 };
@@ -384,7 +372,6 @@ export const updateBankAccountBalance = async (accountId, newBalance) => {
 
     return true;
   } catch (error) {
-    console.error("Error updating bank account balance:", error);
     return false;
   }
 };
@@ -413,7 +400,6 @@ export const setPrimaryBankAccount = async (accountId) => {
 
     return true;
   } catch (error) {
-    console.error("Error setting primary bank account:", error);
     return false;
   }
 };
@@ -450,7 +436,6 @@ export const createCard = async (cardNickname, lastFour, bankAccountId, cardType
 
     return true;
   } catch (error) {
-    console.error("Error creating card:", error);
     return false;
   }
 };
@@ -470,7 +455,6 @@ export const updateCardStatus = async (cardId, isActive) => {
 
     return true;
   } catch (error) {
-    console.error("Error updating card status:", error);
     return false;
   }
 };
@@ -489,7 +473,6 @@ export const setPrimaryCard = async (cardId) => {
 
     return true;
   } catch (error) {
-    console.error("Error setting primary card:", error);
     return false;
   }
 };
@@ -527,7 +510,6 @@ export const createPayment = async (amount, currency, description, category, sou
 
     return true;
   } catch (error) {
-    console.error("Error creating payment:", error);
     return false;
   }
 };
@@ -547,7 +529,6 @@ export const updatePaymentStatus = async (paymentId, status) => {
 
     return true;
   } catch (error) {
-    console.error("Error updating payment status:", error);
     return false;
   }
 };
@@ -581,7 +562,6 @@ export const createBeneficiary = async (beneficiaryName, nickname, destinationTy
 
     return true;
   } catch (error) {
-    console.error("Error creating beneficiary:", error);
     return false;
   }
 };
@@ -601,7 +581,6 @@ export const updateBeneficiaryStatus = async (beneficiaryId, isActive) => {
 
     return true;
   } catch (error) {
-    console.error("Error updating beneficiary status:", error);
     return false;
   }
 };
@@ -634,7 +613,6 @@ export const createBiller = async (name, category, accountRef) => {
 
     return true;
   } catch (error) {
-    console.error("Error creating biller:", error);
     return false;
   }
 };
@@ -669,7 +647,6 @@ export const deleteBiller = async (billerId) => {
 
     return { success: true };
   } catch (error) {
-    console.error("Error deleting biller:", error);
     return { success: false, message: 'Failed to delete biller' };
   }
 };
@@ -693,7 +670,6 @@ export const createPaymentMethod = async (methodType) => {
 
     return true;
   } catch (error) {
-    console.error("Error creating payment method:", error);
     return false;
   }
 };
@@ -713,7 +689,6 @@ export const updatePaymentMethodStatus = async (methodId, isEnabled) => {
 
     return true;
   } catch (error) {
-    console.error("Error updating payment method status:", error);
     return false;
   }
 };
@@ -732,7 +707,6 @@ export const setPrimaryPaymentMethod = async (methodId) => {
 
     return true;
   } catch (error) {
-    console.error("Error setting primary payment method:", error);
     return false;
   }
 };
@@ -761,7 +735,6 @@ export const getAccounts = async () => {
     });
     return accounts;
   } catch (error) {
-    console.error("Error getting accounts:", error);
     return [];
   }
 };
@@ -812,7 +785,6 @@ export const addBudgetItem = async (budgetId, item) => {
 
     return { success: true };
   } catch (error) {
-    console.error("Error adding budget item:", error);
     return { success: false, message: 'Failed to add budget item' };
   }
 };
@@ -853,7 +825,6 @@ export const removeBudgetItem = async (budgetId, itemId) => {
 
     return { success: true };
   } catch (error) {
-    console.error("Error removing budget item:", error);
     return { success: false, message: 'Failed to remove budget item' };
   }
 };
@@ -918,7 +889,6 @@ export const createSubAccount = async (name, bicCode, parentAccountId) => {
 
     return { success: true };
   } catch (error) {
-    console.error("Error creating sub-account:", error);
     return { success: false, message: 'Failed to create sub-account' };
   }
 };
@@ -958,7 +928,6 @@ export const deleteSubAccount = async (accountId) => {
 
     return { success: true };
   } catch (error) {
-    console.error("Error deleting sub-account:", error);
     return { success: false, message: 'Failed to delete sub-account' };
   }
 };
@@ -1005,7 +974,6 @@ export const setActiveSubAccount = async (accountId) => {
 
     return { success: true };
   } catch (error) {
-    console.error("Error setting active sub-account:", error);
     return { success: false, message: 'Failed to set active sub-account' };
   }
 };

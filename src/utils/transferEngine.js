@@ -465,7 +465,7 @@ export const handleExternalTransfer = async (
       txId,
       timestamp: new Date().toISOString(),
       transferType: 'external'
-    }).catch(console.error);
+    });
 
     return {
       success: true,

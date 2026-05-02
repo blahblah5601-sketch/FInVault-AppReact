@@ -1,8 +1,9 @@
 // src/components/TransactionsPage.jsx
 import TransactionRow from './TransactionRow';
 import { FileSpreadsheet } from 'lucide-react';
+import TransactionSkeleton from './skeletons/TransactionSkeleton';
 
-function TransactionsPage({ transactions }) {
+function TransactionsPage({ transactions, isLoading = false }) {
   return (
     <section id="transactions" className="flex flex-col space-y-[22px]">
       <div className="flex justify-between items-center">
@@ -40,26 +41,24 @@ function TransactionsPage({ transactions }) {
         <table className="w-full">
           <thead>
             <tr style={{ backgroundColor: 'var(--color-bg)' }}>
-              <th className="p-[14px] text-left text-xs font-medium uppercase tracking-wider"
-                style={{ color: 'var(--color-text-muted)', fontFamily: "'Sora', sans-serif" }}>
+              <th className="p-[14px] text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--color-text-muted)', fontFamily: "'Sora', sans-serif" }}>
                 Date
               </th>
-              <th className="p-[14px] text-left text-xs font-medium uppercase tracking-wider"
-                style={{ color: 'var(--color-text-muted)', fontFamily: "'Sora', sans-serif" }}>
+              <th className="p-[14px] text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--color-text-muted)', fontFamily: "'Sora', sans-serif" }}>
                 Description
               </th>
-              <th className="p-[14px] text-left text-xs font-medium uppercase tracking-wider"
-                style={{ color: 'var(--color-text-muted)', fontFamily: "'Sora', sans-serif" }}>
+              <th className="p-[14px] text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--color-text-muted)', fontFamily: "'Sora', sans-serif" }}>
                 Category
               </th>
-              <th className="p-[14px] text-right text-xs font-medium uppercase tracking-wider"
-                style={{ color: 'var(--color-text-muted)', fontFamily: "'Sora', sans-serif" }}>
+              <th className="p-[14px] text-right text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--color-text-muted)', fontFamily: "'Sora', sans-serif" }}>
                 Amount
               </th>
             </tr>
           </thead>
           <tbody>
-            {transactions && transactions.length > 0 ? (
+            {isLoading ? (
+              [...Array(5)].map((_, i) => <TransactionSkeleton key={i} />)
+            ) : transactions && transactions.length > 0 ? (
               transactions.map(tx => (
                 <TransactionRow key={tx.id} transaction={tx} />
               ))

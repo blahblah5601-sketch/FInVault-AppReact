@@ -34,7 +34,6 @@ function BudgetsPage({ budgets, showToast, preferences }) {
     try {
       await updateUserPreferences({ useVisualBudgetView: newView });
     } catch (error) {
-      console.error("Failed to update user preferences:", error);
       showToast("Failed to save preference");
     }
   };

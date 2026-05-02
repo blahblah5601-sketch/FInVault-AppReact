@@ -26,7 +26,7 @@ const OnboardingController = ({ children, activePage }) => {
           setOnboardingCompleted(false);
         }
       } catch (err) {
-        console.error('Failed to load onboarding state:', err);
+        
         // Fail safe — never block the app
         setOnboardingCompleted(true);
       } finally {

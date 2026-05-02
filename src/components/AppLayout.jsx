@@ -1,5 +1,5 @@
 // src/components/AppLayout.jsx
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import MainContent from './MainContent';
@@ -7,38 +7,11 @@ import SendMoneyPanel from './panels/SendMoneyPanel';
 import AddFundsPanel from './panels/AddFundsPanel';
 import QRPaymentPanel from './panels/QRPaymentPanel';
 import NFCPaymentPanel from './panels/NFCPaymentPanel';
-import { getUserPreferences } from '../api';
-
 // The component receives props, including the onLogout function
-function AppLayout({ user, onLogout, showToast, theme, setTheme, accounts, budgets, vaults, transactions, history, billers, beneficiaries }) {
+function AppLayout({ user, onLogout, showToast, theme, setTheme, accounts, budgets, vaults, transactions, history, billers, beneficiaries, preferences, isDataLoading }) {
     const [activePage, setActivePage] = useState('dashboard');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [activePanelId, setActivePanelId] = useState(null); // 'send' | 'add' | 'qr' | 'nfc' | null
-    const [preferences, setPreferences] = useState({
-      showIconTooltips: true,
-      showIBANOnHero: true,
-      showBalanceByDefault: true,
-      usePlanetIcons: true,
-      showEnvelopeItemsExpanded: false,
-      useVisualBudgetView: false,
-      budgetWarningThreshold: 80,
-      requirePaymentConfirmation: true,
-      saveCardDetailsSession: false,
-      compactMode: false,
-      showMonthlyIncome: true,
-      showMonthlySpend: true,
-    });
-
-    // Load user preferences on mount
-    useEffect(() => {
-      const loadPrefs = async () => {
-        const prefs = await getUserPreferences();
-        if (prefs && Object.keys(prefs).length > 0) {
-          setPreferences(prev => ({ ...prev, ...prefs }));
-        }
-      };
-      loadPrefs();
-    }, []);
 
     return (
     <div id="app-container" className="flex h-screen w-full bg-background text-text-secondary overflow-hidden">
@@ -86,16 +59,17 @@ function AppLayout({ user, onLogout, showToast, theme, setTheme, accounts, budge
                 vaults={vaults}
                 transactions={transactions}
                 history={history}
+                billers={billers}
+                beneficiaries={beneficiaries}
                 showToast={showToast}
                 theme={theme}
                 setTheme={setTheme}
-                billers={billers}
-                beneficiaries={beneficiaries}
                 preferences={preferences}
                 onOpenSendMoney={() => setActivePanelId('send')}
                 onOpenAddFunds={() => setActivePanelId('add')}
                 onOpenQRPayment={() => setActivePanelId('qr')}
                 onOpenNFCPayment={() => setActivePanelId('nfc')}
+                isDataLoading={isDataLoading}
             />
         </main>
 

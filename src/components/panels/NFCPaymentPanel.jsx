@@ -55,7 +55,7 @@ const NFCPaymentPanel = ({ isOpen, onClose, onSuccess, showToast }) => {
             setNfcState('idle');
           }
         } catch (error) {
-          console.error('Error processing NFC payment:', error);
+          
           showToast('Failed to process NFC payment.');
           setNfcState('idle');
         }

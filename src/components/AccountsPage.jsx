@@ -31,7 +31,7 @@ const AccountsPage = ({ accounts: accountsProp, showToast }) => {
             setActiveAccountId(active.id);
           }
         } catch (error) {
-          console.error('Failed to load accounts:', error);
+          // Failed to load accounts - error handled by toast
           showToast('Failed to load accounts');
         } finally {
           setIsLoading(false);
@@ -80,7 +80,7 @@ const AccountsPage = ({ accounts: accountsProp, showToast }) => {
       }
     } catch (error) {
       setIsCreating(false);
-      console.error('Error creating sub-account:', error);
+      // Error shown via toast
       showToast('Failed to create sub-account');
     }
   };
@@ -121,7 +121,6 @@ const AccountsPage = ({ accounts: accountsProp, showToast }) => {
         showToast('Failed to set active account');
       }
     } catch (error) {
-      console.error('Error setting active sub-account:', error);
       showToast('Failed to set active account');
     }
   };
