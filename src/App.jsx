@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import ToastNotification from './components/ToastNotification';
+import ErrorBoundary from './components/ErrorBoundary';
 import './App.css';
 import { auth, db } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { collection, query, onSnapshot, orderBy } from 'firebase/firestore';
 import AuthComponent from './components/AuthComponent';
 import AppLayout from './components/AppLayout';
-import { getUserPreferences } from './api'; // <-- Import getUserSettings
-import { applyTheme } from './theme.js'; // <-- Import applyTheme
+import { getUserPreferences } from './api';
+import { applyTheme } from './theme.js';
 import OnboardingController from './components/onboarding/OnboardingController';
 
 // --- Helper Components (we will move these to their own files later) ---
@@ -29,13 +30,13 @@ function App( ) {
   // Toast Notification State
   const [toast, setToast] = useState({ message: '', isVisible: false });
 
-  const showToast = (message) => {
+  const showToast = useCallback((message) => {
     setToast({ message, isVisible: true });
     // Hide the toast after 3 seconds
     setTimeout(() => {
       setToast({ message: '', isVisible: false });
     }, 3000);
-  };
+  }, []);
 
   // States to hold your application data
   const [accounts, setAccounts] = useState([]);
@@ -49,11 +50,16 @@ function App( ) {
   useEffect(() => {
     // onAuthStateChanged is the Firebase listener for login/logout events
     let firestoreUnsubscribers = [];
+    let dataUnsubscribers = []; // Track Firestore listener unsubscribers for cleanup
 
     const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
       // When auth state changes, first unsubscribe from any old Firestore listeners
       firestoreUnsubscribers.forEach(unsub => unsub());
       firestoreUnsubscribers = []; // Then clear the array
+
+      // Also unsubscribe any existing data listeners
+      dataUnsubscribers.forEach(unsub => unsub());
+      dataUnsubscribers = [];
 
       if (currentUser) {
         setUser(currentUser);
@@ -85,21 +91,32 @@ function App( ) {
 
         let loadedCount = 0;
         const totalCollections = Object.keys(collectionsToSync).length;
+        const hasCollectionLoaded = {}; // Track which collections have loaded at least once
 
-        const unsubscribers = [];
+        // Memoize expensive query creation - moved outside hook to use regular memoization
+        const collectionQueries = {};
+        for (const [colName] of Object.entries(collectionsToSync)) {
+          collectionQueries[colName] = query(
+            collection(db, 'users', currentUser.uid, colName),
+            orderBy("createdAt", "desc")
+          );
+        }
+
         for (const [colName, setter] of Object.entries(collectionsToSync)) {
-          const q = query(collection(db, 'users', currentUser.uid, colName), orderBy("createdAt", "desc"));
-          const unsubscribe = onSnapshot(q, (querySnapshot) => {
+          const unsubscribe = onSnapshot(collectionQueries[colName], (querySnapshot) => {
             const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            setter(data); // Update the component's state with the new data
+            setter(data);
 
-            // NEW - Track loading progress
-            loadedCount++;
-            if (loadedCount === totalCollections) {
-              setIsDataLoading(false); // All data loaded
+            // NEW - Track loading progress (only count first load per collection)
+            if (!hasCollectionLoaded[colName]) {
+              hasCollectionLoaded[colName] = true;
+              loadedCount++;
+              if (loadedCount === totalCollections) {
+                setIsDataLoading(false); // All data loaded
+              }
             }
           });
-          unsubscribers.push(unsubscribe);
+          dataUnsubscribers.push(unsubscribe);
         }
 
       } else {
@@ -116,12 +133,19 @@ function App( ) {
     });
 
     // Cleanup subscription on component unmount
-    return () => unsubscribeAuth();
+    return () => {
+      unsubscribeAuth();
+      // Also unsubscribe from all Firestore listeners
+      dataUnsubscribers.forEach(unsub => unsub());
+      firestoreUnsubscribers.forEach(unsub => unsub());
+    };
   }, []); // The empty array ensures this effect runs only once
 
-  const handleLogout = () => {
-    signOut(auth).catch(error => console.error("Logout Error:", error));
-  };
+  const handleLogout = useCallback(() => {
+    signOut(auth).catch(() => {
+      showToast("Failed to sign out");
+    });
+  }, [showToast]);
 
   // --- Conditional Rendering ---
   // Based on the state, we decide what to show the user.
@@ -134,30 +158,30 @@ function App( ) {
   }
 
   return (
-    <><OnboardingController>
-      <AppLayout
-        user={user}
-        onLogout={handleLogout}
-        accounts={accounts}
-        budgets={budgetsData}
-        vaults={vaultsData}
-        transactions={transactionsData}
-        history={historyData}
-        showToast={showToast}
-        theme={theme}
-        setTheme={setTheme}
-        billers={billersData}
-        beneficiaries={beneficiariesData}
-        preferences={preferences}
-        isDataLoading={isDataLoading} // NEW - Pass loading state
-
-      />
-    </OnboardingController>
+    <ErrorBoundary>
+      <OnboardingController>
+        <AppLayout
+          user={user}
+          onLogout={handleLogout}
+          accounts={accounts}
+          budgets={budgetsData}
+          vaults={vaultsData}
+          transactions={transactionsData}
+          history={historyData}
+          showToast={showToast}
+          theme={theme}
+          setTheme={setTheme}
+          billers={billersData}
+          beneficiaries={beneficiariesData}
+          preferences={preferences}
+          isDataLoading={isDataLoading}
+        />
+      </OnboardingController>
       <ToastNotification
         message={toast.message}
         isVisible={toast.isVisible}
       />
-      </>
+    </ErrorBoundary>
   );
 }
 
