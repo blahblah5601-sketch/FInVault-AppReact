@@ -40,13 +40,13 @@ function Sidebar({ user, onLogout, activePage, setActivePage, compactMode = fals
   return (
     <aside className="flex flex-col h-full w-full" style={{
       backgroundColor: '#1a1f3a',
-      borderRadius: `${compactMode ? '8px' : '16px'} 0 0 ${compactMode ? '8px' : '16px'}`
+      borderRadius: `${compactMode ? 'var(--radius-md)' : 'var(--radius-xl)'} 0 0 ${compactMode ? 'var(--radius-md)' : 'var(--radius-xl)'}`
     }}>
       {/* Logo */}
       <div className="flex items-center gap-3 mx-4 mt-4 mb-7">
         <div className="w-[28px] h-[28px] flex items-center justify-center shrink-0" style={{
           backgroundColor: 'var(--color-gold)',
-          borderRadius: '8px'
+          borderRadius: 'var(--radius-sm)'
         }}>
           <svg viewBox="0 0 16 16" fill="none" width="15" height="15">
             <path d="M2 12V7L8 3L14 7V12" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -95,25 +95,29 @@ function Sidebar({ user, onLogout, activePage, setActivePage, compactMode = fals
 
       {/* Footer */}
       <div className="border-t pt-4 mx-4" style={{
-        borderColor: 'rgba(255,255,255,0.08)'
+        borderColor: 'rgba(255,255,255,0.08)',
+        paddingTop: 'var(--space-md)'
       }}>
         <div className="flex items-center gap-[10px]">
           <div className="w-[34px] h-[34px] rounded-full flex items-center justify-center shrink-0" style={{
             backgroundColor: 'var(--color-gold)',
             color: '#1a1f3a',
             fontSize: '12px',
-            fontWeight: 600
+            fontWeight: 600,
+            borderRadius: 'var(--radius-circle)'
           }}>
             {getInitials()}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[12px] font-medium truncate" style={{
-              color: 'rgba(255,255,255,0.85)'
+              color: 'rgba(255,255,255,0.85)',
+              fontSize: 'var(--text-sm)'
             }}>
               {user.email.split('@')[0]}
             </p>
             <span className="text-[10px] block" style={{
-              color: 'rgba(255,255,255,0.35)'
+              color: 'rgba(255,255,255,0.35)',
+              fontSize: 'var(--text-xs)'
             }}>
               Premium Account
             </span>
