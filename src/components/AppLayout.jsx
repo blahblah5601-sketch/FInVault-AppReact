@@ -8,8 +8,7 @@ import AddFundsPanel from './panels/AddFundsPanel';
 import QRPaymentPanel from './panels/QRPaymentPanel';
 import NFCPaymentPanel from './panels/NFCPaymentPanel';
 // The component receives props, including the onLogout function
-function AppLayout({ user, onLogout, showToast, theme, setTheme, accounts, budgets, vaults, transactions, history, billers, beneficiaries, preferences, isDataLoading }) {
-    const [activePage, setActivePage] = useState('dashboard');
+function AppLayout({ user, onLogout, showToast, theme, setTheme, accounts, budgets, vaults, transactions, history, billers, beneficiaries, preferences, isDataLoading, page, navigate, goBack }) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [activePanelId, setActivePanelId] = useState(null); // 'send' | 'add' | 'qr' | 'nfc' | null
 
@@ -33,10 +32,11 @@ function AppLayout({ user, onLogout, showToast, theme, setTheme, accounts, budge
             <Sidebar
                 user={user}
                 onLogout={onLogout}
-                activePage={activePage}
-                setActivePage={(page) => {
-                    setActivePage(page);
-                    setIsMobileMenuOpen(false); // Close menu after clicking a link
+                activePage={page}
+                setActivePage={(newPage) => {
+                    navigate(newPage);
+                    // Close mobile menu after navigation
+                    setIsMobileMenuOpen(false);
                 }}
                 compactMode={preferences.compactMode}
             />
@@ -46,14 +46,15 @@ function AppLayout({ user, onLogout, showToast, theme, setTheme, accounts, budge
         <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
             {/* Pass a function to Header to open the menu */}
             <Header
-                activePage={activePage}
+                activePage={page}
                 onMenuClick={() => setIsMobileMenuOpen(true)}
+                onGoBack={goBack}
                 history={history}
                 transactions={transactions}
             />
             <MainContent
-                activePage={activePage}
-                setActivePage={setActivePage}
+                activePage={page}
+                setActivePage={navigate}
                 accounts={accounts}
                 budgets={budgets}
                 vaults={vaults}

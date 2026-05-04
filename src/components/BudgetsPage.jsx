@@ -32,9 +32,12 @@ function BudgetsPage({ budgets, showToast, preferences }) {
   const toggleVisualView = async () => {
     const newView = !useVisualBudgetView;
     try {
-      await updateUserPreferences({ useVisualBudgetView: newView });
+      const success = await updateUserPreferences({ useVisualBudgetView: newView });
+      if (!success) {
+        showToast("Network error: Failed to save preference. Check connection or disable ad-blocker.");
+      }
     } catch (error) {
-      showToast("Failed to save preference");
+      showToast("Network error: Failed to save preference. Check connection or disable ad-blocker.");
     }
   };
 
@@ -47,9 +50,8 @@ function BudgetsPage({ budgets, showToast, preferences }) {
   };
 
   const handleCreateBudget = async (name, limit) => {
-    const success = await createBudget(name, limit);
-    if (success) setIsModalOpen(false);
-    else showToast("Failed to create budget.");
+    await createBudget(name, limit);
+    setIsModalOpen(false);
   };
 
   const handleOpenUpdateModal = (budget) => {
@@ -58,13 +60,9 @@ function BudgetsPage({ budgets, showToast, preferences }) {
   };
 
   const handleUpdateBudget = async (budgetId, newName, newLimit) => {
-    const success = await updateBudget(budgetId, newName, newLimit);
-    if (success) {
-      setIsUpdateModalOpen(false);
-      setBudgetToEdit(null);
-    } else {
-      showToast("Failed to update budget.");
-    }
+    await updateBudget(budgetId, newName, newLimit);
+    setIsUpdateModalOpen(false);
+    setBudgetToEdit(null);
   };
 
   const handleOpenDeleteModal = (budget) => {
@@ -74,17 +72,11 @@ function BudgetsPage({ budgets, showToast, preferences }) {
 
   const handleConfirmDelete = async () => {
     if (itemToDelete) {
-      setIsDeleting(true); //  Set isDeleting to true when deletion starts
-      const success = await deleteBudget(itemToDelete);
-      setIsDeleting(false); // Reset the deleting state
-      setIsDeleteModalOpen(false); // Now close the modal
-      if (success) {
-        setIsDeleteModalOpen(false);
-        setItemToDelete(null);
-        showToast(`Budget '${itemToDelete.name}' was deleted.`);
-      } else {
-        showToast("Failed to delete budget.");
-      }
+      setIsDeleting(true);
+      await deleteBudget(itemToDelete);
+      setIsDeleting(false);
+      setIsDeleteModalOpen(false);
+      setItemToDelete(null);
     }
   };
 

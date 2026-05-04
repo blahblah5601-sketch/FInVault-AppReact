@@ -184,7 +184,6 @@ export default function DashboardPage({
     { label: 'Pay Bill', icon: PayBillIcon, bgClass: 'gold', onClick: () => setActivePage('payments') },
     { label: 'QR Pay', icon: QRIcon, bgClass: 'blue', onClick: onQRPayment },
     { label: 'NFC Pay', icon: NFCIcon, bgClass: 'purple', onClick: onNFCPayment },
-    { label: 'Transfer', icon: TransferIcon, bgClass: 'orange', onClick: onTransferBetweenAccounts },
     { label: 'Savings', icon: SavingsIcon, bgClass: 'red', onClick: () => setActivePage('vaults') },
   ];
 
@@ -211,11 +210,11 @@ export default function DashboardPage({
       </div>
 
       {/* === TOP ROW: 3-column grid === */}
-      <div className="grid grid-cols-1 md:grid-cols-[1.4fr_1fr_1fr] gap-[14px]">
-        {/* Balance Card — dark navy, gold chip, Space Mono amount */}
+      <div className="grid grid-cols-2 gap-[var(--space-md)] md:grid-cols-[1.4fr_1fr_1fr] md:gap-[14px]">
+        {/* Balance Card — full width on mobile (spans 2 cols), 1st column on desktop */}
         <motion.div
           whileHover={{ scale: 1.01 }}
-          className="relative overflow-hidden rounded-panel p-[22px]"
+          className="col-span-2 md:col-span-1 relative overflow-hidden rounded-panel p-[22px] md:rounded-[var(--radius-xl)]"
           style={{ backgroundColor: '#1a1f3a', color: 'white' }}
         >
           {/* Decorative circles */}
@@ -230,7 +229,8 @@ export default function DashboardPage({
 
           {/* Gold chip */}
           <div className="w-[28px] h-[20px] rounded-sm mb-[18px] flex items-center justify-center" style={{
-            backgroundColor: 'var(--color-gold)'
+            backgroundColor: 'var(--color-gold)',
+            minHeight: '20px'
           }}>
             <svg viewBox="0 0 18 14" fill="none" width="18" height="14">
               <rect x="1" y="1" width="16" height="12" rx="2" stroke="#1a1f3a" strokeWidth="1.2"/>
@@ -249,7 +249,7 @@ export default function DashboardPage({
               whileHover={{ scale: 1.1 }}
               onClick={() => setBalanceVisible(v => !v)}
               className="p-1 rounded transition-colors"
-              style={{ color: 'rgba(255,255,255,0.5)' }}
+              style={{ color: 'rgba(255,255,255,0.5)', minHeight: '44px', minWidth: '44px' }}
             >
               {balanceVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </motion.button>
@@ -263,17 +263,18 @@ export default function DashboardPage({
             }}>
               {mainAccount?.ibanNumber
                 ? `PK${mainAccount.ibanNumber.substring(2, 4)} ${formatMaskedIBAN(mainAccount.ibanNumber)}`
-                : '\u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022'}
+                : '•••• •••• •••• ••••'}
             </div>
           )}
         </motion.div>
 
-        {/* Stat Card — Monthly Income */}
+        {/* Stat Card — Monthly Income / Budgets */}
         {prefs.showMonthlyIncome !== false && (
           <motion.div
             whileHover={{ scale: 1.02 }}
-            className="rounded-panel p-[18px] border flex flex-col justify-between"
-            style={{ backgroundColor: 'var(--color-panel)', borderColor: 'var(--color-border)' }}
+            className="rounded-panel p-[18px] border flex flex-col justify-between cursor-pointer transition-colors"
+            style={{ backgroundColor: 'var(--color-panel)', borderColor: 'var(--color-border)', borderRadius: 'var(--radius-xl)' }}
+            onClick={() => setActivePage('budgets')}
           >
             <div>
               <div className="w-9 h-9 rounded-sm-panel flex items-center justify-center mb-3" style={{ backgroundColor: 'var(--color-teal2)' }}>
@@ -286,18 +287,20 @@ export default function DashboardPage({
                 Rs {budgets?.reduce((s, b) => s + b.limit, 0).toLocaleString('en-US') || '0'}
               </div>
             </div>
-            <div className="text-[11px] mt-2" style={{ color: 'var(--color-teal)' }}>
-              &#8593; Budget allocated
+            <div className="text-[11px] mt-2 flex items-center justify-between" style={{ color: 'var(--color-teal)' }}>
+              <span>&#8593; Budget allocated</span>
+              <span className="text-[10px] opacity-60">View all</span>
             </div>
           </motion.div>
         )}
 
-        {/* Stat Card — Monthly Spend */}
+        {/* Stat Card — Monthly Spend / Transactions */}
         {prefs.showMonthlySpend !== false && (
           <motion.div
             whileHover={{ scale: 1.02 }}
-            className="rounded-panel p-[18px] border flex flex-col justify-between"
-            style={{ backgroundColor: 'var(--color-panel)', borderColor: 'var(--color-border)' }}
+            className="rounded-panel p-[18px] border flex flex-col justify-between cursor-pointer transition-colors"
+            style={{ backgroundColor: 'var(--color-panel)', borderColor: 'var(--color-border)', borderRadius: 'var(--radius-xl)' }}
+            onClick={() => setActivePage('transactions')}
           >
             <div>
               <div className="w-9 h-9 rounded-sm-panel flex items-center justify-center mb-3" style={{ backgroundColor: 'var(--color-blue2)' }}>
@@ -310,8 +313,9 @@ export default function DashboardPage({
                 Rs {budgets?.reduce((s, b) => s + b.spent, 0).toLocaleString('en-US') || '0'}
               </div>
             </div>
-            <div className="text-[11px] mt-2" style={{ color: 'var(--color-red-accent)' }}>
-              &#8593; Active spending
+            <div className="text-[11px] mt-2 flex items-center justify-between" style={{ color: 'var(--color-red-accent)' }}>
+              <span>&#8593; Active spending</span>
+              <span className="text-[10px] opacity-60">View all</span>
             </div>
           </motion.div>
         )}

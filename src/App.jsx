@@ -29,6 +29,21 @@ function App( ) {
 
   // Toast Notification State
   const [toast, setToast] = useState({ message: '', isVisible: false });
+  const [pageHistory, setPageHistory] = useState(['dashboard']);
+  const [page, setPage] = useState('dashboard');
+
+  const navigate = (newPage) => {
+    setPageHistory(prev => [...prev, newPage]);
+    setPage(newPage);
+  };
+
+  const goBack = () => {
+    if (pageHistory.length > 1) {
+      const newHistory = pageHistory.slice(0, -1);
+      setPageHistory(newHistory);
+      setPage(newHistory[newHistory.length - 1]);
+    }
+  };
 
   const showToast = useCallback((message) => {
     setToast({ message, isVisible: true });
@@ -62,6 +77,23 @@ function App( ) {
       dataUnsubscribers = [];
 
       if (currentUser) {
+        // Check email verification before allowing app access
+        await currentUser.reload();
+        if (!currentUser.emailVerified) {
+          // Unverified user - sign them out and show auth screen
+          signOut(auth).catch(() => {});
+          setUser(null);
+          applyTheme('Slate');
+          setAccounts([]);
+          setBudgetsData([]);
+          setVaultsData([]);
+          setTransactionsData([]);
+          setHistoryData([]);
+          setIsDataLoading(false);
+          setIsLoading(false);
+          return; // Block access, stay on auth screen
+        }
+
         setUser(currentUser);
         setIsDataLoading(true); // NEW - Start data loading
 
@@ -175,6 +207,9 @@ function App( ) {
           beneficiaries={beneficiariesData}
           preferences={preferences}
           isDataLoading={isDataLoading}
+          page={page}
+          navigate={navigate}
+          goBack={goBack}
         />
       </OnboardingController>
       <ToastNotification

@@ -12,13 +12,13 @@ import {
   findUserByIBAN
 } from './utils/transferEngine';
 
- // Note: This is the same logic from your old main.js file
+// Note: This is the same logic from your old main.js file
 export const createBudget = async (name, limit) => {
     if (!name || limit <= 0 || !auth.currentUser) {
     return false;
    }
 
-   try {
+  try {
      const userId = auth.currentUser.uid;
 
      // Add the new budget to the 'budgets' collection
@@ -43,7 +43,7 @@ export const createBudget = async (name, limit) => {
 
     return true; // Indicate success
   } catch (error) {
-    // Error is logged via ErrorBoundary; return structured response
+    // Error handled by ErrorBoundary; return structured response
     return false; // Indicate failure
   }
 };
@@ -216,6 +216,7 @@ export const toggleBudgetCardAssignment = async (budgetToToggle, allBudgets, act
 
 export const updateUserPreferences = async (prefs) => {
   if (!auth.currentUser) return false;
+
   try {
     const userDocRef = doc(db, "users", auth.currentUser.uid);
     //await updateDoc(userDocRef, { settings: prefs }, { merge: true });

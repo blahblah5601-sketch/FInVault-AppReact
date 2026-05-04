@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Bell } from 'lucide-react';
 
-function Header({ activePage, onMenuClick, history = [], transactions = [], compactMode = false }) {
+function Header({ activePage, onMenuClick, onGoBack, history = [], transactions = [], compactMode = false }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const notifRef = useRef(null);
 
@@ -47,8 +47,8 @@ function Header({ activePage, onMenuClick, history = [], transactions = [], comp
   return (
     <header
       ref={notifRef}
-      className={`flex items-center justify-between h-${compactMode ? '16' : '20'} px-${compactMode ? '4' : '6'} border-b bg-panel`}
-      style={{ borderColor: 'var(--color-border)' }}
+      className={`flex items-center justify-between h-${compactMode ? '18' : '20'} px-${compactMode ? '4' : '6'} border-b bg-panel`}
+      style={{ borderColor: 'var(--color-border)', paddingTop: 'var(--space-md)', paddingBottom: 'var(--space-md)' }}
     >
       <div className="flex items-center gap-4">
         {/* Mobile Menu Button */}
@@ -64,7 +64,20 @@ function Header({ activePage, onMenuClick, history = [], transactions = [], comp
           </svg>
         </button>
 
-        <h1 className="text-base font-medium capitalize">{pageTitle}</h1>
+        <div className="flex items-center gap-2">
+          {activePage !== 'dashboard' && (
+            <button
+              onClick={onGoBack}
+              className="p-1.5 -ml-2 hover:bg-white/10 rounded-lg transition-colors"
+              aria-label="Go back"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+            </button>
+          )}
+          <h1 className="text-base font-medium capitalize">{pageTitle}</h1>
+        </div>
       </div>
 
       {/* Notification Button */}

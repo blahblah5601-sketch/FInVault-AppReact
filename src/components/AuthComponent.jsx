@@ -1,12 +1,12 @@
 // src/components/AuthComponent.jsx - ENHANCED VERSION
 import { useState } from 'react';
 import { auth, db } from '../firebase';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp, writeBatch, collection } from 'firebase/firestore';
 import { validateEmail, validatePassword } from '../utils/validation';
 import { generateAccountNumber, generateIBAN } from '../utils/ibanUtils';
 import Logo from './Logo';
-import { Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, Mail, ArrowLeft } from 'lucide-react';
 
 const setupNewUser = async (user) => {
   const userDocRef = doc(db, "users", user.uid);
@@ -59,6 +59,7 @@ const setupNewUser = async (user) => {
 
 function AuthComponent() {
   const [isLoginMode, setIsLoginMode] = useState(true);
+  const [isResetMode, setIsResetMode] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -66,6 +67,8 @@ function AuthComponent() {
   const [isLoading, setIsLoading] = useState(false);
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [resetSuccess, setResetSuccess] = useState(false);
+  const [isResendingVerification, setIsResendingVerification] = useState(false);
 
   // Real-time email validation
   const handleEmailChange = (e) => {
@@ -84,7 +87,7 @@ function AuthComponent() {
   const handlePasswordChange = (e) => {
     const value = e.target.value;
     setPassword(value);
-    
+
     if (!isLoginMode && value) {
       const validation = validatePassword(value);
       setPasswordError(validation.valid ? '' : validation.error);
@@ -96,18 +99,27 @@ function AuthComponent() {
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
-    
+
     // Validate before submission
     const emailValidation = validateEmail(email);
     if (!emailValidation.valid) {
       setError(emailValidation.error);
       return;
     }
-    
+
     setIsLoading(true);
-    
+
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+
+      // Check if email is verified
+      if (!userCredential.user.emailVerified) {
+        // User is not verified - block login and show clear message
+        setError('Email not verified. Please check your inbox and click the verification link to activate your account. You can request a new verification email after logging in via Settings → Account Verification.');
+        // Still sign them out since we don't want unverified access
+        signOut(auth).catch(() => {});
+        return;
+      }
     } catch (err) {
       if (err.code === 'auth/invalid-credential') {
         setError('Invalid email or password');
@@ -121,28 +133,61 @@ function AuthComponent() {
     }
   };
 
+  const handleResendVerification = async () => {
+    if (!email) {
+      setError('Please enter your email address first');
+      return;
+    }
+
+    try {
+      // Get current user or create a temporary one to resend
+      const user = auth.currentUser;
+      if (user && user.email === email) {
+        await sendEmailVerification(user, {
+          url: window.location.origin + '/login',
+          handleCodeInApp: false,
+        });
+        setError('Verification email resent! Please check your inbox.');
+      } else {
+        setError('Please log in with your account to resend verification');
+      }
+    } catch (err) {
+      setError('Failed to resend verification email. Please try again.');
+    }
+  };
+
   const handleSignup = async (e) => {
     e.preventDefault();
     setError('');
-    
+
     // Validate inputs
     const emailValidation = validateEmail(email);
     if (!emailValidation.valid) {
       setError(emailValidation.error);
       return;
     }
-    
+
     const passwordValidation = validatePassword(password);
     if (!passwordValidation.valid) {
       setError(passwordValidation.error);
       return;
     }
-    
+
     setIsLoading(true);
-    
+
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+
+      // Send email verification to new user
+      await sendEmailVerification(userCredential.user, {
+        url: window.location.origin + '/login',
+        handleCodeInApp: false,
+      });
+
       await setupNewUser(userCredential.user);
+
+      // Show success message about verification email
+      setError('Account created! A verification email has been sent to ' + userCredential.user.email + '. Please check your inbox (and spam folder) and click the verification link to activate your account before logging in.');
     } catch (err) {
       if (err.code === 'auth/email-already-in-use') {
         setError('This email is already registered');
@@ -163,6 +208,64 @@ function AuthComponent() {
     setPassword('');
     setEmailError('');
     setPasswordError('');
+  };
+
+  const handleForgotPassword = () => {
+    setIsResetMode(true);
+    setIsLoginMode(false);
+    setError('');
+    setResetSuccess(false);
+  };
+
+  const handleBackToLogin = () => {
+    setIsResetMode(false);
+    setIsLoginMode(true);
+    setError('');
+    setResetSuccess(false);
+    setEmail('');
+    setEmailError('');
+  };
+
+  const handlePasswordReset = async (e) => {
+    e.preventDefault();
+    setError('');
+    setResetSuccess(false);
+
+    // Validate email
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.valid) {
+      setError(emailValidation.error);
+      setEmailError(emailValidation.error);
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Send password reset email
+      // NOTE: Link expiration is determined by Firebase environment:
+      // - Development (localhost): May expire in 10-15 minutes (Firebase default)
+      // - Production (custom domain): Expires in 1 hour (or as configured in Firebase Console)
+      // To increase expiration, configure in Firebase Console:
+      //   Authentication → Templates → Password reset → Edit → Link expiration (hours)
+      await sendPasswordResetEmail(auth, email, {
+        url: window.location.origin + '/login',  // Use current origin for proper redirect
+        handleCodeInApp: false,
+      });
+      setResetSuccess(true);
+    } catch (err) {
+      if (err.code === 'auth/invalid-email') {
+        setError('Invalid email address');
+      } else if (err.code === 'auth/user-not-found') {
+        setError('No account found with this email');
+      } else if (err.code === 'auth/too-many-requests') {
+        setError('Too many requests. Please try again later.');
+      } else {
+        setError('Failed to send password reset email. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const getPasswordStrength = () => {
@@ -246,6 +349,38 @@ function AuthComponent() {
           </button>
         </form>
 
+        {/* Forgot Password Link */}
+        <p className="text-sm text-center text-text-secondary">
+          <button
+            type="button"
+            onClick={handleForgotPassword}
+            className="font-medium hover:underline"
+            style={{ color: 'var(--color-primary)' }}
+            disabled={isLoading}
+          >
+            Forgot Password?
+          </button>
+        </p>
+
+        {/* Verification Resend Link - only shown when there's a verification error */}
+        {error && error.includes('verify') && (
+          <p className="text-sm text-center">
+            <button
+              type="button"
+              onClick={() => {
+                setIsResendingVerification(true);
+                handleResendVerification();
+                setIsResendingVerification(false);
+              }}
+              className="font-medium hover:underline"
+              style={{ color: 'var(--color-primary)' }}
+              disabled={isResendingVerification || isLoading}
+            >
+              {isResendingVerification ? 'Sending...' : 'Resend Verification Email'}
+            </button>
+          </p>
+        )}
+
         {/* Signup Form */}
         <form onSubmit={handleSignup} className={`space-y-4 ${isLoginMode ? 'hidden' : ''}`}>
           <div>
@@ -320,6 +455,80 @@ function AuthComponent() {
             {isLoading ? 'Creating Account...' : 'Create Account'}
           </button>
         </form>
+
+        {/* Password Reset Form */}
+        {isResetMode && !resetSuccess && (
+          <form onSubmit={handlePasswordReset} className="space-y-4">
+            <div className="text-center mb-4">
+              <button
+                type="button"
+                onClick={handleBackToLogin}
+                className="flex items-center justify-center gap-2 text-text-secondary hover:text-text-primary transition-colors mb-2"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span className="text-sm">Back to login</span>
+              </button>
+              <h3 className="text-lg font-semibold">Reset Password</h3>
+              <p className="text-sm text-text-secondary">Enter your email to receive a password reset link</p>
+            </div>
+
+            <div>
+              <input
+                type="email"
+                value={email}
+                onChange={handleEmailChange}
+                placeholder="Email"
+                className={`auth-input ${emailError ? 'border-red-500' : ''}`}
+                required
+                disabled={isLoading}
+              />
+              {emailError && (
+                <p className="text-red-400 text-xs mt-1 flex items-center">
+                  <AlertCircle className="w-3 h-3 mr-1" />
+                  {emailError}
+                </p>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              className="w-full btn-primary py-3 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isLoading || !!emailError}
+            >
+              {isLoading ? 'Sending...' : 'Send Reset Link'}
+            </button>
+          </form>
+        )}
+
+        {/* Password Reset Success */}
+        {resetSuccess && (
+          <div className="space-y-4">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-green-400">Password Reset Email Sent</h3>
+              <p className="text-sm text-text-secondary mt-2">
+                We've sent a password reset link to<br />
+                <span className="text-text-primary font-medium">{email}</span>
+              </p>
+              <p className="text-xs text-text-muted mt-4">
+                Please check your email and click the link to reset your password.<br />
+                The link will expire in 1 hour.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleBackToLogin}
+              className="w-full btn-primary py-3 rounded-lg font-semibold"
+            >
+              Back to Login
+            </button>
+          </div>
+        )}
 
         {/* Error Message */}
         {error && (
