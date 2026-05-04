@@ -599,6 +599,21 @@ export const findUserByEmail = async (email) => {
   }
 };
 
+/** Find a FinVault user document by username. Returns { id, ...data } or null. */
+export const findUserByUsername = async (username) => {
+  if (!username || !auth.currentUser) return null;
+  try {
+    const q    = query(collection(db, 'users'), where('username', '==', username.toLowerCase().trim()));
+    const snap = await getDocs(q);
+    if (snap.empty) return null;
+    const d = snap.docs[0];
+    return { id: d.id, ...d.data() };
+  } catch (err) {
+    console.error('findUserByUsername:', err);
+    return null;
+  }
+};
+
 /** Find a FinVault user by their IBAN (scans all user accounts). Returns { id, ...data } or null. */
 export const findUserByIBAN = async (iban) => {
   if (!iban || !auth.currentUser) return null;

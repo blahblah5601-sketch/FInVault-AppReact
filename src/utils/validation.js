@@ -32,6 +32,7 @@ export const PATTERNS = {
   NUMERIC: /^\d+(\.\d{1,2})?$/,
   ALPHANUMERIC: /^[a-zA-Z0-9\s-']+$/,
   PHONE_PK: /^(\+92|0)?[0-9]{10}$/,
+  USERNAME: /^[a-zA-Z0-9_]{3,50}$/,
 };
 
 export const ERROR_MESSAGES = {
@@ -42,9 +43,14 @@ export const ERROR_MESSAGES = {
     PASSWORD_TOO_SHORT: `Password must be at least ${LIMITS.MIN_PASSWORD_LENGTH} characters`,
     PASSWORD_TOO_WEAK: 'Password must include uppercase, lowercase, and numbers',
     EMAIL_IN_USE: 'This email address is already registered',
-    INVALID_CREDENTIALS: 'Invalid email or password',
+    INVALID_CREDENTIALS: 'Invalid email/username or password',
     TOO_MANY_ATTEMPTS: 'Too many failed attempts. Please try again in 15 minutes.',
     ACCOUNT_DISABLED: 'This account has been disabled. Contact support.',
+    USERNAME_REQUIRED: 'Username is required',
+    USERNAME_INVALID: 'Username must be 3-50 characters and can only contain letters, numbers, and underscores',
+    USERNAME_TOO_SHORT: 'Username must be at least 3 characters',
+    USERNAME_TOO_LONG: 'Username must be less than 50 characters',
+    USERNAME_IN_USE: 'This username is already taken',
   },
   
   BUDGET: {
@@ -631,6 +637,46 @@ export const hasChanged = (obj1, obj2, keys = null) => {
   if (!keys) {
     return JSON.stringify(obj1) !== JSON.stringify(obj2);
   }
-  
+
   return keys.some(key => obj1[key] !== obj2[key]);
+};
+
+/**
+ * Validate username format and availability
+ *
+ * @param {string} username - Username to validate
+ * @returns {Object} { valid: boolean, error?: string, sanitized?: string }
+ */
+export const validateUsername = (username) => {
+  if (!username || typeof username !== 'string') {
+    return {
+      valid: false,
+      error: ERROR_MESSAGES.AUTH.USERNAME_REQUIRED
+    };
+  }
+
+  const trimmed = username.trim();
+
+  if (trimmed.length < 3) {
+    return {
+      valid: false,
+      error: ERROR_MESSAGES.AUTH.USERNAME_TOO_SHORT
+    };
+  }
+
+  if (trimmed.length > LIMITS.MAX_NAME_LENGTH) {
+    return {
+      valid: false,
+      error: ERROR_MESSAGES.AUTH.USERNAME_TOO_LONG
+    };
+  }
+
+  if (!PATTERNS.USERNAME.test(trimmed)) {
+    return {
+      valid: false,
+      error: ERROR_MESSAGES.AUTH.USERNAME_INVALID
+    };
+  }
+
+  return { valid: true, sanitized: trimmed.toLowerCase() };
 };
