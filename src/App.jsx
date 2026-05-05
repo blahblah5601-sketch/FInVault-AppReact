@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import ToastNotification from './components/ToastNotification';
 import ErrorBoundary from './components/ErrorBoundary';
+import VerificationRequiredModal from './components/modals/VerificationRequiredModal';
 import './App.css';
 import { auth, db } from './firebase';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { onAuthStateChanged, signOut, sendEmailVerification } from 'firebase/auth';
 import { collection, query, onSnapshot, orderBy } from 'firebase/firestore';
 import AuthComponent from './components/AuthComponent';
 import AppLayout from './components/AppLayout';
@@ -31,6 +32,10 @@ function App( ) {
   const [toast, setToast] = useState({ message: '', isVisible: false });
   const [pageHistory, setPageHistory] = useState(['dashboard']);
   const [page, setPage] = useState('dashboard');
+
+  // Verification Modal State
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [unverifiedUserEmail, setUnverifiedUserEmail] = useState('');
 
   const navigate = (newPage) => {
     setPageHistory(prev => [...prev, newPage]);
@@ -80,8 +85,9 @@ function App( ) {
         // Check email verification before allowing app access
         await currentUser.reload();
         if (!currentUser.emailVerified) {
-          // Unverified user - sign them out and show auth screen
-          signOut(auth).catch(() => {});
+          // Unverified user - show verification modal instead of silently signing out
+          setUnverifiedUserEmail(currentUser.email);
+          setShowVerificationModal(true);
           setUser(null);
           applyTheme('Slate');
           setAccounts([]);
@@ -179,6 +185,25 @@ function App( ) {
     });
   }, [showToast]);
 
+  const handleResendVerification = async () => {
+    if (!auth.currentUser) return;
+    try {
+      await sendEmailVerification(auth.currentUser, {
+        url: window.location.origin + '/login',
+        handleCodeInApp: false,
+      });
+      setToast({ message: `Verification email sent to ${auth.currentUser.email}. Please check your inbox.`, isVisible: true });
+      setShowVerificationModal(false);
+    } catch (err) {
+      setToast({ message: 'Failed to send verification email. Please try again.', isVisible: true });
+    }
+  };
+
+  const handleCloseVerificationModal = () => {
+    setShowVerificationModal(false);
+    signOut(auth).catch(() => {});
+  };
+
   // --- Conditional Rendering ---
   // Based on the state, we decide what to show the user.
   if (isLoading) {
@@ -215,6 +240,12 @@ function App( ) {
       <ToastNotification
         message={toast.message}
         isVisible={toast.isVisible}
+      />
+      <VerificationRequiredModal
+        isOpen={showVerificationModal}
+        onClose={handleCloseVerificationModal}
+        userEmail={unverifiedUserEmail}
+        onResend={handleResendVerification}
       />
     </ErrorBoundary>
   );
