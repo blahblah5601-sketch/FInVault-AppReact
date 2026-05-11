@@ -322,7 +322,7 @@ export default function DashboardPage({
       </div>
 
       {/* === QUICK ACTIONS: 6 equal columns === */}
-      <div className="grid grid-cols-3 md:grid-cols-6 gap-[10px]">
+      <div className="grid grid-cols-3 md:grid-cols-6 gap-[14px]">
         {quickActions.map((action, i) => {
           const IconComp = action.icon;
           const colors = iconBgMap[action.bgClass];
@@ -385,7 +385,7 @@ export default function DashboardPage({
           </div>
           {/* Render actual transactions if available, else show empty state */}
           {transactions && transactions.length > 0 ? (
-            <div className="space-y-2">
+            <div className="space-y-4">
               {transactions.slice(0, 7).map(tx => {
                 const amount = tx.amount || 0;
                 const IconComp = getTransactionIcon(tx);
@@ -433,19 +433,19 @@ export default function DashboardPage({
           </div>
           {budgets && budgets.length > 0 ? (
             <>
-              <div className="space-y-[13px]">
+              <div className="space-y-4">
                 {budgets.slice(0, 5).map(budget => {
                   const pct = budget.limit > 0 ? Math.round((budget.spent / budget.limit) * 100) : 0;
                   const barColor = getBudgetBarColor(pct);
                   return (
-                    <div key={budget.id} className="cursor-pointer rounded-panel p-2 -m-2 hover:bg-white/5 transition-colors" onClick={() => setActivePage('budgets')}>
-                      <div className="flex justify-between mb-1">
+                    <div key={budget.id} className="cursor-pointer rounded-panel p-3 -m-3 hover:bg-white/5 transition-colors" onClick={() => setActivePage('budgets')}>
+                      <div className="flex justify-between mb-2">
                         <p className="text-xs font-medium">{budget.name}</p>
                         <span className="text-xs" style={{ color: barColor }}>
                           Rs {budget.spent.toLocaleString('en-US')} / Rs {budget.limit.toLocaleString('en-US')}
                         </span>
                       </div>
-                      <div className="h-[6px] rounded-full overflow-hidden" style={{
+                      <div className="h-[8px] rounded-full overflow-hidden" style={{
                         backgroundColor: 'rgba(13,15,26,0.08)'
                       }}>
                         <div className="h-full rounded-full transition-all duration-300" style={{
@@ -496,7 +496,7 @@ export default function DashboardPage({
             </span>
           </div>
           {vaults && vaults.length > 0 ? (
-            <div className="space-y-[10px] mt-2">
+            <div className="space-y-4 mt-2">
               {vaults.slice(0, 3).map(vault => {
                 const pct = vault.target > 0 ? Math.round((vault.current / vault.target) * 100) : 0;
                 const barColor = pct > 80 ? '#0e7c6e' : pct > 45 ? '#2056d4' : '#c9a84c';

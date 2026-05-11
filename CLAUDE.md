@@ -148,6 +148,21 @@ FinVault is a banking application built with React 19, Vite, Tailwind CSS, Fireb
 - Include usage examples in CLI scripts
 - Maintain up-to-date documentation
 
+### 6. Authentication and Mobile Considerations
+**Issue:** Google Sign-In popup was blocked on mobile devices causing authentication failures.
+
+**What happened:**
+- Mobile browsers block popups by default for security
+- Incorrect Vite base URL configuration caused Cross-Origin-Opener-Policy errors
+- Missing redirect result handling broke the mobile sign-in flow
+
+**Better approach:**
+- Use `signInWithRedirect` for mobile devices and `signInWithPopup` for desktop
+- Detect mobile devices using user agent and window width
+- Configure Vite base URL correctly (usually '/' for root deployment)
+- Handle redirect results in App.jsx using `getRedirectResult()` to complete the auth flow
+- Test authentication flows on both desktop and mobile devices
+
 ## Best Practices for Future Development
 
 ### 1. Module System
@@ -187,6 +202,7 @@ FinVault is a banking application built with React 19, Vite, Tailwind CSS, Fireb
 3. **Separate concerns** - Keep code modular and focused
 4. **Error handling matters** - Good error handling saves debugging time
 5. **Documentation helps** - Clear documentation makes maintenance easier
+6. **Mobile-first authentication** - Use redirect-based flows for mobile, popup for desktop, and always handle redirect results properly
 
 ## Next Steps
 
@@ -214,3 +230,16 @@ FinVault is a banking application built with React 19, Vite, Tailwind CSS, Fireb
 *Document last updated: 2026-05-02*
 *Version: 1.3*
 *Author: Development Team**Changes: Added ErrorBoundary and loading skeleton components*
+
+## Canonical Files (use these, ignore deprecated equivalents)
+- DB init: database/init.sql
+- Sync: src/sync/enhanced-sync-scheduler.js
+- Transfers: src/utils/transferEngine.js
+- Auth: src/firebase.js + src/components/AuthComponent.jsx
+- Payments: src/services/raastService.js, src/services/paypakService.js
+
+## Deprecated / Cleaned Up
+- All root-level *.cjs and one-off test files have been removed
+- SQL: init-db-fixed.sql and init-db-final.sql deleted, use database/init.sql
+- Sync: scripts/sync-scheduler.* deleted, use src/sync/enhanced-sync-scheduler.js
+- .bak files removed — use git history instead

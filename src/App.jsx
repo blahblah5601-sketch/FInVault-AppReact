@@ -4,7 +4,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import VerificationRequiredModal from './components/modals/VerificationRequiredModal';
 import './App.css';
 import { auth, db } from './firebase';
-import { onAuthStateChanged, signOut, sendEmailVerification } from 'firebase/auth';
+import { onAuthStateChanged, signOut, sendEmailVerification, getRedirectResult, GoogleAuthProvider } from 'firebase/auth';
 import { collection, query, onSnapshot, orderBy } from 'firebase/firestore';
 import AuthComponent from './components/AuthComponent';
 import AppLayout from './components/AppLayout';

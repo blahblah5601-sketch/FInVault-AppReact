@@ -38,7 +38,7 @@ function Sidebar({ user, onLogout, activePage, setActivePage, compactMode = fals
   };
 
   return (
-    <aside className="flex flex-col h-full w-full" style={{
+    <aside className="flex flex-col h-full w-full p-0" style={{
       backgroundColor: '#1a1f3a',
       borderRadius: `${compactMode ? 'var(--radius-md)' : 'var(--radius-xl)'} 0 0 ${compactMode ? 'var(--radius-md)' : 'var(--radius-xl)'}`
     }}>

@@ -97,6 +97,8 @@
 /* --- ADD THIS BLOCK --- */
 html, body, #root {
   @apply h-full w-full bg-background;
+  margin: 0;
+  padding: 0;
 }
 /* --- END OF BLOCK --- */
 

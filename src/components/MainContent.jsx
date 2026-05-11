@@ -41,7 +41,14 @@ function MainContent({
 
   return (
     <div
-      className={`flex-1 overflow-y-auto ${compactMode ? 'p-2 md:p-4' : 'p-4 md:p-8'} space-y-${compactMode ? '4' : '8'}`}>
+      className={`flex-1 overflow-y-auto ${compactMode ? 'p-0' :
+        (activePage === 'dashboard' || activePage === 'accounts' || activePage === 'settings'
+          ? 'p-0'
+          : 'p-4 md:p-8')}
+      space-y-${compactMode ? '0' :
+        (activePage === 'dashboard' || activePage === 'accounts' || activePage === 'settings'
+          ? '0'
+          : '8')}`}>
       {/* This is conditional rendering. It checks activePage and shows the right content. */}
       {activePage === 'dashboard' && (
         <DashboardPage

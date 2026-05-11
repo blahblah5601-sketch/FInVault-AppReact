@@ -1,7 +1,7 @@
 // src/components/AuthComponent.jsx - Fixed UI with Slate dark theme
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { auth, db } from '../firebase';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification, signOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification, signOut, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp, writeBatch, collection, query, where, getDocs } from 'firebase/firestore';
 import { validateEmail, validatePassword, validateUsername } from '../utils/validation';
 import { generateAccountNumber, generateIBAN } from '../utils/ibanUtils';
@@ -226,25 +226,37 @@ function AuthComponent() {
       provider.setCustomParameters({
         prompt: 'select_account',
       });
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
 
-      if (!user.emailVerified) {
-        signOut(auth).catch(() => {});
-        setError('Email not verified. Please verify your Google account email.');
-        return;
-      }
+      // Detect if we are on a mobile device
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
 
-      // Check if user exists in our system, if not create profile
-      // If email already exists, login proceeds normally (no duplicate account created)
-      if (user.email) {
-        const existingUser = await findUserByEmail(user.email);
-        if (!existingUser) {
-          // Create new user profile with Google account
-          const namePart = (user.displayName || user.email.split('@')[0]).toLowerCase().replace(/[^a-z0-9]/g, '');
-          const baseUsername = namePart || 'user';
-          let username = `${baseUsername}_${Math.random().toString(36).substring(2, 7)}`;
-          await setupNewUser(user, username);
+      if (isMobile) {
+        // For mobile, use redirect to avoid popup blocking issues
+        await signInWithRedirect(auth, provider);
+        // Note: The redirect will cause a page reload, so the code after this won't run until the redirect returns
+        // We'll handle the redirect result in App.jsx via getRedirectResult
+      } else {
+        // For desktop, use popup
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+
+        if (!user.emailVerified) {
+          signOut(auth).catch(() => {});
+          setError('Email not verified. Please verify your Google account email.');
+          return;
+        }
+
+        // Check if user exists in our system, if not create profile
+        // If email already exists, login proceeds normally (no duplicate account created)
+        if (user.email) {
+          const existingUser = await findUserByEmail(user.email);
+          if (!existingUser) {
+            // Create new user profile with Google account
+            const namePart = (user.displayName || user.email.split('@')[0]).toLowerCase().replace(/[^a-z0-9]/g, '');
+            const baseUsername = namePart || 'user';
+            let username = `${baseUsername}_${Math.random().toString(36).substring(2, 7)}`;
+            await setupNewUser(user, username);
+          }
         }
       }
     } catch (err) {
