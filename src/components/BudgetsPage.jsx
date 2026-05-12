@@ -25,21 +25,8 @@ function BudgetsPage({ budgets, showToast, preferences }) {
   const [itemToDelete, setItemToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false); // 1. Add isDeleting state
 
-  // Use preferences prop instead of local state for visual view
-  const useVisualBudgetView = preferences?.useVisualBudgetView ?? false;
-
-  // Toggle visual view preference and update user preferences
-  const toggleVisualView = async () => {
-    const newView = !useVisualBudgetView;
-    try {
-      const success = await updateUserPreferences({ useVisualBudgetView: newView });
-      if (!success) {
-        showToast("Network error: Failed to save preference. Check connection or disable ad-blocker.");
-      }
-    } catch (error) {
-      showToast("Network error: Failed to save preference. Check connection or disable ad-blocker.");
-    }
-  };
+  // Visual view feature removed - always use list view
+  const useVisualBudgetView = false;
 
   const addBudgetItem = async (budgetId, item) => {
     return await addBudgetItemApi(budgetId, item);
@@ -127,13 +114,6 @@ function BudgetsPage({ budgets, showToast, preferences }) {
             </p>
           </div>
           <div className="flex space-x-3">
-            <button
-              onClick={toggleVisualView}
-              className={`${useVisualBudgetView ? 'bg-primary/20 text-primary' : ''}`}
-              style={{ fontFamily: 'Sora', padding: '10px 18px', fontSize: 13, background: 'rgba(255,255,255,0.08)', color: 'var(--color-text-primary)', border: '1px solid var(--color-border-soft)', borderRadius: 10, cursor: 'pointer' }}
-            >
-              {useVisualBudgetView ? 'List View' : 'Visual View'}
-            </button>
             <button
               onClick={() => setIsModalOpen(true)}
               id="new-budget-btn"

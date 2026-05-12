@@ -50,14 +50,10 @@ function SettingRow({ label, hint, checked, onChange }) {
 export default function SettingsPage({ currentTheme, setCurrentTheme, preferences }) {
   const [userPreferences, setUserPreferences] = useState(preferences || {});
   const [showIconTooltips, setShowIconTooltips] = useState(preferences?.showIconTooltips ?? true);
-  const [usePlanetIcons, setUsePlanetIcons] = useState(preferences?.usePlanetIcons ?? true);
   const [showIBANOnHero, setShowIBANOnHero] = useState(preferences?.showIBANOnHero ?? true);
   const [showBalanceByDefault, setShowBalanceByDefault] = useState(preferences?.showBalanceByDefault ?? true);
   const [showEnvelopeItemsExpanded, setShowEnvelopeItemsExpanded] = useState(preferences?.showEnvelopeItemsExpanded ?? false);
-  const [useVisualBudgetView, setUseVisualBudgetView] = useState(preferences?.useVisualBudgetView ?? false);
   const [budgetWarningThreshold, setBudgetWarningThreshold] = useState(preferences?.budgetWarningThreshold?.toString() ?? '80');
-  const [requirePaymentConfirmation, setRequirePaymentConfirmation] = useState(preferences?.requirePaymentConfirmation ?? true);
-  const [saveCardDetailsSession, setSaveCardDetailsSession] = useState(preferences?.saveCardDetailsSession ?? false);
   const [compactMode, setCompactMode] = useState(preferences?.compactMode ?? false);
   const [showMonthlyIncome, setShowMonthlyIncome] = useState(preferences?.showMonthlyIncome ?? true);
   const [showMonthlySpend, setShowMonthlySpend] = useState(preferences?.showMonthlySpend ?? true);
@@ -70,14 +66,10 @@ export default function SettingsPage({ currentTheme, setCurrentTheme, preference
       setUserPreferences(prefs);
 
       if (prefs.showIconTooltips !== undefined) setShowIconTooltips(prefs.showIconTooltips);
-      if (prefs.usePlanetIcons !== undefined) setUsePlanetIcons(prefs.usePlanetIcons);
       if (prefs.showIBANOnHero !== undefined) setShowIBANOnHero(prefs.showIBANOnHero);
       if (prefs.showBalanceByDefault !== undefined) setShowBalanceByDefault(prefs.showBalanceByDefault);
       if (prefs.showEnvelopeItemsExpanded !== undefined) setShowEnvelopeItemsExpanded(prefs.showEnvelopeItemsExpanded);
-      if (prefs.useVisualBudgetView !== undefined) setUseVisualBudgetView(prefs.useVisualBudgetView);
       if (prefs.budgetWarningThreshold !== undefined) setBudgetWarningThreshold(prefs.budgetWarningThreshold.toString());
-      if (prefs.requirePaymentConfirmation !== undefined) setRequirePaymentConfirmation(prefs.requirePaymentConfirmation);
-      if (prefs.saveCardDetailsSession !== undefined) setSaveCardDetailsSession(prefs.saveCardDetailsSession);
       if (prefs.compactMode !== undefined) setCompactMode(prefs.compactMode);
       if (prefs.showMonthlyIncome !== undefined) setShowMonthlyIncome(prefs.showMonthlyIncome);
       if (prefs.showMonthlySpend !== undefined) setShowMonthlySpend(prefs.showMonthlySpend);
@@ -100,14 +92,10 @@ export default function SettingsPage({ currentTheme, setCurrentTheme, preference
     // Also update specific state variables for immediate UI feedback
     if (field === 'compactMode') setCompactMode(value);
     if (field === 'showIconTooltips') setShowIconTooltips(value);
-    if (field === 'usePlanetIcons') setUsePlanetIcons(value);
     if (field === 'showIBANOnHero') setShowIBANOnHero(value);
     if (field === 'showBalanceByDefault') setShowBalanceByDefault(value);
     if (field === 'showEnvelopeItemsExpanded') setShowEnvelopeItemsExpanded(value);
-    if (field === 'useVisualBudgetView') setUseVisualBudgetView(value);
     if (field === 'budgetWarningThreshold') setBudgetWarningThreshold(value.toString());
-    if (field === 'requirePaymentConfirmation') setRequirePaymentConfirmation(value);
-    if (field === 'saveCardDetailsSession') setSaveCardDetailsSession(value);
     if (field === 'showMonthlyIncome') setShowMonthlyIncome(value);
     if (field === 'showMonthlySpend') setShowMonthlySpend(value);
   };
@@ -302,12 +290,6 @@ export default function SettingsPage({ currentTheme, setCurrentTheme, preference
               onChange={(v) => handleToggleChange('showBalanceByDefault', v)}
             />
             <SettingRow
-              label="Use Planet Icons on Dashboard"
-              hint="When enabled, shows animated planet icons for navigation. When disabled, shows simple icon grid"
-              checked={usePlanetIcons}
-              onChange={(v) => handleToggleChange('usePlanetIcons', v)}
-            />
-            <SettingRow
               label="Show Monthly Income Card"
               hint="Display the monthly income stat card on the dashboard"
               checked={showMonthlyIncome}
@@ -330,12 +312,6 @@ export default function SettingsPage({ currentTheme, setCurrentTheme, preference
               hint="When enabled, budget cards will show their envelope items expanded by default"
               checked={showEnvelopeItemsExpanded}
               onChange={(v) => handleToggleChange('showEnvelopeItemsExpanded', v)}
-            />
-            <SettingRow
-              label="Use Visual (Donut) View by default"
-              hint="When enabled, the budgets page will open in the visual donut chart view instead of list view"
-              checked={useVisualBudgetView}
-              onChange={(v) => handleToggleChange('useVisualBudgetView', v)}
             />
 
             {/* Budget warning threshold */}
@@ -363,19 +339,6 @@ export default function SettingsPage({ currentTheme, setCurrentTheme, preference
           {/* Payments Section */}
           <div className="rounded-panel p-5 border" style={{ backgroundColor: 'var(--color-panel)', borderColor: 'var(--color-border)' }}>
             <h3 className="font-semibold mb-4" id="settings-payments">Payments</h3>
-
-            <SettingRow
-              label="Require confirmation before sending money"
-              hint="When enabled, you'll be asked to confirm before sending any money"
-              checked={requirePaymentConfirmation}
-              onChange={(v) => handleToggleChange('requirePaymentConfirmation', v)}
-            />
-            <SettingRow
-              label="Save card details for session"
-              hint="When enabled, card details are remembered for the current browser session only (never stored)"
-              checked={saveCardDetailsSession}
-              onChange={(v) => handleToggleChange('saveCardDetailsSession', v)}
-            />
           </div>
 
           {/* Interface Section */}
@@ -400,7 +363,6 @@ export default function SettingsPage({ currentTheme, setCurrentTheme, preference
                 { label: 'Active Theme', value: currentTheme },
                 { label: 'Compact Mode', value: compactMode ? 'On' : 'Off' },
                 { label: 'Budget Alerts', value: `${budgetWarningThreshold}%` },
-                { label: 'Payment Confirm', value: requirePaymentConfirmation ? 'Yes' : 'No' },
                 { label: 'Tooltips', value: showIconTooltips ? 'Enabled' : 'Disabled' },
               ].map(item => (
                 <div key={item.label} className="flex items-center justify-between">
